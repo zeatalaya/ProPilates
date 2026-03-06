@@ -7,7 +7,7 @@ import { StepPractice } from "@/components/onboarding/StepPractice";
 import { StepMusic } from "@/components/onboarding/StepMusic";
 import { StepConfirmation } from "@/components/onboarding/StepConfirmation";
 import { useAuthStore } from "@/stores/auth";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { PilatesMethod, ClassType } from "@/types";
 
 export interface OnboardingData {
@@ -60,30 +60,52 @@ export default function OnboardingPage() {
   async function handleComplete() {
     setIsSubmitting(true);
     try {
-      const { data: instructor, error } = await supabase
-        .from("instructors")
-        .upsert(
-          {
-            xion_address: xionAddress,
-            name: data.name,
-            bio: data.bio,
-            location: data.location,
-            languages: data.languages,
-            methods: data.methods,
-            class_types: data.classTypes,
-            equipment: data.equipment,
-            certifications: data.certifications,
-            music_style: data.musicStyle,
-            favorite_artists: data.favoriteArtists,
-            onboarding_complete: true,
-          },
-          { onConflict: "xion_address" },
-        )
-        .select()
-        .single();
+      if (isSupabaseConfigured) {
+        const { data: instructor, error } = await supabase
+          .from("instructors")
+          .upsert(
+            {
+              xion_address: xionAddress,
+              name: data.name,
+              bio: data.bio,
+              location: data.location,
+              languages: data.languages,
+              methods: data.methods,
+              class_types: data.classTypes,
+              equipment: data.equipment,
+              certifications: data.certifications,
+              music_style: data.musicStyle,
+              favorite_artists: data.favoriteArtists,
+              onboarding_complete: true,
+            },
+            { onConflict: "xion_address" },
+          )
+          .select()
+          .single();
 
-      if (error) throw error;
-      setInstructor(instructor);
+        if (error) throw error;
+        setInstructor(instructor);
+      } else {
+        // Demo mode: store locally when Supabase is not configured
+        setInstructor({
+          id: crypto.randomUUID(),
+          xion_address: xionAddress || "demo-address",
+          name: data.name,
+          bio: data.bio,
+          location: data.location,
+          languages: data.languages,
+          methods: data.methods,
+          class_types: data.classTypes,
+          equipment: data.equipment,
+          certifications: data.certifications,
+          music_style: data.musicStyle,
+          favorite_artists: data.favoriteArtists,
+          onboarding_complete: true,
+          tier: "free",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
       router.push("/builder");
     } catch (err) {
       console.error("Onboarding failed:", err);
