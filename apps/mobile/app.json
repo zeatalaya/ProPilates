@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "ProPilates",
+    "slug": "propilates",
+    "version": "1.0.0",
+    "scheme": "propilates",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0f"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.propilates.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0f"
+      },
+      "package": "com.propilates.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "propilates" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
+  }
+}

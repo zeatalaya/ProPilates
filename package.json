@@ -1,41 +1,21 @@
 {
-  "name": "propilates",
+  "name": "propilates-monorepo",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "seed": "npx tsx src/data/seed.ts"
+    "postinstall": "mkdir -p node_modules/react-native-worklets && echo '{\"name\":\"react-native-worklets\",\"version\":\"0.0.0-stub\",\"main\":\"plugin.js\"}' > node_modules/react-native-worklets/package.json && echo 'module.exports=function(){return{visitor:{}}};' > node_modules/react-native-worklets/plugin.js",
+    "web": "npm run dev --workspace=@propilates/web",
+    "web:build": "npm run build --workspace=@propilates/web",
+    "mobile": "npm run start --workspace=@propilates/mobile",
+    "mobile:ios": "npm run ios --workspace=@propilates/mobile",
+    "mobile:android": "npm run android --workspace=@propilates/mobile"
   },
   "dependencies": {
-    "@burnt-labs/abstraxion": "^1.0.0-alpha.75",
-    "@reclaimprotocol/js-sdk": "^4.14.0",
-    "@supabase/supabase-js": "^2.45.0",
-    "clsx": "^2.1.1",
-    "framer-motion": "^11.5.0",
-    "lucide-react": "^0.441.0",
-    "next": "14.2.13",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-beautiful-dnd": "^13.1.1",
-    "spotify-web-api-node": "^5.0.2",
-    "tailwind-merge": "^2.5.2",
-    "zustand": "^5.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.16.0",
-    "@types/react": "^18.3.5",
-    "@types/react-beautiful-dnd": "^13.1.8",
-    "@types/react-dom": "^18.3.0",
-    "@types/spotify-web-api-node": "^5.0.11",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.13",
-    "postcss": "^8.4.45",
-    "tailwindcss": "^3.4.10",
-    "tsx": "^4.19.0",
-    "typescript": "^5.5.4"
+    "expo-dev-client": "~5.0.20",
+    "react-native-libsodium": "^1.6.0"
   }
 }

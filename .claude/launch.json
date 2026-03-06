@@ -5,7 +5,15 @@
       "name": "next-dev",
       "runtimeExecutable": "/Users/zeatalaya/.local/bin/node",
       "runtimeArgs": ["node_modules/.bin/next", "dev"],
+      "cwd": "apps/web",
       "port": 3000
+    },
+    {
+      "name": "expo-dev",
+      "runtimeExecutable": "/Users/zeatalaya/.local/bin/node",
+      "runtimeArgs": ["../../node_modules/.bin/expo", "start", "--web", "--port", "8081"],
+      "cwd": "apps/mobile",
+      "port": 8081
     }
   ]
 }

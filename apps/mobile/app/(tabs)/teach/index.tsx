@@ -1,0 +1,251 @@
+import React, { useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Platform } from "react-native";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
+import {
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
+  ChevronDown,
+  ChevronUp,
+  Music,
+} from "lucide-react-native";
+import { useTeachingModeStore, useSpotifyStore } from "@propilates/shared";
+import { formatDuration } from "@propilates/shared";
+import { useSpotifyMobile } from "../../../src/hooks/useSpotifyMobile";
+import { TimerRing } from "../../../src/components/ui/TimerRing";
+import { Badge } from "../../../src/components/ui/Badge";
+
+export default function TeachScreen() {
+  const {
+    isPlaying,
+    currentBlockIndex,
+    currentExerciseIndex,
+    elapsed,
+    blocks,
+    play,
+    pause,
+    togglePlayPause,
+    tick,
+    skipNext,
+    skipPrev,
+    reset,
+    currentBlock: getCurrentBlock,
+    currentExercise: getCurrentExercise,
+    progress: getProgress,
+  } = useTeachingModeStore();
+
+  // Keep screen awake during teaching (native only, web Wake Lock may fail)
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    activateKeepAwakeAsync("teaching").catch(() => {});
+    return () => { deactivateKeepAwake("teaching"); };
+  }, []);
+  const spotify = useSpotifyMobile();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [showUpNext, setShowUpNext] = React.useState(false);
+
+  // Timer tick
+  useEffect(() => {
+    if (isPlaying) {
+      intervalRef.current = setInterval(() => {
+        tick();
+      }, 1000);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isPlaying, tick]);
+
+  const currentBlock = getCurrentBlock();
+  const currentExercise = getCurrentExercise();
+  const exercise = currentExercise?.exercise;
+  const totalDuration = currentExercise?.duration ?? 60;
+  const remaining = Math.max(0, totalDuration - elapsed);
+  const progress = getProgress();
+
+  if (blocks.length === 0) {
+    return (
+      <SafeAreaView className="flex-1 bg-bg-primary">
+        <View className="flex-1 items-center justify-center px-6">
+          <View className="w-20 h-20 rounded-full bg-violet-500/20 items-center justify-center mb-6">
+            <Play size={36} color="#8257e5" />
+          </View>
+          <Text className="text-2xl font-bold text-text-primary mb-2 text-center">
+            No Active Session
+          </Text>
+          <Text className="text-text-secondary text-center mb-6">
+            Build a class in the Builder tab and tap "Teach" to start a live
+            teaching session with timer and cues.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-bg-primary">
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-6 py-3">
+        <TouchableOpacity onPress={reset}>
+          <Text className="text-red-400 font-medium">End Session</Text>
+        </TouchableOpacity>
+        <Text className="text-text-secondary text-sm">
+          Block {currentBlockIndex + 1}/{blocks.length}
+        </Text>
+        <TouchableOpacity
+          className="flex-row items-center"
+          onPress={() => setShowUpNext(!showUpNext)}
+        >
+          <Text className="text-violet-400 text-sm mr-1">Up Next</Text>
+          {showUpNext ? (
+            <ChevronUp size={16} color="#8257e5" />
+          ) : (
+            <ChevronDown size={16} color="#8257e5" />
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Main Content */}
+      <View className="flex-1 items-center justify-center px-6">
+        {/* Method Badge */}
+        {exercise?.method && (
+          <Badge variant="violet" className="mb-4">
+            {exercise.method}
+          </Badge>
+        )}
+
+        {/* Exercise Name */}
+        <Text className="text-3xl font-bold text-text-primary text-center mb-2">
+          {exercise?.name ?? "Exercise"}
+        </Text>
+
+        {/* Side indicator */}
+        {currentExercise?.side && currentExercise.side !== "both" && (
+          <Text className="text-violet-400 text-lg font-medium mb-6 uppercase">
+            {currentExercise.side} Side
+          </Text>
+        )}
+
+        {/* Timer Ring */}
+        <View className="my-8">
+          <TimerRing
+            progress={Math.min(progress, 1)}
+            elapsed={elapsed}
+            duration={totalDuration}
+            size={220}
+          />
+        </View>
+
+        {/* Cues */}
+        {currentExercise?.notes && (
+          <View className="bg-bg-card border border-border rounded-xl p-4 w-full mb-6">
+            <Text className="text-text-secondary text-sm font-medium mb-1">
+              Cues
+            </Text>
+            <Text className="text-text-primary">{currentExercise.notes}</Text>
+          </View>
+        )}
+
+        {/* Reps */}
+        {currentExercise?.reps && currentExercise.reps > 0 && (
+          <Text className="text-text-secondary text-base">
+            {currentExercise.reps} reps
+          </Text>
+        )}
+      </View>
+
+      {/* Controls */}
+      <View className="px-6 pb-4">
+        <View className="flex-row items-center justify-center gap-6 mb-4">
+          <TouchableOpacity
+            className="w-14 h-14 rounded-full bg-bg-card border border-border items-center justify-center"
+            onPress={skipPrev}
+          >
+            <SkipBack size={22} color="#a0a0b8" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="w-18 h-18 rounded-full bg-violet-600 items-center justify-center"
+            style={{ width: 72, height: 72 }}
+            onPress={togglePlayPause}
+          >
+            {isPlaying ? (
+              <Pause size={32} color="#fff" />
+            ) : (
+              <Play size={32} color="#fff" />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="w-14 h-14 rounded-full bg-bg-card border border-border items-center justify-center"
+            onPress={skipNext}
+          >
+            <SkipForward size={22} color="#a0a0b8" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Spotify Mini */}
+        {spotify.isReady ? (
+          <TouchableOpacity
+            className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-3"
+            onPress={() => spotify.isPlaying ? spotify.pause() : spotify.play()}
+          >
+            <Music size={18} color="#34d399" />
+            <Text className="text-text-primary text-sm ml-2 flex-1" numberOfLines={1}>
+              {spotify.currentTrack?.name ?? "Spotify Ready"}
+            </Text>
+            {spotify.isPlaying ? (
+              <Pause size={16} color="#34d399" />
+            ) : (
+              <Play size={16} color="#34d399" />
+            )}
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-3"
+            onPress={spotify.canLogin ? spotify.login : undefined}
+          >
+            <Music size={18} color="#34d399" />
+            <Text className="text-text-secondary text-sm ml-2 flex-1">
+              {spotify.canLogin ? "Connect Spotify" : "Set Spotify Client ID in .env"}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Up Next Drawer */}
+      {showUpNext && (
+        <View className="absolute bottom-32 left-0 right-0 bg-bg-card border-t border-border rounded-t-2xl px-6 pt-4 pb-6 max-h-64">
+          <Text className="text-text-primary font-semibold mb-3">Up Next</Text>
+          <FlatList
+            data={currentBlock?.exercises?.slice(currentExerciseIndex + 1) ?? []}
+            keyExtractor={(_, i) => String(i)}
+            renderItem={({ item }) => (
+              <View className="flex-row items-center py-2 border-b border-border">
+                <Text className="text-text-primary flex-1">
+                  {item.exercise?.name ?? "Exercise"}
+                </Text>
+                <Text className="text-text-secondary text-sm">
+                  {formatDuration(item.duration)}
+                </Text>
+              </View>
+            )}
+            ListEmptyComponent={
+              <Text className="text-text-secondary text-sm">
+                No more exercises in this block
+              </Text>
+            }
+          />
+        </View>
+      )}
+    </SafeAreaView>
+  );
+}

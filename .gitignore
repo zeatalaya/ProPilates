@@ -1,17 +1,27 @@
 # deps
-/node_modules
-/.pnp
-.pnp.js
+node_modules/
 
 # testing
 /coverage
 
 # next.js
-/.next/
+.next/
 /out/
+
+# expo
+.expo/
+ios/
+android/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
 
 # production
 /build
+dist/
 
 # misc
 .DS_Store
@@ -23,7 +33,9 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env
+.env
 .env*.local
+.env.local
 
 # vercel
 .vercel
