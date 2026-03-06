@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@14 propilates --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm)",
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Bash(mdfind -name \"node\" -onlyin /opt/homebrew)",
+      "Bash(npx create-next-app@14 . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git)",
+      "Bash(# Check if there''s a shell profile that sources a node manager cat ~/.bash_profile ~/.bashrc ~/.profile ~/.zprofile)",
+      "Bash(curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh)",
+      "Bash(bash)",
+      "Bash(xcode-select -p)",
+      "Bash(tar -xz -C \"$HOME/.local\" --strip-components=1)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(export PATH=\"$HOME/.local/bin:$PATH\")",
+      "Bash(npm install)",
+      "Bash(npm view @burnt-labs/abstraxion versions --json)",
+      "Bash(npm view @burnt-labs/abstraxion.js versions --json)",
+      "Bash(npm view @reclaim-protocol/js-sdk versions --json)",
+      "Bash(npm search reclaim-protocol)",
+      "Bash(npm view @reclaimprotocol/js-sdk version)",
+      "Bash(npm install --legacy-peer-deps)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(echo \"$HOME/.local/bin/npm\")",
+      "Bash(git init)",
+      "Bash(git add -A)",
+      "Bash(npm install -g vercel)",
+      "Bash(vercel --version)",
+      "Bash(xcode-select --install)",
+      "Bash(git --version)",
+      "Bash(gh auth status)",
+      "Bash(/usr/bin/git --version)",
+      "Bash(/usr/bin/git init)",
+      "Bash(/usr/bin/git add -A)",
+      "Bash(/usr/bin/git status -s)"
+    ]
+  }
+}

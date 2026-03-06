@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: 10 10 15;
+    --bg-card: 17 17 24;
+    --bg-elevated: 26 26 36;
+    --border: 42 42 58;
+    --violet-500: 130 87 229;
+    --text-primary: 240 240 245;
+    --text-secondary: 136 136 160;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-bg text-text-primary antialiased;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-border;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-border-hover;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply rounded-xl border border-border bg-bg-card/80 backdrop-blur-sm;
+  }
+
+  .glass-elevated {
+    @apply rounded-xl border border-border bg-bg-elevated/80 backdrop-blur-sm;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5
+           font-medium text-white transition-all hover:bg-violet-500 active:scale-[0.98]
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-bg-elevated
+           px-4 py-2.5 font-medium text-text-primary transition-all hover:border-border-hover
+           hover:bg-bg-elevated/50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium
+           text-text-secondary transition-all hover:bg-bg-elevated hover:text-text-primary;
+  }
+
+  .input-field {
+    @apply w-full rounded-lg border border-border bg-bg-card px-3 py-2.5 text-text-primary
+           placeholder-text-muted outline-none transition-colors focus:border-violet-500
+           focus:ring-1 focus:ring-violet-500/30;
+  }
+
+  .label-text {
+    @apply text-sm font-medium text-text-secondary;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-violet {
+    @apply badge bg-violet-500/15 text-violet-400;
+  }
+
+  .badge-emerald {
+    @apply badge bg-emerald-500/15 text-emerald-400;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-text-primary;
+  }
+
+  /* Timer ring for teaching mode */
+  .timer-ring {
+    transform: rotate(-90deg);
+  }
+  .timer-ring circle {
+    transition: stroke-dashoffset 1s linear;
+  }
+}
