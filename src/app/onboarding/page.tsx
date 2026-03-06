@@ -92,6 +92,7 @@ export default function OnboardingPage() {
           xion_address: xionAddress || "demo-address",
           name: data.name,
           bio: data.bio,
+          avatar_url: null,
           location: data.location,
           languages: data.languages,
           methods: data.methods,
