@@ -13,6 +13,8 @@ import {
   ListMusic,
   Check,
   Loader2,
+  Plus,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +35,9 @@ export function SpotifyPanel() {
     null,
   );
   const [startingPlayback, setStartingPlayback] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [creatingPlaylist, setCreatingPlaylist] = useState(false);
 
   // Fetch user playlists when connected
   const fetchPlaylists = useCallback(async () => {
@@ -80,6 +85,47 @@ export function SpotifyPanel() {
       // silently fail
     } finally {
       setStartingPlayback(false);
+    }
+  };
+
+  // Create a new playlist
+  const createPlaylist = async () => {
+    if (!spotify.accessToken || !newPlaylistName.trim()) return;
+    setCreatingPlaylist(true);
+    try {
+      // Get current user ID
+      const meRes = await fetch("https://api.spotify.com/v1/me", {
+        headers: { Authorization: `Bearer ${spotify.accessToken}` },
+      });
+      if (!meRes.ok) return;
+      const me = await meRes.json();
+
+      // Create the playlist
+      const createRes = await fetch(
+        `https://api.spotify.com/v1/users/${me.id}/playlists`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${spotify.accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: newPlaylistName.trim(),
+            description: "Created with ProPilates",
+            public: false,
+          }),
+        },
+      );
+      if (createRes.ok) {
+        setNewPlaylistName("");
+        setShowCreateForm(false);
+        // Refresh playlists
+        await fetchPlaylists();
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setCreatingPlaylist(false);
     }
   };
 
@@ -194,10 +240,55 @@ export function SpotifyPanel() {
           <span className="text-xs font-medium text-text-secondary">
             Your Playlists
           </span>
-          {loadingPlaylists && (
-            <Loader2 size={12} className="text-text-muted animate-spin ml-auto" />
-          )}
+          <div className="ml-auto flex items-center gap-1">
+            {loadingPlaylists && (
+              <Loader2 size={12} className="text-text-muted animate-spin" />
+            )}
+            <button
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+              onClick={() => setShowCreateForm(!showCreateForm)}
+              title="Create playlist"
+            >
+              {showCreateForm ? <X size={12} /> : <Plus size={12} />}
+            </button>
+          </div>
         </div>
+
+        {/* Create Playlist Form */}
+        {showCreateForm && (
+          <div className="px-3 py-2 border-b border-border bg-white/[0.02]">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Playlist name..."
+                value={newPlaylistName}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") createPlaylist();
+                  if (e.key === "Escape") {
+                    setShowCreateForm(false);
+                    setNewPlaylistName("");
+                  }
+                }}
+                className="flex-1 rounded bg-bg border border-border px-2 py-1 text-xs text-white placeholder:text-text-muted focus:outline-none focus:border-emerald-500"
+                autoFocus
+                disabled={creatingPlaylist}
+              />
+              <button
+                className="flex items-center gap-1 rounded bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                onClick={createPlaylist}
+                disabled={!newPlaylistName.trim() || creatingPlaylist}
+              >
+                {creatingPlaylist ? (
+                  <Loader2 size={10} className="animate-spin" />
+                ) : (
+                  <Plus size={10} />
+                )}
+                Create
+              </button>
+            </div>
+          </div>
+        )}
         <div className="max-h-48 overflow-y-auto">
           {playlists.length === 0 && !loadingPlaylists && (
             <div className="px-3 py-4 text-center text-xs text-text-muted">

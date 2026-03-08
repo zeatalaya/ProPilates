@@ -17,6 +17,8 @@ export function getSpotifyAuthUrl(): string {
     "user-modify-playback-state",
     "playlist-read-private",
     "playlist-read-collaborative",
+    "playlist-modify-public",
+    "playlist-modify-private",
   ];
   const client = createSpotifyClient();
   return client.createAuthorizeURL(scopes, "propilates-state");
