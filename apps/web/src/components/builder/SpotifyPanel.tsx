@@ -15,6 +15,7 @@ import {
   Loader2,
   Plus,
   X,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -183,6 +184,14 @@ export function SpotifyPanel() {
         <div className="ml-auto flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-emerald-400" />
           <span className="text-xs text-emerald-400">Connected</span>
+          <a
+            href="/api/auth/spotify"
+            onClick={() => spotify.reset()}
+            className="ml-1 text-text-muted hover:text-text-secondary transition-colors"
+            title="Reconnect Spotify"
+          >
+            <RefreshCw size={10} />
+          </a>
         </div>
       </div>
 
