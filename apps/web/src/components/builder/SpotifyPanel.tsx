@@ -50,7 +50,7 @@ export function SpotifyPanel() {
       });
       if (res.ok) {
         const data = await res.json();
-        setPlaylists(data.items ?? []);
+        setPlaylists((data.items ?? []).filter((p: SpotifyPlaylist | null) => p != null));
       }
     } catch {
       // silently fail
@@ -316,7 +316,7 @@ export function SpotifyPanel() {
                 onClick={() => playPlaylist(pl.uri)}
                 disabled={startingPlayback}
               >
-                {pl.images[0] ? (
+                {pl.images?.[0] ? (
                   <img
                     src={pl.images[0].url}
                     alt=""
@@ -332,7 +332,7 @@ export function SpotifyPanel() {
                     {pl.name}
                   </div>
                   <div className="text-xs text-text-muted">
-                    {pl.tracks.total} tracks
+                    {pl.tracks?.total ?? 0} tracks
                   </div>
                 </div>
                 {isActive && (
