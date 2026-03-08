@@ -27,7 +27,6 @@ const METHOD_LABELS: Record<string, string> = {
   reformer: "Reformer",
   "x-reformer": "x-Reformer",
   mat: "Mat",
-  barre: "Barre",
 };
 
 export default function PortfolioScreen() {

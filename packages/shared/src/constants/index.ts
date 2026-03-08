@@ -3,25 +3,13 @@ import type { PilatesMethod, ExerciseCategory, Difficulty } from "../types";
 export const MOBILE_METHODS: { value: PilatesMethod; label: string }[] = [
   { value: "mat", label: "Mat" },
   { value: "reformer", label: "Reformer" },
-  { value: "chair", label: "Chair" },
-  { value: "tower", label: "Tower" },
-  { value: "barrel", label: "Barrel" },
-  { value: "ring", label: "Ring" },
-  { value: "band", label: "Band" },
-  { value: "foam_roller", label: "Foam Roller" },
+  { value: "x-reformer", label: "x-Reformer" },
 ];
 
 export const ALL_METHODS: { value: PilatesMethod; label: string }[] = [
   { value: "mat", label: "Mat" },
   { value: "reformer", label: "Reformer" },
   { value: "x-reformer", label: "x-Reformer" },
-  { value: "barre", label: "Barre" },
-  { value: "chair", label: "Chair" },
-  { value: "tower", label: "Tower" },
-  { value: "barrel", label: "Barrel" },
-  { value: "ring", label: "Ring" },
-  { value: "band", label: "Band" },
-  { value: "foam_roller", label: "Foam Roller" },
 ];
 
 export const CATEGORIES: { value: ExerciseCategory; label: string }[] = [

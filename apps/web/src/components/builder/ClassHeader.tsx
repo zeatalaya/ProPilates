@@ -11,12 +11,7 @@ import { useState } from "react";
 const METHODS = [
   { value: "mat", label: "Mat" },
   { value: "reformer", label: "Reformer" },
-  { value: "chair", label: "Chair" },
-  { value: "tower", label: "Tower" },
-  { value: "barrel", label: "Barrel" },
-  { value: "ring", label: "Ring" },
-  { value: "band", label: "Band" },
-  { value: "foam_roller", label: "Foam Roller" },
+  { value: "x-reformer", label: "x-Reformer" },
 ];
 
 const DIFFICULTIES = [

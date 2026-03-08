@@ -3,7 +3,7 @@
 -- ═══════════════════════════════════════════
 
 -- Enums
-create type pilates_method as enum ('mat','reformer','chair','tower','barrel','ring','band','foam_roller');
+create type pilates_method as enum ('mat','reformer','x-reformer');
 create type class_type     as enum ('private','duet','group','virtual');
 create type difficulty     as enum ('beginner','intermediate','advanced');
 create type exercise_cat   as enum ('warmup','strength','flexibility','balance','cooldown','flow','cardio');

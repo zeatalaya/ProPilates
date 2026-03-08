@@ -1,16 +1,6 @@
 // ── Core domain types ──
 
-export type PilatesMethod =
-  | "mat"
-  | "reformer"
-  | "x-reformer"
-  | "barre"
-  | "chair"
-  | "tower"
-  | "barrel"
-  | "ring"
-  | "band"
-  | "foam_roller";
+export type PilatesMethod = "mat" | "reformer" | "x-reformer";
 
 export type ClassType = "private" | "duet" | "group" | "virtual";
 export type Difficulty = "beginner" | "intermediate" | "advanced";

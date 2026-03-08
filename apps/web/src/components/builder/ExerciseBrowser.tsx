@@ -15,12 +15,7 @@ const METHODS: { value: PilatesMethod | "all"; label: string }[] = [
   { value: "all", label: "All" },
   { value: "mat", label: "Mat" },
   { value: "reformer", label: "Reformer" },
-  { value: "chair", label: "Chair" },
-  { value: "tower", label: "Tower" },
-  { value: "barrel", label: "Barrel" },
-  { value: "ring", label: "Ring" },
-  { value: "band", label: "Band" },
-  { value: "foam_roller", label: "Roller" },
+  { value: "x-reformer", label: "x-Reformer" },
 ];
 
 const CATEGORIES = [

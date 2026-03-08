@@ -13,12 +13,7 @@ interface Props {
 const METHODS: { value: PilatesMethod; label: string }[] = [
   { value: "mat", label: "Mat" },
   { value: "reformer", label: "Reformer" },
-  { value: "chair", label: "Chair" },
-  { value: "tower", label: "Tower / Cadillac" },
-  { value: "barrel", label: "Barrel" },
-  { value: "ring", label: "Magic Circle" },
-  { value: "band", label: "Resistance Band" },
-  { value: "foam_roller", label: "Foam Roller" },
+  { value: "x-reformer", label: "x-Reformer" },
 ];
 
 const CLASS_TYPES: { value: ClassType; label: string }[] = [
@@ -29,9 +24,8 @@ const CLASS_TYPES: { value: ClassType; label: string }[] = [
 ];
 
 const EQUIPMENT = [
-  "Reformer", "Cadillac", "Wunda Chair", "Ladder Barrel",
-  "Spine Corrector", "Magic Circle", "Resistance Band", "Foam Roller",
-  "Stability Ball", "TRX", "Jumpboard", "Rotation Disk",
+  "Reformer", "x-Reformer", "Mat", "Jumpboard",
+  "Reformer Box", "Rotation Disk", "Stability Ball",
 ];
 
 const CERTIFICATIONS = [

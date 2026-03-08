@@ -14,12 +14,7 @@ import { useOnboardingStore } from "../../src/stores/onboarding";
 const METHOD_DESCRIPTIONS: Record<string, string> = {
   mat: "Floor-based exercises using body weight",
   reformer: "Spring-based resistance training on the reformer machine",
-  chair: "Compact equipment for seated and standing exercises",
-  tower: "Wall-mounted springs for vertical resistance work",
-  barrel: "Curved surfaces for spinal articulation and stretching",
-  ring: "Flexible ring for added resistance to mat exercises",
-  band: "Resistance band exercises for strength and flexibility",
-  foam_roller: "Self-massage and balance work on a foam roller",
+  "x-reformer": "Advanced reformer work with cross-training techniques",
 };
 
 export default function PracticeScreen() {
