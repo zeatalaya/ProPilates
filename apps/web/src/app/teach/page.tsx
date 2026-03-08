@@ -8,7 +8,8 @@ import {
   SkipForward,
   SkipBack,
   ArrowLeft,
-  Volume2,
+  Music,
+  Wifi,
 } from "lucide-react";
 import { useTeachingModeStore } from "@/stores/teachingMode";
 import { useClassBuilderStore } from "@/stores/classBuilder";
@@ -45,8 +46,13 @@ export default function TeachPage() {
   } = useTeachingModeStore();
 
   const spotify = useSpotifyStore();
-  const { togglePlay: toggleSpotify } = useSpotifyPlayer();
+  const {
+    togglePlay: toggleSpotify,
+    nextTrack,
+    previousTrack,
+  } = useSpotifyPlayer();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevIsPlayingRef = useRef(isPlaying);
 
   // Load blocks from builder on mount
   useEffect(() => {
@@ -64,6 +70,19 @@ export default function TeachPage() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isPlaying, tick]);
+
+  // Sync Spotify playback with class timer
+  useEffect(() => {
+    if (prevIsPlayingRef.current !== isPlaying && spotify.isReady) {
+      // Class play state changed — sync Spotify
+      if (isPlaying && !spotify.isPlaying) {
+        toggleSpotify(); // resume Spotify when class plays
+      } else if (!isPlaying && spotify.isPlaying) {
+        toggleSpotify(); // pause Spotify when class pauses
+      }
+    }
+    prevIsPlayingRef.current = isPlaying;
+  }, [isPlaying, spotify.isReady, spotify.isPlaying, toggleSpotify]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -144,7 +163,7 @@ export default function TeachPage() {
 
           <div className="mt-8 text-center">
             <h1 className="text-3xl font-bold">
-              {exercise?.exercise?.name ?? "—"}
+              {exercise?.exercise?.name ?? "\u2014"}
             </h1>
             <div className="mt-2 flex justify-center gap-2">
               {exercise?.exercise && (
@@ -180,7 +199,7 @@ export default function TeachPage() {
           </div>
         </div>
 
-        {/* Right sidebar: next exercise + block progress */}
+        {/* Right sidebar: next exercise + block progress + Spotify */}
         <div className="w-72 space-y-6">
           {/* Block progress */}
           <div className="glass-card p-4">
@@ -188,7 +207,7 @@ export default function TeachPage() {
               Current Block
             </h3>
             <div className="text-lg font-semibold">
-              {block?.name ?? "—"}
+              {block?.name ?? "\u2014"}
             </div>
             <div className="mt-3 space-y-1">
               {block?.exercises.map((ex, i) => (
@@ -238,20 +257,91 @@ export default function TeachPage() {
             </div>
           )}
 
-          {/* Spotify mini player */}
-          {spotify.isReady && spotify.currentTrack && (
+          {/* Spotify Player */}
+          {spotify.isReady ? (
             <div className="glass-card p-4">
-              <div className="flex items-center gap-3">
-                <Volume2 size={16} className="text-emerald-400" />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">
-                    {spotify.currentTrack.name}
-                  </div>
-                  <div className="truncate text-xs text-text-muted">
-                    {spotify.currentTrack.artist}
-                  </div>
+              <div className="flex items-center gap-2 mb-3">
+                <Music size={14} className="text-emerald-400" />
+                <span className="text-xs font-semibold text-text-secondary">
+                  Now Playing
+                </span>
+                <div className="ml-auto flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 </div>
               </div>
+
+              {spotify.currentTrack ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    {spotify.currentTrack.image_url && (
+                      <img
+                        src={spotify.currentTrack.image_url}
+                        alt=""
+                        className="w-12 h-12 rounded"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
+                        {spotify.currentTrack.name}
+                      </div>
+                      <div className="truncate text-xs text-text-muted">
+                        {spotify.currentTrack.artist}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center gap-4 mt-3">
+                    <button
+                      className="text-text-secondary hover:text-white transition-colors"
+                      onClick={previousTrack}
+                    >
+                      <SkipBack size={16} />
+                    </button>
+                    <button
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
+                      onClick={toggleSpotify}
+                    >
+                      {spotify.isPlaying ? (
+                        <Pause size={16} />
+                      ) : (
+                        <Play size={16} className="ml-0.5" />
+                      )}
+                    </button>
+                    <button
+                      className="text-text-secondary hover:text-white transition-colors"
+                      onClick={nextTrack}
+                    >
+                      <SkipForward size={16} />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-2">
+                  <p className="text-xs text-text-muted">
+                    No track playing. Select a playlist in the Builder.
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : spotify.accessToken ? (
+            <div className="glass-card p-4 text-center">
+              <Music size={20} className="text-emerald-400 mx-auto mb-2 animate-pulse" />
+              <p className="text-xs text-text-muted">
+                Connecting to Spotify...
+              </p>
+            </div>
+          ) : (
+            <div className="glass-card p-4 text-center">
+              <Music size={20} className="text-text-muted mx-auto mb-2" />
+              <p className="text-xs text-text-muted mb-2">
+                Music not connected
+              </p>
+              <a
+                href="/api/auth/spotify"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 transition-colors"
+              >
+                <Wifi size={12} />
+                Connect Spotify
+              </a>
             </div>
           )}
         </div>
