@@ -1,87 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { Crown, CreditCard, CheckCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle } from "lucide-react";
+import {
+  CrossmintHostedCheckout,
+  CrossmintCheckoutProvider,
+  useCrossmintCheckout,
+} from "@crossmint/client-sdk-react-ui";
 import { useAuthStore } from "@/stores/auth";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+
+const CROSSMINT_COLLECTION_ID =
+  process.env.NEXT_PUBLIC_CROSSMINT_COLLECTION_ID ?? "";
 
 interface Props {
   instructorId: string;
 }
 
-const CROSSMINT_COLLECTION_ID =
-  process.env.NEXT_PUBLIC_CROSSMINT_COLLECTION_ID ?? "";
-const CROSSMINT_PROJECT_ID =
-  process.env.NEXT_PUBLIC_CROSSMINT_PROJECT_ID ?? "";
-const CROSSMINT_ENVIRONMENT =
-  (process.env.NEXT_PUBLIC_CROSSMINT_ENVIRONMENT as "staging" | "production") ??
-  "staging";
-
-export function PremiumCheckout({ instructorId }: Props) {
+function CheckoutInner({ instructorId }: Props) {
   const { setTier } = useAuthStore();
-  const [status, setStatus] = useState<
-    "idle" | "processing" | "success" | "error"
-  >("idle");
+  const { order } = useCrossmintCheckout();
+  const [activated, setActivated] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  async function handleUpgrade() {
-    setStatus("processing");
-    setErrorMsg("");
-
-    try {
-      if (CROSSMINT_COLLECTION_ID && CROSSMINT_PROJECT_ID) {
-        // Use Crossmint hosted checkout for credit card payment
-        // Opens a new window to Crossmint's checkout page
-        const crossmintDomain =
-          CROSSMINT_ENVIRONMENT === "staging"
-            ? "https://staging.crossmint.com"
-            : "https://www.crossmint.com";
-        const checkoutUrl = new URL(`${crossmintDomain}/checkout/mint`);
-        checkoutUrl.searchParams.set("projectId", CROSSMINT_PROJECT_ID);
-        checkoutUrl.searchParams.set("collectionId", CROSSMINT_COLLECTION_ID);
-        checkoutUrl.searchParams.set("environment", CROSSMINT_ENVIRONMENT);
-        checkoutUrl.searchParams.set(
-          "mintConfig",
-          JSON.stringify({
-            type: "managed",
-            totalPrice: "4.99",
-            currency: "usd",
-          }),
-        );
-
-        // Open Crossmint checkout in a new window
-        const checkoutWindow = window.open(
-          checkoutUrl.toString(),
-          "crossmint-checkout",
-          "width=500,height=700",
-        );
-
-        // Poll for completion or listen for window close
-        const pollInterval = setInterval(() => {
-          if (checkoutWindow?.closed) {
-            clearInterval(pollInterval);
-            // After checkout window closes, assume success and update status
-            // In production, use webhooks to confirm payment
-            activatePremium();
-          }
-        }, 1000);
-
-        return; // Don't set status yet, wait for window close
-      }
-
-      // Demo mode: simulate successful purchase
-      await new Promise((r) => setTimeout(r, 1500));
-      await activatePremium();
-    } catch (err: any) {
-      setStatus("error");
-      setErrorMsg(err.message || "Purchase failed. Please try again.");
+  useEffect(() => {
+    if (order?.phase === "completed" && !activated) {
+      activatePremium();
     }
-  }
+  }, [order?.phase, activated]);
 
   async function activatePremium() {
     try {
       if (isSupabaseConfigured) {
-        // Create subscription record
         const { error: subError } = await supabase
           .from("subscriptions")
           .insert({
@@ -97,7 +47,6 @@ export function PremiumCheckout({ instructorId }: Props) {
 
         if (subError) throw subError;
 
-        // Update instructor tier
         const { error: updateError } = await supabase
           .from("instructors")
           .update({ tier: "premium" })
@@ -107,20 +56,17 @@ export function PremiumCheckout({ instructorId }: Props) {
       }
 
       setTier("premium");
-      setStatus("success");
+      setActivated(true);
     } catch (err: any) {
-      setStatus("error");
       setErrorMsg(err.message || "Failed to activate premium.");
     }
   }
 
-  if (status === "success") {
+  if (activated) {
     return (
       <div className="text-center">
         <CheckCircle size={32} className="mx-auto mb-2 text-emerald-400" />
-        <p className="font-semibold text-emerald-400">
-          Premium Activated!
-        </p>
+        <p className="font-semibold text-emerald-400">Premium Activated!</p>
         <p className="text-sm text-text-secondary">
           You now have access to all premium features.
         </p>
@@ -138,9 +84,7 @@ export function PremiumCheckout({ instructorId }: Props) {
       <div className="mb-3 rounded-lg border border-violet-500/20 bg-violet-500/5 p-3">
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-semibold text-text-primary">
-              Premium Plan
-            </div>
+            <div className="font-semibold text-text-primary">Premium Plan</div>
             <div className="text-sm text-text-secondary">
               All features included
             </div>
@@ -152,31 +96,42 @@ export function PremiumCheckout({ instructorId }: Props) {
         </div>
       </div>
 
-      {errorMsg && (
-        <p className="mb-2 text-sm text-red-400">{errorMsg}</p>
-      )}
+      {errorMsg && <p className="mb-2 text-sm text-red-400">{errorMsg}</p>}
 
-      <button
+      <CrossmintHostedCheckout
+        lineItems={{
+          collectionLocator: `crossmint:${CROSSMINT_COLLECTION_ID}`,
+          callData: {
+            totalPrice: "4.99",
+            quantity: 1,
+          },
+        }}
+        payment={{
+          crypto: { enabled: true },
+          fiat: { enabled: true },
+        }}
         className="btn-primary w-full text-sm"
-        onClick={handleUpgrade}
-        disabled={status === "processing"}
-      >
-        {status === "processing" ? (
-          <>
-            <Loader2 size={16} className="animate-spin" />
-            Processing...
-          </>
-        ) : (
-          <>
-            <CreditCard size={16} />
-            Upgrade to Premium
-          </>
-        )}
-      </button>
+      />
 
       <p className="mt-2 text-center text-xs text-text-muted">
-        Secure payment via Crossmint. Pay with credit card.
+        Secure payment via Crossmint. Pay with credit card or crypto.
       </p>
     </div>
+  );
+}
+
+export function PremiumCheckout({ instructorId }: Props) {
+  if (!CROSSMINT_COLLECTION_ID) {
+    return (
+      <p className="text-sm text-text-muted">
+        Payment not configured. Contact support.
+      </p>
+    );
+  }
+
+  return (
+    <CrossmintCheckoutProvider>
+      <CheckoutInner instructorId={instructorId} />
+    </CrossmintCheckoutProvider>
   );
 }
