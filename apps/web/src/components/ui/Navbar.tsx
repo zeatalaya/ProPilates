@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   Layers,
+  BookOpen,
   Play,
   ShoppingBag,
   FolderOpen,
@@ -22,6 +23,7 @@ import { useOAuth3 } from "@/hooks/useOAuth3";
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/builder", label: "Builder", icon: Layers },
+  { href: "/templates", label: "Templates", icon: BookOpen },
   { href: "/teach", label: "Teach", icon: Play },
   { href: "/marketplace", label: "Market", icon: ShoppingBag },
   { href: "/portfolio", label: "Portfolio", icon: FolderOpen },

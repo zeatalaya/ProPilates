@@ -23,6 +23,12 @@ async function seed() {
       description: ex.description,
       cues: ex.cues,
       default_duration: ex.default_duration,
+      objective: ex.objective,
+      apparatus: ex.apparatus,
+      start_position: ex.start_position,
+      movement: ex.movement,
+      pace: ex.pace,
+      school: ex.school,
     })),
     { onConflict: "name" },
   );

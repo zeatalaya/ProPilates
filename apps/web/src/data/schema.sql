@@ -62,10 +62,12 @@ create table classes (
   is_public         boolean not null default false,
   price             numeric(12,6),
   playlist_id       uuid,
+  is_template       boolean not null default false,
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now()
 );
 create index idx_classes_instructor on classes(instructor_id);
+create index idx_classes_template on classes(is_template) where is_template = true;
 
 -- ── Class Blocks ──
 create table class_blocks (

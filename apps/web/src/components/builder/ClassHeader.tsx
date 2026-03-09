@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Play, Save, Clock } from "lucide-react";
+import { Play, Save, Clock, BookOpen } from "lucide-react";
 import { useClassBuilderStore } from "@/stores/classBuilder";
 import { useAuthStore } from "@/stores/auth";
 import { formatDuration } from "@/lib/utils";
@@ -12,6 +12,9 @@ const METHODS = [
   { value: "mat", label: "Mat" },
   { value: "reformer", label: "Reformer" },
   { value: "x-reformer", label: "x-Reformer" },
+  { value: "chair", label: "Chair" },
+  { value: "tower", label: "Tower" },
+  { value: "barrel", label: "Barrel" },
 ];
 
 const DIFFICULTIES = [
@@ -120,6 +123,14 @@ export function ClassHeader() {
         <Clock size={14} />
         {formatDuration(totalSec)}
       </div>
+
+      <button
+        className="btn-secondary text-sm"
+        onClick={() => router.push("/templates")}
+      >
+        <BookOpen size={14} />
+        Templates
+      </button>
 
       <button
         className="btn-secondary text-sm"

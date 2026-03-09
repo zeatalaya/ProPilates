@@ -1,6 +1,6 @@
 // ── Core domain types ──
 
-export type PilatesMethod = "mat" | "reformer" | "x-reformer";
+export type PilatesMethod = "mat" | "reformer" | "x-reformer" | "chair" | "tower" | "barrel" | "ring" | "band" | "foam_roller";
 
 export type ClassType = "private" | "duet" | "group" | "virtual";
 export type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -22,6 +22,8 @@ export type ExerciseCategory =
   | "cooldown"
   | "flow"
   | "cardio";
+export type ExercisePace = "deliberate" | "moderate" | "flowing" | "dynamic";
+export type PilatesSchool = "classical" | "basi" | "stott" | "romana" | "fletcher" | "polestar" | "balanced_body" | "contemporary";
 export type Tier = "free" | "premium";
 export type VerificationProvider =
   | "basi"
@@ -62,6 +64,12 @@ export interface Exercise {
   default_duration: number;
   image_url: string | null;
   video_url: string | null;
+  objective: string | null;
+  apparatus: string | null;
+  start_position: string | null;
+  movement: string[] | null;
+  pace: ExercisePace | null;
+  school: PilatesSchool | null;
 }
 
 export interface ClassBlock {
@@ -94,6 +102,7 @@ export interface PilatesClass {
   difficulty: Difficulty;
   duration_minutes: number;
   is_public: boolean;
+  is_template: boolean;
   price: number | null;
   playlist_id: string | null;
   blocks: ClassBlock[];
