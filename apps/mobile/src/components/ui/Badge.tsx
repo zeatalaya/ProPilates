@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text } from "react-native";
 import { cn } from "../../lib/cn";
 
-type Variant = "violet" | "emerald" | "blue" | "gray" | "red";
+type Variant = "violet" | "emerald" | "blue" | "gray" | "red" | "amber";
 
 const variantStyles: Record<Variant, string> = {
   violet: "bg-violet-500/20 border-violet-500/30",
@@ -10,6 +10,7 @@ const variantStyles: Record<Variant, string> = {
   blue: "bg-blue-500/20 border-blue-500/30",
   gray: "bg-gray-500/20 border-gray-500/30",
   red: "bg-red-500/20 border-red-500/30",
+  amber: "bg-amber-500/20 border-amber-500/30",
 };
 
 const textStyles: Record<Variant, string> = {
@@ -18,6 +19,7 @@ const textStyles: Record<Variant, string> = {
   blue: "text-blue-400",
   gray: "text-gray-400",
   red: "text-red-400",
+  amber: "text-amber-400",
 };
 
 interface BadgeProps {

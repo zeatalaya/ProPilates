@@ -2,6 +2,7 @@ import React from "react";
 import { Tabs } from "expo-router";
 import {
   Layers,
+  BookOpen,
   Play,
   ShoppingBag,
   Briefcase,
@@ -31,6 +32,15 @@ export default function TabsLayout() {
           title: "Builder",
           tabBarIcon: ({ color, size }) => (
             <Layers size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="templates"
+        options={{
+          title: "Templates",
+          tabBarIcon: ({ color, size }) => (
+            <BookOpen size={size} color={color} />
           ),
         }}
       />

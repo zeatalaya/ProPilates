@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Navbar } from "@/components/ui/Navbar";
+import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({
@@ -27,7 +28,8 @@ export default function RootLayout({
       <body className={`${inter.variable} ${jetbrains.variable} font-sans`}>
         <Providers>
           <Navbar />
-          <main className="min-h-screen pt-16">{children}</main>
+          <main className="min-h-screen pt-16 pb-20 md:pb-0">{children}</main>
+          <MobileBottomNav />
         </Providers>
       </body>
     </html>
