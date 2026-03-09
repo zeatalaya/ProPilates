@@ -28,6 +28,41 @@ interface SpotifyPlaylist {
   uri: string;
 }
 
+/** Helper: make a Spotify API request with automatic token refresh on 401 */
+async function spotifyFetch(
+  url: string,
+  options: RequestInit = {},
+): Promise<Response> {
+  const store = useSpotifyStore.getState();
+  const token = await store.getValidToken();
+  if (!token) throw new Error("No Spotify token available");
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  // If 401, try refreshing the token once and retry
+  if (res.status === 401) {
+    console.log("[Spotify] Got 401, attempting token refresh...");
+    const newToken = await store.refreshAccessToken();
+    if (newToken) {
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${newToken}`,
+        },
+      });
+    }
+  }
+
+  return res;
+}
+
 export function SpotifyPanel() {
   const spotify = useSpotifyStore();
   const { togglePlay, nextTrack, previousTrack } = useSpotifyPlayer();
@@ -48,9 +83,9 @@ export function SpotifyPanel() {
     setLoadingPlaylists(true);
     setError(null);
     try {
-      const res = await fetch("https://api.spotify.com/v1/me/playlists?limit=50", {
-        headers: { Authorization: `Bearer ${spotify.accessToken}` },
-      });
+      const res = await spotifyFetch(
+        "https://api.spotify.com/v1/me/playlists?limit=50",
+      );
       if (res.ok) {
         const data = await res.json();
         setPlaylists(
@@ -90,14 +125,11 @@ export function SpotifyPanel() {
     setSelectedPlaylistUri(uri);
     setError(null);
     try {
-      const res = await fetch(
+      const res = await spotifyFetch(
         `https://api.spotify.com/v1/me/player/play?device_id=${spotify.deviceId}`,
         {
           method: "PUT",
-          headers: {
-            Authorization: `Bearer ${spotify.accessToken}`,
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ context_uri: uri }),
         },
       );
@@ -112,7 +144,7 @@ export function SpotifyPanel() {
           errMsg = errText;
         }
         if (res.status === 403) {
-          setError(`Playback failed: ${errMsg || "Spotify Premium may be required."}`);
+          setError(`Playback failed: ${errMsg || "permission denied — try reconnecting Spotify."}`);
         } else if (res.status === 404) {
           setError(`Player not found: ${errMsg || "try refreshing the page."}`);
         } else {
@@ -135,14 +167,11 @@ export function SpotifyPanel() {
     try {
       // Use POST /me/playlists (the /users/{id}/playlists endpoint is
       // deprecated for development-mode apps since the Feb 2026 API changes)
-      const createRes = await fetch(
+      const createRes = await spotifyFetch(
         "https://api.spotify.com/v1/me/playlists",
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${spotify.accessToken}`,
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: newPlaylistName.trim(),
             description: "Created with ProPilates",

@@ -26,9 +26,10 @@ export default function BuilderPage() {
     const params = new URLSearchParams(hash.substring(1));
     const accessToken = params.get("access_token");
     const refreshToken = params.get("refresh_token");
+    const expiresIn = params.get("expires_in");
 
     if (accessToken && refreshToken) {
-      setTokens(accessToken, refreshToken);
+      setTokens(accessToken, refreshToken, expiresIn ? Number(expiresIn) : undefined);
     }
 
     // Clean up the hash from the URL

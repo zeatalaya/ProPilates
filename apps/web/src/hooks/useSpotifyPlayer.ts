@@ -49,18 +49,47 @@ export function useSpotifyPlayer() {
     window.onSpotifyWebPlaybackSDKReady = () => {
       const player = new window.Spotify.Player({
         name: "ProPilates Studio",
-        getOAuthToken: (cb) => cb(accessToken),
+        // IMPORTANT: Always read the LATEST token from the store.
+        // Using a closure over `accessToken` would capture a stale value
+        // after token refresh.
+        getOAuthToken: async (cb) => {
+          const token = await useSpotifyStore.getState().getValidToken();
+          if (token) cb(token);
+        },
         volume: volume / 100,
       });
 
       player.addListener("ready", ({ device_id }: { device_id: string }) => {
+        console.log("[Spotify] Player ready, device:", device_id);
         setDeviceId(device_id);
         setReady(true);
       });
 
       player.addListener("not_ready", () => {
+        console.log("[Spotify] Player not ready");
         setReady(false);
       });
+
+      player.addListener(
+        "initialization_error",
+        ({ message }: { message: string }) => {
+          console.error("[Spotify] Init error:", message);
+        },
+      );
+
+      player.addListener(
+        "authentication_error",
+        ({ message }: { message: string }) => {
+          console.error("[Spotify] Auth error:", message);
+        },
+      );
+
+      player.addListener(
+        "account_error",
+        ({ message }: { message: string }) => {
+          console.error("[Spotify] Account error:", message);
+        },
+      );
 
       player.addListener("player_state_changed", (state: any) => {
         if (!state) return;
@@ -87,7 +116,10 @@ export function useSpotifyPlayer() {
       playerRef.current?.disconnect();
       script.remove();
     };
-  }, [accessToken, setDeviceId, setReady, setPlaying, setCurrentTrack, volume]);
+    // Only re-init when accessToken changes (not on volume change which would
+    // disconnect/reconnect the player unnecessarily)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken, setDeviceId, setReady, setPlaying, setCurrentTrack]);
 
   const togglePlay = useCallback(() => {
     playerRef.current?.togglePlay();
