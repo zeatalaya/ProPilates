@@ -159,12 +159,19 @@ export function SpotifyPanel() {
         // Refresh playlists
         await fetchPlaylists();
       } else {
-        const errData = await createRes.json().catch(() => ({}));
-        console.error("[Spotify] Create playlist failed:", createRes.status, errData);
+        const errText = await createRes.text().catch(() => "");
+        console.error("[Spotify] Create playlist failed:", createRes.status, errText);
+        let errMsg = "";
+        try {
+          const errJson = JSON.parse(errText);
+          errMsg = errJson?.error?.message || errJson?.error?.reason || errText;
+        } catch {
+          errMsg = errText;
+        }
         if (createRes.status === 403) {
-          setError("Permission denied — click the ↻ icon to reconnect Spotify with updated permissions.");
+          setError(`Permission denied: ${errMsg}`);
         } else {
-          setError(`Failed to create playlist (${createRes.status})`);
+          setError(`Failed to create playlist (${createRes.status}): ${errMsg}`);
         }
       }
     } catch (err) {
