@@ -14,6 +14,9 @@ const SESSION_KEY = "propilates_oauth3_session";
 const PKCE_KEY = "propilates_pkce_verifier";
 const STATE_KEY = "propilates_oauth_state";
 
+/** Module-level lock to prevent multiple hook instances from exchanging the same code */
+let codeExchangeInProgress = false;
+
 interface OAuth3Session {
   accessToken: string;
   refreshToken?: string;
@@ -82,8 +85,10 @@ export function useOAuth3() {
       }
     } else if (oauthResult === "code") {
       // Code exchange flow — server returned the code for client-side PKCE exchange
+      // Guard: multiple useOAuth3 instances (Navbar + page) may both detect the code
       const codeData = params.get("code_data");
-      if (codeData) {
+      if (codeData && !codeExchangeInProgress) {
+        codeExchangeInProgress = true;
         handleCodeExchange(codeData);
       }
     }
@@ -147,6 +152,8 @@ export function useOAuth3() {
       window.history.replaceState({}, "", window.location.pathname);
     } catch (err) {
       console.error("Code exchange failed:", err);
+    } finally {
+      codeExchangeInProgress = false;
     }
   }
 

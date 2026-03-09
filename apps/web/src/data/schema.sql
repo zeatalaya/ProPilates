@@ -129,7 +129,9 @@ create table subscriptions (
   tier            tier_level not null default 'premium',
   started_at      timestamptz not null default now(),
   expires_at      timestamptz,
-  tx_hash         text
+  tx_hash         text,
+  payment_method  text,
+  amount_usdc     numeric(10,2)
 );
 
 -- ── RLS policies ──

@@ -23,11 +23,33 @@ import { PremiumCheckout } from "@/components/profile/PremiumCheckout";
 import type { Verification, Subscription } from "@/types";
 
 export default function ProfilePage() {
-  const { instructor, xionAddress, tier } = useAuthStore();
+  const { instructor, xionAddress, tier, isConnected, setInstructor } = useAuthStore();
   const [verifications, setVerifications] = useState<Verification[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Restore instructor from Supabase when xionAddress is available but instructor is null
+  // (happens after page refresh — useOAuth3 restores xionAddress from localStorage but
+  //  instructor data is only in Zustand memory)
+  useEffect(() => {
+    if (instructor || !xionAddress) return;
+    async function restoreInstructor() {
+      try {
+        const { data } = await supabase
+          .from("instructors")
+          .select("*")
+          .eq("xion_address", xionAddress)
+          .maybeSingle();
+        if (data) {
+          setInstructor(data);
+        }
+      } catch (err) {
+        console.error("Failed to restore instructor:", err);
+      }
+    }
+    restoreInstructor();
+  }, [instructor, xionAddress, setInstructor]);
 
   useEffect(() => {
     if (!instructor) return;
@@ -69,7 +91,7 @@ export default function ProfilePage() {
     load();
   }, [instructor, xionAddress]);
 
-  if (!instructor) {
+  if (!instructor && !isConnected) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <div className="text-center">
@@ -80,7 +102,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (isLoading) {
+  if (!instructor || isLoading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <Loader2 size={24} className="animate-spin text-violet-400" />
