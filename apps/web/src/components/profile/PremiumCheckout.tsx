@@ -32,9 +32,11 @@ export function PremiumCheckout({ instructorId }: Props) {
       if (CROSSMINT_COLLECTION_ID && CROSSMINT_PROJECT_ID) {
         // Use Crossmint hosted checkout for credit card payment
         // Opens a new window to Crossmint's checkout page
-        const checkoutUrl = new URL(
-          `https://www.crossmint.com/checkout/mint`,
-        );
+        const crossmintDomain =
+          CROSSMINT_ENVIRONMENT === "staging"
+            ? "https://staging.crossmint.com"
+            : "https://www.crossmint.com";
+        const checkoutUrl = new URL(`${crossmintDomain}/checkout/mint`);
         checkoutUrl.searchParams.set("projectId", CROSSMINT_PROJECT_ID);
         checkoutUrl.searchParams.set("collectionId", CROSSMINT_COLLECTION_ID);
         checkoutUrl.searchParams.set("environment", CROSSMINT_ENVIRONMENT);
