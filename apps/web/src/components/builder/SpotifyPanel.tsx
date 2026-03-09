@@ -316,7 +316,7 @@ export function SpotifyPanel() {
     setAddingTrackId(trackId);
     try {
       const res = await spotifyFetch(
-        `https://api.spotify.com/v1/playlists/${selectedPlaylistId}/tracks`,
+        `https://api.spotify.com/v1/playlists/${selectedPlaylistId}/items`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
