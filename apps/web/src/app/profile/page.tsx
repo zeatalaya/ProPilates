@@ -189,7 +189,7 @@ export default function ProfilePage() {
                 )}
               </div>
             ) : (
-              <PremiumCheckout instructorId={instructor.id} />
+              <PremiumCheckout instructorId={instructor.id} xionAddress={xionAddress} />
             )}
           </CardBody>
         </Card>

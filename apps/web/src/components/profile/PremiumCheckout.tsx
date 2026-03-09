@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle } from "lucide-react";
 import {
-  CrossmintHostedCheckout,
+  CrossmintEmbeddedCheckout,
   CrossmintCheckoutProvider,
   useCrossmintCheckout,
 } from "@crossmint/client-sdk-react-ui";
@@ -15,9 +15,10 @@ const CROSSMINT_COLLECTION_ID =
 
 interface Props {
   instructorId: string;
+  xionAddress?: string | null;
 }
 
-function CheckoutInner({ instructorId }: Props) {
+function CheckoutInner({ instructorId, xionAddress }: Props) {
   const { setTier } = useAuthStore();
   const { order } = useCrossmintCheckout();
   const [activated, setActivated] = useState(false);
@@ -98,7 +99,7 @@ function CheckoutInner({ instructorId }: Props) {
 
       {errorMsg && <p className="mb-2 text-sm text-red-400">{errorMsg}</p>}
 
-      <CrossmintHostedCheckout
+      <CrossmintEmbeddedCheckout
         lineItems={{
           collectionLocator: `crossmint:${CROSSMINT_COLLECTION_ID}`,
           callData: {
@@ -109,18 +110,34 @@ function CheckoutInner({ instructorId }: Props) {
         payment={{
           crypto: { enabled: true },
           fiat: { enabled: true },
+          defaultMethod: "fiat",
         }}
-        className="btn-primary w-full text-sm"
+        {...(xionAddress
+          ? {
+              recipient: { walletAddress: xionAddress },
+            }
+          : {})}
+        appearance={{
+          variables: {
+            colors: {
+              backgroundPrimary: "#1a1a2e",
+              textPrimary: "#e2e8f0",
+              textSecondary: "#94a3b8",
+              borderPrimary: "#334155",
+              accent: "#8b5cf6",
+            },
+            borderRadius: "8px",
+          },
+          rules: {
+            DestinationInput: { display: "hidden" },
+          },
+        }}
       />
-
-      <p className="mt-2 text-center text-xs text-text-muted">
-        Secure payment via Crossmint. Pay with credit card or crypto.
-      </p>
     </div>
   );
 }
 
-export function PremiumCheckout({ instructorId }: Props) {
+export function PremiumCheckout({ instructorId, xionAddress }: Props) {
   if (!CROSSMINT_COLLECTION_ID) {
     return (
       <p className="text-sm text-text-muted">
@@ -131,7 +148,7 @@ export function PremiumCheckout({ instructorId }: Props) {
 
   return (
     <CrossmintCheckoutProvider>
-      <CheckoutInner instructorId={instructorId} />
+      <CheckoutInner instructorId={instructorId} xionAddress={xionAddress} />
     </CrossmintCheckoutProvider>
   );
 }
