@@ -126,20 +126,10 @@ export function SpotifyPanel() {
     setCreatingPlaylist(true);
     setError(null);
     try {
-      // Get current user ID
-      const meRes = await fetch("https://api.spotify.com/v1/me", {
-        headers: { Authorization: `Bearer ${spotify.accessToken}` },
-      });
-      if (!meRes.ok) {
-        console.error("[Spotify] Get user failed:", meRes.status);
-        setError("Failed to get user info — try reconnecting Spotify.");
-        return;
-      }
-      const me = await meRes.json();
-
-      // Create the playlist
+      // Use POST /me/playlists (the /users/{id}/playlists endpoint is
+      // deprecated for development-mode apps since the Feb 2026 API changes)
       const createRes = await fetch(
-        `https://api.spotify.com/v1/users/${me.id}/playlists`,
+        "https://api.spotify.com/v1/me/playlists",
         {
           method: "POST",
           headers: {
