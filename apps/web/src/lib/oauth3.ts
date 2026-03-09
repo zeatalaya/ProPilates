@@ -1,10 +1,44 @@
 /**
- * OAuth3 client for XION authentication via Abstraxion portal.
- * Integrates with XION's OAuth2 Abstraxion service for account creation.
- * Provides standard OAuth 2.1 PKCE flow for social login + XION account.
+ * XION Abstraxion OAuth2 client.
  *
- * Default: https://oauth2.testnet.burnt.com/
+ * Handles user authentication and Meta Account (abstract account) creation
+ * via the XION Abstraxion OAuth2 portal.
+ *
+ * ## Setup Prerequisites
+ *
+ * Before this works, you need:
+ *
+ * 1. **Deploy a Treasury contract** at https://dev.testnet.burnt.com
+ *    - Configure Fee Grant: BasicAllowance with spend limit (e.g. 1000uxion)
+ *    - Configure Authorization Grants:
+ *      - MsgSend (for USDC transfers between users)
+ *      - MsgExecuteContract for RECLAIM_CONTRACT (credential verification)
+ *      - MsgExecuteContract for MARKETPLACE_CONTRACT (portfolio sales)
+ *    - Set Redirect URI to: {APP_URL}/api/auth/oauth3/callback
+ *    - Set Icon URL to your app logo
+ *    - Fund the Treasury with XION tokens for gas coverage
+ *
+ * 2. **Register an OAuth2 client** at https://oauth2.testnet.burnt.com/
+ *    - Select your Treasury contract address
+ *    - Save the Client ID (and Client Secret if confidential)
+ *
+ * 3. **Set environment variables**:
+ *    - NEXT_PUBLIC_OAUTH3_SERVER=https://oauth2.testnet.burnt.com
+ *    - NEXT_PUBLIC_OAUTH3_CLIENT_ID=<your-client-id>
+ *    - NEXT_PUBLIC_TREASURY_CONTRACT=<your-treasury-address>
+ *
+ * ## How It Works
+ *
+ * When a user authenticates via Abstraxion (Google, email, passkeys, or wallets),
+ * a Meta Account (abstract account) is automatically created for them on XION.
+ * The Treasury contract's grants determine what transactions your app can execute
+ * on behalf of the user (gasless, via Fee Grants + Authz).
+ *
+ * After auth, call `getMetaAccount()` to get the user's XION address,
+ * then use `xion-transactions.ts` to submit transactions.
+ *
  * Docs: https://docs.burnt.com/xion/developers/getting-started-advanced/your-first-dapp/build-oauth2-app-with-xion-auth
+ * Treasury: https://docs.burnt.com/xion/developers/getting-started-advanced/gasless-ux-and-permission-grants/treasury-contracts
  */
 
 const OAUTH3_SERVER =
@@ -42,6 +76,18 @@ export async function generatePKCE() {
 
 // ── Auth flow ──
 
+/**
+ * Build the Abstraxion authorize URL.
+ *
+ * The `xion:transactions:submit` scope allows submitting transactions
+ * through the Treasury contract's pre-approved grants (MsgSend,
+ * MsgExecuteContract for specific contracts).
+ *
+ * The Abstraxion portal handles:
+ * - User login (Google, email, passkeys, crypto wallets)
+ * - Meta Account (abstract account) creation on XION
+ * - Grant approval (user approves Treasury's permissions)
+ */
 export function getAuthorizeUrl(codeChallenge: string, state: string, provider?: string): string {
   const params = new URLSearchParams({
     response_type: "code",
@@ -77,18 +123,29 @@ export async function exchangeCodeForTokens(code: string, codeVerifier: string) 
   }>;
 }
 
-export async function getUserInfo(accessToken: string) {
-  const res = await fetch(`${OAUTH3_SERVER}/me`, {
+/**
+ * Fetch the authenticated user's Meta Account info from Abstraxion.
+ *
+ * Returns the user's XION address (Meta Account), which is the abstract
+ * account created automatically when the user first authenticates.
+ * This is the on-chain identity used for all transactions.
+ */
+export async function getMetaAccount(accessToken: string) {
+  const res = await fetch(`${OAUTH3_SERVER}/api/v1/me`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  if (!res.ok) throw new Error("Failed to fetch user info");
+  if (!res.ok) throw new Error("Failed to fetch Meta Account info");
   return res.json() as Promise<{
-    id: string;
-    email?: string;
-    name?: string;
-    xion_address?: string;
-    providers: Array<{ provider: string; email?: string }>;
+    id: string; // XION address (e.g. xion1abc...)
+    authenticators?: Array<{ type: string; id: string }>;
   }>;
+}
+
+/**
+ * @deprecated Use getMetaAccount instead — this used an older endpoint
+ */
+export async function getUserInfo(accessToken: string) {
+  return getMetaAccount(accessToken);
 }
 
 export async function refreshAccessToken(refreshToken: string) {

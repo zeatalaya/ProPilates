@@ -12,6 +12,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useAuthStore } from "@/stores/auth";
 import { buildSubmitProofMsg, RECLAIM_CONTRACT } from "@/contracts/reclaim";
+import { submitTransaction, buildReclaimVerifyMsg } from "@/lib/xion-transactions";
 import { truncateAddress } from "@/lib/utils";
 import type { VerificationProvider } from "@/types";
 
@@ -55,7 +56,7 @@ const PROVIDERS: ProviderOption[] = [
 type VerifyStatus = "idle" | "generating" | "proving" | "submitting" | "success" | "error";
 
 export default function VerifyPage() {
-  const { instructor, xionAddress } = useAuthStore();
+  const { instructor, xionAddress, oauthAccessToken } = useAuthStore();
   const [selectedProvider, setSelectedProvider] =
     useState<ProviderOption | null>(null);
   const [status, setStatus] = useState<VerifyStatus>("idle");
@@ -107,16 +108,24 @@ export default function VerifyPage() {
 
       if (!validateRes.ok) throw new Error("Server validation failed");
 
-      // Step 3: Submit proof on-chain
+      // Step 3: Submit proof on-chain via Abstraxion OAuth2 transaction API
       setStatus("submitting");
-      const msg = buildSubmitProofMsg(
-        xionAddress,
-        provider.id,
-        mockProofData,
-      );
 
-      // In production: execute via XION signing client
-      console.log("On-chain submit msg:", msg);
+      if (oauthAccessToken) {
+        // Submit via Treasury-granted MsgExecuteContract on Reclaim contract
+        const txMsg = buildReclaimVerifyMsg(
+          xionAddress,
+          instructor.id,
+          provider.id,
+          mockProofData,
+        );
+        const result = await submitTransaction(oauthAccessToken, [txMsg]);
+        console.log("On-chain tx result:", result);
+      } else {
+        // Fallback: log the message for manual submission
+        const msg = buildSubmitProofMsg(xionAddress, provider.id, mockProofData);
+        console.log("On-chain submit msg (no access token):", msg);
+      }
 
       setStatus("success");
     } catch (err: any) {

@@ -7,7 +7,7 @@ import {
   generatePKCE,
   getAuthorizeUrl,
   exchangeCodeForTokens,
-  getUserInfo,
+  getMetaAccount,
 } from "@/lib/oauth3";
 
 const SESSION_KEY = "propilates_oauth3_session";
@@ -19,10 +19,8 @@ interface OAuth3Session {
   refreshToken?: string;
   expiresAt: number;
   user: {
-    id: string;
-    email?: string;
-    name?: string;
-    xionAddress?: string;
+    /** XION Meta Account address (e.g. xion1abc...) — the user's on-chain identity */
+    xionAddress: string;
   };
 }
 
@@ -83,7 +81,7 @@ export function useOAuth3() {
         }
       }
     } else if (oauthResult === "code") {
-      // Code exchange flow — server returned the code for client-side exchange
+      // Code exchange flow — server returned the code for client-side PKCE exchange
       const codeData = params.get("code_data");
       if (codeData) {
         handleCodeExchange(codeData);
@@ -91,6 +89,19 @@ export function useOAuth3() {
     }
   }, [isInitialized, setXionAddress, setConnected, setOAuthAccessToken]);
 
+  /**
+   * Complete the OAuth2 PKCE code exchange flow:
+   *
+   * 1. Validate state (CSRF protection)
+   * 2. Exchange authorization code for access token (PKCE)
+   * 3. Call GET /api/v1/me on Abstraxion to get the user's Meta Account
+   *    → This returns the user's XION address (abstract account)
+   *    → The Meta Account is created automatically on first login
+   * 4. Store session with XION address for on-chain operations
+   *
+   * After this, the access token can be used with xion-transactions.ts
+   * to submit transactions (gasless, via Treasury contract grants).
+   */
   async function handleCodeExchange(codeDataStr: string) {
     try {
       const { code, state } = JSON.parse(decodeURIComponent(codeDataStr));
@@ -107,34 +118,30 @@ export function useOAuth3() {
         return;
       }
 
-      // Exchange code for tokens
+      // Step 1: Exchange authorization code for tokens
       const tokens = await exchangeCodeForTokens(code, verifier);
 
-      // Fetch user info with the access token
-      const userInfo = await getUserInfo(tokens.access_token);
+      // Step 2: Fetch user's Meta Account (abstract account) from Abstraxion
+      // GET /api/v1/me returns { id: "xion1abc..." }
+      // The Meta Account is created automatically when the user first authenticates
+      const metaAccount = await getMetaAccount(tokens.access_token);
 
       const newSession: OAuth3Session = {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiresAt: Date.now() + tokens.expires_in * 1000,
         user: {
-          id: userInfo.id,
-          email: userInfo.email,
-          name: userInfo.name,
-          xionAddress: userInfo.xion_address,
+          xionAddress: metaAccount.id, // The XION address (e.g. xion1abc...)
         },
       };
 
       setSession(newSession);
       setOAuthAccessToken(tokens.access_token);
       localStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
-
-      if (userInfo.xion_address) {
-        setXionAddress(userInfo.xion_address);
-      }
+      setXionAddress(metaAccount.id);
       setConnected(true);
 
-      // Clean up
+      // Clean up PKCE state
       sessionStorage.removeItem(PKCE_KEY);
       sessionStorage.removeItem(STATE_KEY);
       window.history.replaceState({}, "", window.location.pathname);
@@ -146,32 +153,35 @@ export function useOAuth3() {
   const login = useCallback(
     async (provider: string = "google") => {
       if (!isOAuth3Configured) {
-        // Demo mode: simulate login with XION account creation
+        // Demo mode: simulate Abstraxion login + Meta Account creation
+        const demoAddress =
+          "xion1demo" + Math.random().toString(36).slice(2, 12);
         const demoSession: OAuth3Session = {
           accessToken: "demo-token",
           expiresAt: Date.now() + 86400000,
           user: {
-            id: "demo-user",
-            email: "demo@propilates.app",
-            name: "Demo Instructor",
-            xionAddress: "xion1demo" + Math.random().toString(36).slice(2, 12),
+            xionAddress: demoAddress,
           },
         };
         setSession(demoSession);
         setOAuthAccessToken(demoSession.accessToken);
         localStorage.setItem(SESSION_KEY, JSON.stringify(demoSession));
-        setXionAddress(demoSession.user.xionAddress!);
+        setXionAddress(demoAddress);
         setConnected(true);
         return;
       }
 
-      // Generate PKCE + state
+      // Generate PKCE challenge + state for CSRF protection
       const { verifier, challenge } = await generatePKCE();
       const state = crypto.randomUUID();
       sessionStorage.setItem(PKCE_KEY, verifier);
       sessionStorage.setItem(STATE_KEY, state);
 
       // Redirect to Abstraxion OAuth2 portal
+      // The portal handles:
+      //   1. User login (Google, email, passkeys, crypto wallets)
+      //   2. Meta Account creation on XION (first time only)
+      //   3. Treasury grant approval (user approves the app's permissions)
       window.location.href = getAuthorizeUrl(challenge, state, provider);
     },
     [setXionAddress, setConnected, setOAuthAccessToken],
@@ -194,7 +204,9 @@ export function useOAuth3() {
     isOAuth3Configured,
     login,
     logout,
-    user: session?.user ?? null,
+    /** User's XION Meta Account address */
+    xionAddress: session?.user?.xionAddress ?? null,
+    /** OAuth2 access token for submitting transactions via Abstraxion */
     accessToken: session?.accessToken ?? null,
   };
 }
