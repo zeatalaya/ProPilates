@@ -112,7 +112,7 @@ function CheckoutInner({ instructorId, xionAddress }: Props) {
           fiat: { enabled: true },
           defaultMethod: "fiat",
         }}
-        {...(xionAddress
+        {...(xionAddress && !xionAddress.includes("demo")
           ? {
               recipient: { walletAddress: xionAddress },
             }
@@ -129,7 +129,9 @@ function CheckoutInner({ instructorId, xionAddress }: Props) {
             borderRadius: "8px",
           },
           rules: {
-            DestinationInput: { display: "hidden" },
+            ...(xionAddress && !xionAddress.includes("demo")
+              ? { DestinationInput: { display: "hidden" } }
+              : {}),
           },
         }}
       />
