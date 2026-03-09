@@ -21,5 +21,7 @@ export function getSpotifyAuthUrl(): string {
     "playlist-modify-private",
   ];
   const client = createSpotifyClient();
-  return client.createAuthorizeURL(scopes, "propilates-state");
+  // show_dialog=true forces Spotify to re-show the consent screen
+  // so users always grant the latest scopes (e.g. after we add new ones)
+  return client.createAuthorizeURL(scopes, "propilates-state", true);
 }
