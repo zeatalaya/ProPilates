@@ -44,6 +44,8 @@ export const CONTRACTS = {
   reclaim:
     process.env.NEXT_PUBLIC_RECLAIM_CONTRACT ??
     "xion1qf8jtznwf0tykpg7e65gwafwp47rwxl4x2g2kldvv357s6frcjlsh2m24e",
+  clearance: process.env.NEXT_PUBLIC_CLEARANCE_CONTRACT ?? "",
+  nft: process.env.NEXT_PUBLIC_NFT_CONTRACT ?? "",
 } as const;
 
 interface TransactionMessage {
@@ -161,6 +163,28 @@ export function buildReclaimVerifyMsg(
   return buildMsgExecuteContract(sender, CONTRACTS.reclaim, {
     verify_proof: {
       instructor,
+      provider,
+      claim_info: proofData.claimInfo,
+      signed_claim: proofData.signedClaim,
+    },
+  });
+}
+
+/**
+ * Submit a certification proof to mint a badge NFT via the clearance contract.
+ *
+ * Requires MsgExecuteContract grant for CLEARANCE_CONTRACT in the Treasury.
+ */
+export function buildClearanceMintMsg(
+  sender: string,
+  provider: string,
+  proofData: {
+    claimInfo: Record<string, unknown>;
+    signedClaim: Record<string, unknown>;
+  },
+): TransactionMessage {
+  return buildMsgExecuteContract(sender, CONTRACTS.clearance, {
+    submit_proof: {
       provider,
       claim_info: proofData.claimInfo,
       signed_claim: proofData.signedClaim,

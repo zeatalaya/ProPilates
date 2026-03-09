@@ -72,7 +72,10 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/onboarding" className="btn-primary px-8 py-3 text-lg">
+            <Link
+              href="/onboarding"
+              className="btn-primary px-8 py-3 text-lg"
+            >
               Get Started
               <ArrowRight size={18} />
             </Link>
@@ -148,7 +151,7 @@ export default function LandingPage() {
                   <span className="text-text-muted">Marketplace access</span>
                 </li>
               </ul>
-              <Link href="/onboarding" className="btn-secondary w-full">
+              <Link href="/onboarding" className="btn-secondary w-full text-center">
                 Start Free
               </Link>
             </div>
@@ -186,7 +189,7 @@ export default function LandingPage() {
                   On-chain credential badges
                 </li>
               </ul>
-              <Link href="/onboarding" className="btn-primary w-full">
+              <Link href="/onboarding" className="btn-primary w-full text-center">
                 Go Premium
               </Link>
             </div>

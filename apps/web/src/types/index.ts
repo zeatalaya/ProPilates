@@ -147,3 +147,20 @@ export interface MarketplaceListing {
   price: string; // uxion amount
   listed_at: string;
 }
+
+// ── Certification Badges ──
+export interface CertificationBadge {
+  tokenId: string;
+  owner: string;
+  provider: VerificationProvider;
+  certifiedAt: string;
+  txHash: string;
+  metadata: BadgeMetadata;
+}
+
+export interface BadgeMetadata {
+  name: string;
+  description: string;
+  image?: string;
+  attributes: Array<{ trait_type: string; value: string }>;
+}

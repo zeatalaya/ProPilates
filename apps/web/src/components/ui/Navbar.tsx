@@ -11,6 +11,7 @@ import {
   FolderOpen,
   User,
   ShieldCheck,
+  Award,
   ChevronDown,
   LogOut,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/portfolio", label: "Portfolio", icon: FolderOpen },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/verify", label: "Verify", icon: ShieldCheck },
+  { href: "/gallery", label: "Gallery", icon: Award },
 ];
 
 export function Navbar() {
@@ -53,7 +55,7 @@ export function Navbar() {
   }, [showDropdown]);
 
   // Hide navbar on landing and onboarding
-  if (pathname === "/" || pathname.startsWith("/onboarding")) return null;
+  if (pathname === "/" || pathname.startsWith("/onboarding") || pathname.startsWith("/badge/")) return null;
 
   function handleDisconnect() {
     setShowDropdown(false);
