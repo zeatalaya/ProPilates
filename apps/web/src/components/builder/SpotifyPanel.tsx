@@ -102,14 +102,21 @@ export function SpotifyPanel() {
         },
       );
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        console.error("[Spotify] Play failed:", res.status, errData);
+        const errText = await res.text().catch(() => "");
+        console.error("[Spotify] Play failed:", res.status, errText);
+        let errMsg = "";
+        try {
+          const errJson = JSON.parse(errText);
+          errMsg = errJson?.error?.message || errJson?.error?.reason || "";
+        } catch {
+          errMsg = errText;
+        }
         if (res.status === 403) {
-          setError("Playback failed — Spotify Premium is required.");
+          setError(`Playback failed: ${errMsg || "Spotify Premium may be required."}`);
         } else if (res.status === 404) {
-          setError("Player not found — try refreshing the page.");
+          setError(`Player not found: ${errMsg || "try refreshing the page."}`);
         } else {
-          setError(`Playback failed (${res.status})`);
+          setError(`Playback failed (${res.status}): ${errMsg}`);
         }
       }
     } catch (err) {
