@@ -23,18 +23,6 @@ const CLASS_TYPES: { value: ClassType; label: string }[] = [
   { value: "virtual", label: "Virtual" },
 ];
 
-const EQUIPMENT = [
-  "Reformer", "x-Reformer", "Mat", "Jumpboard",
-  "Reformer Box", "Rotation Disk", "Stability Ball",
-];
-
-const CERTIFICATIONS = [
-  "BASI Pilates", "STOTT Pilates", "Balanced Body", "Polestar Pilates",
-  "Peak Pilates", "Power Pilates", "Fletcher Pilates", "Romana\'s Pilates",
-  "PhysicalMind Institute", "Core Pilates NYC", "Club Pilates Training",
-  "ACE Pilates", "NASM Pilates",
-];
-
 function ToggleGroup({
   label,
   options,
@@ -78,7 +66,7 @@ export function StepPractice({ data, updateData, onNext, onPrev }: Props) {
       <div>
         <h2 className="text-2xl font-bold">Your Practice</h2>
         <p className="text-text-secondary">
-          What methods and equipment do you teach with?
+          What methods and class types do you teach?
         </p>
       </div>
 
@@ -101,26 +89,6 @@ export function StepPractice({ data, updateData, onNext, onPrev }: Props) {
           onToggle={(v) =>
             updateData({
               classTypes: toggleInArray(data.classTypes, v as ClassType),
-            })
-          }
-        />
-
-        <ToggleGroup
-          label="Equipment"
-          options={EQUIPMENT.map((e) => ({ value: e, label: e }))}
-          selected={data.equipment}
-          onToggle={(v) =>
-            updateData({ equipment: toggleInArray(data.equipment, v) })
-          }
-        />
-
-        <ToggleGroup
-          label="Certifications"
-          options={CERTIFICATIONS.map((c) => ({ value: c, label: c }))}
-          selected={data.certifications}
-          onToggle={(v) =>
-            updateData({
-              certifications: toggleInArray(data.certifications, v),
             })
           }
         />

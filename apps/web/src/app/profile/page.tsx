@@ -11,12 +11,15 @@ import {
   Zap,
   Crown,
   Loader2,
+  ArrowRight,
+  ExternalLink,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/lib/supabase";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { truncateAddress } from "@/lib/utils";
+import { PremiumCheckout } from "@/components/profile/PremiumCheckout";
 import type { Verification, Subscription } from "@/types";
 
 export default function ProfilePage() {
@@ -164,19 +167,12 @@ export default function ProfilePage() {
                 )}
               </div>
             ) : (
-              <div>
-                <p className="mb-3 text-text-secondary">
-                  Free tier — upgrade to save classes and monetize.
-                </p>
-                <button className="btn-primary text-sm">
-                  Upgrade to Premium
-                </button>
-              </div>
+              <PremiumCheckout instructorId={instructor.id} />
             )}
           </CardBody>
         </Card>
 
-        {/* Verifications */}
+        {/* Verifications / Certifications */}
         <Card className="md:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <h3 className="flex items-center gap-2 font-semibold">
@@ -189,10 +185,28 @@ export default function ProfilePage() {
           </CardHeader>
           <CardBody>
             {verifications.length === 0 ? (
-              <p className="text-text-muted">
-                No certifications verified yet. Use Reclaim Protocol to verify
-                your credentials on-chain.
-              </p>
+              <div className="rounded-lg border border-dashed border-violet-500/30 bg-violet-500/5 p-6 text-center">
+                <ShieldCheck
+                  size={40}
+                  className="mx-auto mb-3 text-violet-400"
+                />
+                <h4 className="mb-2 font-semibold text-text-primary">
+                  Verify Your Credentials
+                </h4>
+                <p className="mx-auto mb-4 max-w-md text-sm text-text-secondary">
+                  Use Reclaim Protocol to verify your Pilates certifications
+                  on-chain with zero-knowledge proofs. Verified credentials
+                  build trust with clients and unlock marketplace features.
+                </p>
+                <Link
+                  href="/verify"
+                  className="btn-primary inline-flex items-center gap-2 text-sm"
+                >
+                  <ShieldCheck size={16} />
+                  Verify Your Certifications
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {verifications.map((v) => (
@@ -201,7 +215,7 @@ export default function ProfilePage() {
                     className="flex items-center gap-3 rounded-lg border border-border p-3"
                   >
                     <ShieldCheck size={20} className="text-emerald-400" />
-                    <div>
+                    <div className="flex-1">
                       <div className="font-medium capitalize">
                         {v.provider.replace("_", " ")}
                       </div>
@@ -211,6 +225,15 @@ export default function ProfilePage() {
                         {new Date(v.verified_at).toLocaleDateString()}
                       </div>
                     </div>
+                    {!v.on_chain && (
+                      <Link
+                        href="/verify"
+                        className="text-xs text-violet-400 hover:text-violet-300"
+                      >
+                        Verify on-chain
+                        <ExternalLink size={10} className="ml-1 inline" />
+                      </Link>
+                    )}
                   </div>
                 ))}
               </div>
@@ -218,7 +241,7 @@ export default function ProfilePage() {
           </CardBody>
         </Card>
 
-        {/* Methods & Equipment */}
+        {/* Methods & Practice */}
         <Card className="md:col-span-2">
           <CardHeader>
             <h3 className="flex items-center gap-2 font-semibold">
@@ -237,29 +260,27 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </div>
-              {instructor.certifications.length > 0 && (
+              {instructor.class_types && instructor.class_types.length > 0 && (
                 <div>
                   <div className="mb-1 text-sm text-text-muted">
-                    Certifications
+                    Class Types
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {instructor.certifications.map((c) => (
-                      <Badge key={c} variant="blue">
-                        {c}
+                    {instructor.class_types.map((ct) => (
+                      <Badge key={ct} variant="blue">
+                        {ct}
                       </Badge>
                     ))}
                   </div>
                 </div>
               )}
-              {instructor.equipment.length > 0 && (
+              {instructor.music_style && (
                 <div>
-                  <div className="mb-1 text-sm text-text-muted">Equipment</div>
-                  <div className="flex flex-wrap gap-2">
-                    {instructor.equipment.map((e) => (
-                      <Badge key={e} variant="gray">
-                        {e}
-                      </Badge>
-                    ))}
+                  <div className="mb-1 text-sm text-text-muted">
+                    Music Preferences
+                  </div>
+                  <div className="text-sm text-text-secondary">
+                    {instructor.music_style}
                   </div>
                 </div>
               )}

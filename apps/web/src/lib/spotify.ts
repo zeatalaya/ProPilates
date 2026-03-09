@@ -8,7 +8,7 @@ export function createSpotifyClient() {
   });
 }
 
-export function getSpotifyAuthUrl(): string {
+export function getSpotifyAuthUrl(from: string = "builder"): string {
   const scopes = [
     "streaming",
     "user-read-email",
@@ -23,5 +23,6 @@ export function getSpotifyAuthUrl(): string {
   const client = createSpotifyClient();
   // show_dialog=true forces Spotify to re-show the consent screen
   // so users always grant the latest scopes (e.g. after we add new ones)
-  return client.createAuthorizeURL(scopes, "propilates-state", true);
+  // State param carries where to redirect back to after auth
+  return client.createAuthorizeURL(scopes, from, true);
 }

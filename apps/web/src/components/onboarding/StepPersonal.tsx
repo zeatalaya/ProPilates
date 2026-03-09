@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { OnboardingData } from "@/app/onboarding/page";
+import { COUNTRIES, CITIES } from "@/data/countries-cities";
 
 interface Props {
   data: OnboardingData;
@@ -15,19 +16,35 @@ const LANGUAGES = [
 ];
 
 export function StepPersonal({ data, updateData, onNext }: Props) {
-  const [langInput, setLangInput] = useState("");
+  const [showOtherCity, setShowOtherCity] = useState(false);
 
-  const canNext = data.name.trim().length > 0 && data.location.trim().length > 0;
+  const canNext = data.name.trim().length > 0 && data.country.trim().length > 0;
+
+  const citiesForCountry = data.country ? CITIES[data.country] ?? [] : [];
 
   function addLanguage(lang: string) {
     if (!data.languages.includes(lang)) {
       updateData({ languages: [...data.languages, lang] });
     }
-    setLangInput("");
   }
 
   function removeLanguage(lang: string) {
     updateData({ languages: data.languages.filter((l) => l !== lang) });
+  }
+
+  function handleCountryChange(country: string) {
+    updateData({ country, city: "" });
+    setShowOtherCity(false);
+  }
+
+  function handleCityChange(city: string) {
+    if (city === "__other__") {
+      setShowOtherCity(true);
+      updateData({ city: "" });
+    } else {
+      setShowOtherCity(false);
+      updateData({ city });
+    }
   }
 
   return (
@@ -61,14 +78,59 @@ export function StepPersonal({ data, updateData, onNext }: Props) {
         </div>
 
         <div>
-          <label className="label-text mb-1.5 block">Location *</label>
-          <input
+          <label className="label-text mb-1.5 block">Country *</label>
+          <select
             className="input-field"
-            placeholder="City, Country"
-            value={data.location}
-            onChange={(e) => updateData({ location: e.target.value })}
-          />
+            value={data.country}
+            onChange={(e) => handleCountryChange(e.target.value)}
+          >
+            <option value="">Select country...</option>
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {data.country && (
+          <div>
+            <label className="label-text mb-1.5 block">City</label>
+            {citiesForCountry.length > 0 ? (
+              <>
+                <select
+                  className="input-field"
+                  value={showOtherCity ? "__other__" : data.city}
+                  onChange={(e) => handleCityChange(e.target.value)}
+                >
+                  <option value="">Select city...</option>
+                  {citiesForCountry.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                  <option value="__other__">Other...</option>
+                </select>
+                {showOtherCity && (
+                  <input
+                    className="input-field mt-2"
+                    placeholder="Enter your city..."
+                    value={data.city}
+                    onChange={(e) => updateData({ city: e.target.value })}
+                    autoFocus
+                  />
+                )}
+              </>
+            ) : (
+              <input
+                className="input-field"
+                placeholder="Enter your city..."
+                value={data.city}
+                onChange={(e) => updateData({ city: e.target.value })}
+              />
+            )}
+          </div>
+        )}
 
         <div>
           <label className="label-text mb-1.5 block">Languages</label>

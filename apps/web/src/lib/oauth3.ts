@@ -1,10 +1,14 @@
 /**
- * OAuth3 client for XION authentication.
- * Integrates with burnt-labs/oauth3 backend service.
- * Provides standard OAuth 2.1 PKCE flow for social login.
+ * OAuth3 client for XION authentication via Abstraxion portal.
+ * Integrates with XION's OAuth2 Abstraxion service for account creation.
+ * Provides standard OAuth 2.1 PKCE flow for social login + XION account.
+ *
+ * Default: https://oauth2.testnet.burnt.com/
+ * Docs: https://docs.burnt.com/xion/developers/getting-started-advanced/your-first-dapp/build-oauth2-app-with-xion-auth
  */
 
-const OAUTH3_SERVER = process.env.NEXT_PUBLIC_OAUTH3_SERVER ?? "";
+const OAUTH3_SERVER =
+  process.env.NEXT_PUBLIC_OAUTH3_SERVER ?? "https://oauth2.testnet.burnt.com";
 const OAUTH3_CLIENT_ID = process.env.NEXT_PUBLIC_OAUTH3_CLIENT_ID ?? "";
 const CALLBACK_URL = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/auth/oauth3/callback`;
 
@@ -46,6 +50,7 @@ export function getAuthorizeUrl(codeChallenge: string, state: string, provider?:
     code_challenge: codeChallenge,
     code_challenge_method: "S256",
     state,
+    scope: "openid profile email xion:transactions:submit",
   });
   if (provider) params.set("provider", provider);
   return `${OAUTH3_SERVER}/oauth/authorize?${params}`;

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { StepPersonal } from "@/components/onboarding/StepPersonal";
 import { StepPractice } from "@/components/onboarding/StepPractice";
 import { StepMusic } from "@/components/onboarding/StepMusic";
@@ -14,37 +15,45 @@ export interface OnboardingData {
   // Step 1
   name: string;
   bio: string;
-  location: string;
+  country: string;
+  city: string;
   languages: string[];
   // Step 2
   methods: PilatesMethod[];
   classTypes: ClassType[];
-  equipment: string[];
-  certifications: string[];
   // Step 3
-  musicStyle: string;
-  favoriteArtists: string[];
+  musicGenres: string[];
+  spotifyConnected: boolean;
 }
 
 const steps = ["Personal", "Practice", "Music", "Confirm"];
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { xionAddress, setInstructor } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState<OnboardingData>({
     name: "",
     bio: "",
-    location: "",
+    country: "",
+    city: "",
     languages: [],
     methods: [],
     classTypes: [],
-    equipment: [],
-    certifications: [],
-    musicStyle: "",
-    favoriteArtists: [],
+    musicGenres: [],
+    spotifyConnected: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle Spotify callback return to onboarding
+  useEffect(() => {
+    if (searchParams.get("spotify_connected") === "true") {
+      setData((prev) => ({ ...prev, spotifyConnected: true }));
+      setCurrentStep(2); // Go back to music step
+      window.history.replaceState({}, "", "/onboarding");
+    }
+  }, [searchParams]);
 
   function updateData(partial: Partial<OnboardingData>) {
     setData((prev) => ({ ...prev, ...partial }));
@@ -61,6 +70,9 @@ export default function OnboardingPage() {
     setIsSubmitting(true);
     try {
       if (isSupabaseConfigured) {
+        const location = [data.city, data.country]
+          .filter(Boolean)
+          .join(", ");
         const { data: instructor, error } = await supabase
           .from("instructors")
           .upsert(
@@ -68,14 +80,14 @@ export default function OnboardingPage() {
               xion_address: xionAddress,
               name: data.name,
               bio: data.bio,
-              location: data.location,
+              location,
               languages: data.languages,
               methods: data.methods,
               class_types: data.classTypes,
-              equipment: data.equipment,
-              certifications: data.certifications,
-              music_style: data.musicStyle,
-              favorite_artists: data.favoriteArtists,
+              equipment: [],
+              certifications: [],
+              music_style: data.musicGenres.join(", "),
+              favorite_artists: [],
               onboarding_complete: true,
             },
             { onConflict: "xion_address" },
@@ -87,20 +99,23 @@ export default function OnboardingPage() {
         setInstructor(instructor);
       } else {
         // Demo mode: store locally when Supabase is not configured
+        const location = [data.city, data.country]
+          .filter(Boolean)
+          .join(", ");
         setInstructor({
           id: crypto.randomUUID(),
           xion_address: xionAddress || "demo-address",
           name: data.name,
           bio: data.bio,
           avatar_url: null,
-          location: data.location,
+          location,
           languages: data.languages,
           methods: data.methods,
           class_types: data.classTypes,
-          equipment: data.equipment,
-          certifications: data.certifications,
-          music_style: data.musicStyle,
-          favorite_artists: data.favoriteArtists,
+          equipment: [],
+          certifications: [],
+          music_style: data.musicGenres.join(", "),
+          favorite_artists: [],
           onboarding_complete: true,
           tier: "free",
           created_at: new Date().toISOString(),
@@ -180,5 +195,19 @@ export default function OnboardingPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <Loader2 size={24} className="animate-spin text-violet-400" />
+        </div>
+      }
+    >
+      <OnboardingContent />
+    </Suspense>
   );
 }

@@ -4,11 +4,13 @@ import type { Instructor, Tier } from "@/types";
 interface AuthState {
   instructor: Instructor | null;
   xionAddress: string | null;
+  oauthAccessToken: string | null;
   isConnected: boolean;
   isLoading: boolean;
   tier: Tier;
   setInstructor: (instructor: Instructor | null) => void;
   setXionAddress: (address: string | null) => void;
+  setOAuthAccessToken: (token: string | null) => void;
   setConnected: (connected: boolean) => void;
   setLoading: (loading: boolean) => void;
   setTier: (tier: Tier) => void;
@@ -18,6 +20,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   instructor: null,
   xionAddress: null,
+  oauthAccessToken: null,
   isConnected: false,
   isLoading: true,
   tier: "free",
@@ -25,6 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ instructor, tier: instructor?.tier ?? "free" }),
   setXionAddress: (xionAddress) =>
     set({ xionAddress, isConnected: !!xionAddress }),
+  setOAuthAccessToken: (oauthAccessToken) => set({ oauthAccessToken }),
   setConnected: (isConnected) => set({ isConnected }),
   setLoading: (isLoading) => set({ isLoading }),
   setTier: (tier) => set({ tier }),
@@ -32,6 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       instructor: null,
       xionAddress: null,
+      oauthAccessToken: null,
       isConnected: false,
       isLoading: false,
       tier: "free",
