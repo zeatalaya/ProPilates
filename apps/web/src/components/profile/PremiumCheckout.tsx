@@ -66,8 +66,8 @@ function CheckoutInner({ instructorId, xionAddress }: Props) {
   if (activated) {
     return (
       <div className="text-center">
-        <CheckCircle size={32} className="mx-auto mb-2 text-emerald-400" />
-        <p className="font-semibold text-emerald-400">Premium Activated!</p>
+        <img src="/icon-70.svg" alt="" className="w-12 h-12 rounded-lg mx-auto mb-2" />
+        <p className="font-semibold" style={{ color: "#f0d898" }}>Premium Activated!</p>
         <p className="text-sm text-text-secondary">
           You now have access to all premium features.
         </p>
@@ -77,21 +77,23 @@ function CheckoutInner({ instructorId, xionAddress }: Props) {
 
   return (
     <div>
-      <p className="mb-3 text-text-secondary">
-        Free tier — upgrade to save classes, list on marketplace, and access
-        Spotify integration.
+      <p className="mb-3 text-sm text-text-secondary">
+        Upgrade to save classes, list on marketplace, Spotify integration, and verification badges.
       </p>
 
-      <div className="mb-3 rounded-lg border border-violet-500/20 bg-violet-500/5 p-3">
+      <div className="mb-3 rounded-lg p-3" style={{ border: "1px solid rgba(184, 137, 42, 0.3)", background: "rgba(184, 137, 42, 0.05)" }}>
         <div className="flex items-center justify-between">
-          <div>
-            <div className="font-semibold text-text-primary">Premium Plan</div>
-            <div className="text-sm text-text-secondary">
-              All features included
+          <div className="flex items-center gap-3">
+            <img src="/icon-70.svg" alt="" className="w-9 h-9 rounded-lg" />
+            <div>
+              <div className="font-semibold text-text-primary">Premium Plan</div>
+              <div className="text-xs text-text-secondary">
+                All features included
+              </div>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xl font-bold text-violet-400">$4.99</div>
+            <div className="text-xl font-bold" style={{ color: "#f0d898" }}>$4.99</div>
             <div className="text-xs text-text-muted">USDC/month</div>
           </div>
         </div>
@@ -124,7 +126,7 @@ function CheckoutInner({ instructorId, xionAddress }: Props) {
               textPrimary: "#e2e8f0",
               textSecondary: "#94a3b8",
               borderPrimary: "#334155",
-              accent: "#8b5cf6",
+              accent: "#c9a96e",
             },
             borderRadius: "8px",
           },

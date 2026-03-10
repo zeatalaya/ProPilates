@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Navbar } from "@/components/ui/Navbar";
 import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
+import { SpotifyPlayerProvider } from "@/components/spotify/SpotifyPlayerProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({
@@ -27,9 +28,11 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.variable} ${jetbrains.variable} font-sans`}>
         <Providers>
-          <Navbar />
-          <main className="min-h-screen pt-16 pb-20 md:pb-0">{children}</main>
-          <MobileBottomNav />
+          <SpotifyPlayerProvider>
+            <Navbar />
+            <main className="min-h-screen pt-16 pb-20 md:pb-0">{children}</main>
+            <MobileBottomNav />
+          </SpotifyPlayerProvider>
         </Providers>
       </body>
     </html>

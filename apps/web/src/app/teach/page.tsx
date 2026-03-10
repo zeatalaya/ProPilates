@@ -74,11 +74,10 @@ export default function TeachPage() {
   // Sync Spotify playback with class timer
   useEffect(() => {
     if (prevIsPlayingRef.current !== isPlaying && spotify.isReady) {
-      // Class play state changed — sync Spotify
       if (isPlaying && !spotify.isPlaying) {
-        toggleSpotify(); // resume Spotify when class plays
+        toggleSpotify();
       } else if (!isPlaying && spotify.isPlaying) {
-        toggleSpotify(); // pause Spotify when class pauses
+        toggleSpotify();
       }
     }
     prevIsPlayingRef.current = isPlaying;
@@ -199,7 +198,7 @@ export default function TeachPage() {
           </div>
         </div>
 
-        {/* Right sidebar: next exercise + block progress + Spotify */}
+        {/* Right sidebar: next exercise + block progress + now playing */}
         <div className="w-72 space-y-6">
           {/* Block progress */}
           <div className="glass-card p-4">
@@ -257,93 +256,79 @@ export default function TeachPage() {
             </div>
           )}
 
-          {/* Spotify Player */}
-          {spotify.isReady ? (
-            <div className="glass-card p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Music size={14} className="text-emerald-400" />
-                <span className="text-xs font-semibold text-text-secondary">
-                  Now Playing
-                </span>
-                <div className="ml-auto flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          {/* Compact Now Playing */}
+          {spotify.isReady && spotify.currentTrack ? (
+            <div className="glass-card p-3">
+              <div className="flex items-center gap-3">
+                {spotify.currentTrack.image_url && (
+                  <img
+                    src={spotify.currentTrack.image_url}
+                    alt=""
+                    className="w-10 h-10 rounded flex-shrink-0"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <Music size={10} className="text-emerald-400 flex-shrink-0" />
+                    <span className="text-[10px] text-emerald-400 font-medium uppercase tracking-wide">
+                      Now Playing
+                    </span>
+                  </div>
+                  <div className="truncate text-sm font-medium">
+                    {spotify.currentTrack.name}
+                  </div>
+                  <div className="truncate text-xs text-text-muted">
+                    {spotify.currentTrack.artist}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    className="text-text-secondary hover:text-white transition-colors"
+                    onClick={previousTrack}
+                  >
+                    <SkipBack size={14} />
+                  </button>
+                  <button
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
+                    onClick={toggleSpotify}
+                  >
+                    {spotify.isPlaying ? (
+                      <Pause size={12} />
+                    ) : (
+                      <Play size={12} className="ml-0.5" />
+                    )}
+                  </button>
+                  <button
+                    className="text-text-secondary hover:text-white transition-colors"
+                    onClick={nextTrack}
+                  >
+                    <SkipForward size={14} />
+                  </button>
                 </div>
               </div>
-
-              {spotify.currentTrack ? (
-                <>
-                  <div className="flex items-center gap-3">
-                    {spotify.currentTrack.image_url && (
-                      <img
-                        src={spotify.currentTrack.image_url}
-                        alt=""
-                        className="w-12 h-12 rounded"
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">
-                        {spotify.currentTrack.name}
-                      </div>
-                      <div className="truncate text-xs text-text-muted">
-                        {spotify.currentTrack.artist}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center gap-4 mt-3">
-                    <button
-                      className="text-text-secondary hover:text-white transition-colors"
-                      onClick={previousTrack}
-                    >
-                      <SkipBack size={16} />
-                    </button>
-                    <button
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
-                      onClick={toggleSpotify}
-                    >
-                      {spotify.isPlaying ? (
-                        <Pause size={16} />
-                      ) : (
-                        <Play size={16} className="ml-0.5" />
-                      )}
-                    </button>
-                    <button
-                      className="text-text-secondary hover:text-white transition-colors"
-                      onClick={nextTrack}
-                    >
-                      <SkipForward size={16} />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-2">
-                  <p className="text-xs text-text-muted">
-                    No track playing. Select a playlist in the Builder.
-                  </p>
-                </div>
-              )}
             </div>
-          ) : spotify.accessToken ? (
-            <div className="glass-card p-4 text-center">
-              <Music size={20} className="text-emerald-400 mx-auto mb-2 animate-pulse" />
-              <p className="text-xs text-text-muted">
+          ) : spotify.accessToken && !spotify.isReady ? (
+            <div className="glass-card p-3 flex items-center gap-2">
+              <Music size={14} className="text-emerald-400 animate-pulse" />
+              <span className="text-xs text-text-muted">
                 Connecting to Spotify...
-              </p>
+              </span>
             </div>
-          ) : (
-            <div className="glass-card p-4 text-center">
-              <Music size={20} className="text-text-muted mx-auto mb-2" />
-              <p className="text-xs text-text-muted mb-2">
-                Music not connected
-              </p>
+          ) : !spotify.accessToken ? (
+            <div className="glass-card p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Music size={14} className="text-text-muted" />
+                <span className="text-xs text-text-muted">Music</span>
+              </div>
               <a
-                href="/api/auth/spotify"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 transition-colors"
+                href="/api/auth/spotify?from=teach"
+                className="inline-flex items-center gap-1.5 rounded bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors"
               >
-                <Wifi size={12} />
-                Connect Spotify
+                <Wifi size={10} />
+                Connect
               </a>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -355,9 +340,7 @@ export default function TeachPage() {
         <button
           className={cn(
             "flex h-16 w-16 items-center justify-center rounded-full transition-all",
-            isPlaying
-              ? "bg-violet-600 text-white hover:bg-violet-500"
-              : "bg-violet-600 text-white hover:bg-violet-500",
+            "bg-violet-600 text-white hover:bg-violet-500",
           )}
           onClick={togglePlayPause}
         >

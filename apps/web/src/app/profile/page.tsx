@@ -114,16 +114,39 @@ export default function ProfilePage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Profile header */}
       <div className="mb-8 flex items-start gap-6">
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-violet-600/20 text-3xl font-bold text-violet-400">
-          {instructor.name.charAt(0).toUpperCase()}
-        </div>
+        {tier === "premium" ? (
+          <div className="relative flex-shrink-0">
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl overflow-hidden"
+              style={{ background: "linear-gradient(135deg, #b8892a, #f0d898, #b8892a)", padding: "2px" }}
+            >
+              <img
+                src="/icon-70.svg"
+                alt="ProPilates Premium"
+                className="h-full w-full rounded-[14px]"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl bg-violet-600/20 text-3xl font-bold text-violet-400">
+            {instructor.name.charAt(0).toUpperCase()}
+          </div>
+        )}
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">{instructor.name}</h1>
-            <Badge variant={tier === "premium" ? "violet" : "gray"}>
-              <Crown size={12} className="mr-1" />
-              {tier === "premium" ? "Premium" : "Free"}
-            </Badge>
+            {tier === "premium" ? (
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                style={{ background: "linear-gradient(135deg, #b8892a, #f0d898, #b8892a)", color: "#0f0f1a" }}
+              >
+                <Crown size={12} />
+                Premium
+              </span>
+            ) : (
+              <Badge variant="gray">
+                <Crown size={12} className="mr-1" />
+                Free
+              </Badge>
+            )}
           </div>
           {instructor.bio && (
             <p className="mt-2 text-text-secondary">{instructor.bio}</p>
@@ -168,18 +191,26 @@ export default function ProfilePage() {
         <Card>
           <CardHeader>
             <h3 className="flex items-center gap-2 font-semibold">
-              <Crown size={16} className="text-violet-400" /> Subscription
+              <Crown size={16} style={{ color: "#f0d898" }} /> Subscription
             </h3>
           </CardHeader>
           <CardBody>
             {subscription ? (
               <div>
-                <Badge variant="emerald" className="mb-2">
-                  Active
-                </Badge>
-                <div className="text-sm text-text-secondary">
-                  Since{" "}
-                  {new Date(subscription.started_at).toLocaleDateString()}
+                <div className="flex items-center gap-3 mb-3">
+                  <img src="/icon-70.svg" alt="" className="w-10 h-10 rounded-lg" />
+                  <div>
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold mb-1"
+                      style={{ background: "linear-gradient(135deg, #b8892a, #f0d898, #b8892a)", color: "#0f0f1a" }}
+                    >
+                      Active
+                    </span>
+                    <div className="text-sm text-text-secondary">
+                      Since{" "}
+                      {new Date(subscription.started_at).toLocaleDateString()}
+                    </div>
+                  </div>
                 </div>
                 {subscription.expires_at && (
                   <div className="text-sm text-text-muted">

@@ -71,12 +71,20 @@ export function Navbar() {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-bold text-violet-400"
+          className="flex items-center flex-shrink-0"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600">
-            <span className="text-sm font-black text-white">P</span>
-          </div>
-          ProPilates
+          {/* Mobile: square icon */}
+          <img
+            src="/icon-70.svg"
+            alt="ProPilates"
+            className="h-8 w-8 rounded-lg md:hidden"
+          />
+          {/* Desktop: full logo */}
+          <img
+            src="/propilates-logo.svg"
+            alt="ProPilates"
+            className="hidden md:block h-8"
+          />
         </Link>
 
         {/* Nav links */}

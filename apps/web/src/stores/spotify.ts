@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { SpotifyTrack } from "@/types";
 
 interface SpotifyState {
@@ -27,7 +28,7 @@ interface SpotifyState {
   getValidToken: () => Promise<string | null>;
 }
 
-export const useSpotifyStore = create<SpotifyState>((set, get) => ({
+export const useSpotifyStore = create<SpotifyState>()(persist((set, get) => ({
   accessToken: null,
   refreshToken: null,
   expiresAt: null,
@@ -99,4 +100,11 @@ export const useSpotifyStore = create<SpotifyState>((set, get) => ({
     }
     return accessToken;
   },
+}), {
+  name: "propilates-spotify",
+  partialize: (state) => ({
+    accessToken: state.accessToken,
+    refreshToken: state.refreshToken,
+    expiresAt: state.expiresAt,
+  }),
 }));

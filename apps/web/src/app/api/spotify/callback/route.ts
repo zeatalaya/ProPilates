@@ -24,8 +24,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // Default: redirect to builder with tokens as hash params
-    const redirectUrl = new URL("/builder", request.url);
+    // Map state to redirect path — supports any origin page
+    const stateToPath: Record<string, string> = {
+      builder: "/builder",
+      teach: "/teach",
+      profile: "/profile",
+      templates: "/templates",
+    };
+    const redirectPath = stateToPath[state] ?? `/${state}`;
+    const redirectUrl = new URL(redirectPath, request.url);
     redirectUrl.hash = `access_token=${access_token}&refresh_token=${refresh_token}&expires_in=${expires_in}`;
 
     return NextResponse.redirect(redirectUrl);

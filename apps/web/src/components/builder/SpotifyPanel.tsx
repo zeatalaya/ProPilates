@@ -18,6 +18,9 @@ import {
   RefreshCw,
   AlertCircle,
   Search,
+  ChevronUp,
+  ChevronDown,
+  Volume2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +58,6 @@ async function spotifyFetch(
     },
   });
 
-  // If 401, try refreshing the token once and retry
   if (res.status === 401) {
     console.log("[Spotify] Got 401, attempting token refresh...");
     const newToken = await store.refreshAccessToken();
@@ -73,14 +75,12 @@ async function spotifyFetch(
   return res;
 }
 
-/** Format ms to m:ss */
 function formatDuration(ms: number) {
   const min = Math.floor(ms / 60000);
   const sec = Math.floor((ms % 60000) / 1000);
   return `${min}:${sec.toString().padStart(2, "0")}`;
 }
 
-/** Parse a friendly error message from Spotify API error responses */
 function parseSpotifyError(status: number, errText: string): string {
   let errMsg = "";
   try {
@@ -89,21 +89,19 @@ function parseSpotifyError(status: number, errText: string): string {
   } catch {
     errMsg = errText;
   }
-
-  // Handle specific known errors with user-friendly messages
   if (errMsg.includes("Restriction violated")) {
     return "This playlist is empty — add songs first.";
   }
   if (errMsg.includes("Premium required")) {
     return "Spotify Premium is required for playback.";
   }
-
   return errMsg;
 }
 
 export function SpotifyPanel() {
   const spotify = useSpotifyStore();
-  const { togglePlay, nextTrack, previousTrack } = useSpotifyPlayer();
+  const { togglePlay, nextTrack, previousTrack, setPlayerVolume } =
+    useSpotifyPlayer();
   const [playlists, setPlaylists] = useState<SpotifyPlaylist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [selectedPlaylistUri, setSelectedPlaylistUri] = useState<string | null>(
@@ -114,6 +112,7 @@ export function SpotifyPanel() {
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [creatingPlaylist, setCreatingPlaylist] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   // Song search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -122,9 +121,12 @@ export function SpotifyPanel() {
   const [addingTrackId, setAddingTrackId] = useState<string | null>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Get the selected playlist ID from URI (spotify:playlist:ID)
   const selectedPlaylistId = selectedPlaylistUri
     ? selectedPlaylistUri.split(":").pop() ?? null
+    : null;
+
+  const selectedPlaylistName = selectedPlaylistUri
+    ? playlists.find((p) => p.uri === selectedPlaylistUri)?.name ?? null
     : null;
 
   // Fetch user playlists when connected
@@ -149,9 +151,7 @@ export function SpotifyPanel() {
         if (res.status === 401) {
           setError("Session expired — please reconnect Spotify.");
         } else if (res.status === 403) {
-          setError(
-            "Permission denied — please reconnect Spotify with updated permissions.",
-          );
+          setError("Permission denied — please reconnect Spotify.");
         } else {
           setError(`Failed to load playlists (${res.status})`);
         }
@@ -170,18 +170,14 @@ export function SpotifyPanel() {
     }
   }, [spotify.accessToken, spotify.isReady, fetchPlaylists]);
 
-  // Start playing a playlist on the ProPilates device
   const playPlaylist = async (uri: string) => {
     if (!spotify.accessToken || !spotify.deviceId) return;
-
-    // Check if playlist is empty before trying to play
     const playlist = playlists.find((p) => p.uri === uri);
     if (playlist && playlist.tracks?.total === 0) {
       setSelectedPlaylistUri(uri);
       setError("This playlist is empty — add songs first.");
       return;
     }
-
     setStartingPlayback(true);
     setSelectedPlaylistUri(uri);
     setError(null);
@@ -196,25 +192,16 @@ export function SpotifyPanel() {
       );
       if (!res.ok) {
         const errText = await res.text().catch(() => "");
-        console.error("[Spotify] Play failed:", res.status, errText);
         const errMsg = parseSpotifyError(res.status, errText);
-        if (res.status === 403) {
-          setError(`Playback failed: ${errMsg || "permission denied — try reconnecting Spotify."}`);
-        } else if (res.status === 404) {
-          setError(`Player not found: ${errMsg || "try refreshing the page."}`);
-        } else {
-          setError(`Playback failed (${res.status}): ${errMsg}`);
-        }
+        setError(`Playback failed: ${errMsg || "try reconnecting."}`);
       }
-    } catch (err) {
-      console.error("[Spotify] Play error:", err);
+    } catch {
       setError("Network error starting playback.");
     } finally {
       setStartingPlayback(false);
     }
   };
 
-  // Create a new playlist
   const createPlaylist = async () => {
     if (!spotify.accessToken || !newPlaylistName.trim()) return;
     setCreatingPlaylist(true);
@@ -237,35 +224,19 @@ export function SpotifyPanel() {
         setNewPlaylistName("");
         setShowCreateForm(false);
         await fetchPlaylists();
-        // Auto-select the newly created playlist so user can add songs
-        if (newPl?.uri) {
-          setSelectedPlaylistUri(newPl.uri);
-        }
+        if (newPl?.uri) setSelectedPlaylistUri(newPl.uri);
       } else {
         const errText = await createRes.text().catch(() => "");
-        console.error(
-          "[Spotify] Create playlist failed:",
-          createRes.status,
-          errText,
-        );
         const errMsg = parseSpotifyError(createRes.status, errText);
-        if (createRes.status === 403) {
-          setError(`Permission denied: ${errMsg}`);
-        } else {
-          setError(
-            `Failed to create playlist (${createRes.status}): ${errMsg}`,
-          );
-        }
+        setError(`Failed to create playlist: ${errMsg}`);
       }
-    } catch (err) {
-      console.error("[Spotify] Create playlist error:", err);
+    } catch {
       setError("Network error creating playlist.");
     } finally {
       setCreatingPlaylist(false);
     }
   };
 
-  // Search Spotify tracks (debounced)
   const searchTracks = useCallback(
     async (query: string) => {
       if (!spotify.accessToken || !query.trim()) {
@@ -280,8 +251,6 @@ export function SpotifyPanel() {
         if (res.ok) {
           const data = await res.json();
           setSearchResults(data.tracks?.items ?? []);
-        } else {
-          console.error("[Spotify] Search failed:", res.status);
         }
       } catch (err) {
         console.error("[Spotify] Search error:", err);
@@ -292,7 +261,6 @@ export function SpotifyPanel() {
     [spotify.accessToken],
   );
 
-  // Debounced search on query change
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     if (!searchQuery.trim()) {
@@ -307,7 +275,6 @@ export function SpotifyPanel() {
     };
   }, [searchQuery, searchTracks]);
 
-  // Add a track to the selected playlist
   const addToPlaylist = async (trackUri: string, trackId: string) => {
     if (!selectedPlaylistId) {
       setError("Select a playlist first to add songs.");
@@ -324,7 +291,6 @@ export function SpotifyPanel() {
         },
       );
       if (res.ok) {
-        // Update the track count locally
         setPlaylists((prev) =>
           prev.map((pl) =>
             pl.id === selectedPlaylistId && pl.tracks
@@ -334,12 +300,10 @@ export function SpotifyPanel() {
         );
       } else {
         const errText = await res.text().catch(() => "");
-        console.error("[Spotify] Add track failed:", res.status, errText);
         const errMsg = parseSpotifyError(res.status, errText);
         setError(`Failed to add track: ${errMsg}`);
       }
-    } catch (err) {
-      console.error("[Spotify] Add track error:", err);
+    } catch {
       setError("Network error adding track.");
     } finally {
       setAddingTrackId(null);
@@ -349,128 +313,47 @@ export function SpotifyPanel() {
   // ── Not connected ──
   if (!spotify.accessToken) {
     return (
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Music size={16} className="text-emerald-400" />
-          <h3 className="text-sm font-semibold text-text-secondary">Music</h3>
-        </div>
-        <div className="glass-card p-4 text-center">
-          <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
-            <Music size={24} className="text-emerald-400" />
-          </div>
-          <p className="text-sm text-text-secondary mb-3">
-            Connect Spotify to play music during your class.
-          </p>
-          <a
-            href="/api/auth/spotify"
-            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
-          >
-            <Wifi size={14} />
-            Connect Spotify
-          </a>
-        </div>
+      <div className="flex items-center justify-center gap-3 border-t border-border bg-bg-elevated px-6 py-3">
+        <Music size={16} className="text-emerald-400" />
+        <span className="text-sm text-text-secondary">
+          Connect Spotify to play music during your class
+        </span>
+        <a
+          href="/api/auth/spotify"
+          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
+        >
+          <Wifi size={14} />
+          Connect Spotify
+        </a>
       </div>
     );
   }
 
-  // ── Connecting (token present, SDK loading) ──
+  // ── Connecting ──
   if (!spotify.isReady) {
     return (
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Music size={16} className="text-emerald-400" />
-          <h3 className="text-sm font-semibold text-text-secondary">Music</h3>
-        </div>
-        <div className="glass-card p-4 text-center">
-          <Loader2
-            size={24}
-            className="text-emerald-400 animate-spin mx-auto mb-2"
-          />
-          <p className="text-sm text-text-secondary">
-            Connecting to Spotify...
-          </p>
-        </div>
+      <div className="flex items-center justify-center gap-3 border-t border-border bg-bg-elevated px-6 py-3">
+        <Loader2
+          size={16}
+          className="text-emerald-400 animate-spin"
+        />
+        <span className="text-sm text-text-secondary">
+          Connecting to Spotify...
+        </span>
       </div>
     );
   }
 
-  // ── Connected ──
+  // ── Connected — Full-width bottom bar ──
   return (
-    <div className="p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Music size={16} className="text-emerald-400" />
-        <h3 className="text-sm font-semibold text-text-secondary">Music</h3>
-        <div className="ml-auto flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span className="text-xs text-emerald-400">Connected</span>
-          <a
-            href="/api/auth/spotify"
-            onClick={() => spotify.reset()}
-            className="ml-1 text-text-muted hover:text-text-secondary transition-colors"
-            title="Reconnect Spotify"
-          >
-            <RefreshCw size={10} />
-          </a>
-        </div>
-      </div>
-
-      {/* Now Playing */}
-      {spotify.currentTrack && (
-        <div className="glass-card p-3 mb-3">
-          <div className="flex items-center gap-3">
-            {spotify.currentTrack.image_url && (
-              <img
-                src={spotify.currentTrack.image_url}
-                alt=""
-                className="w-10 h-10 rounded"
-              />
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium">
-                {spotify.currentTrack.name}
-              </div>
-              <div className="truncate text-xs text-text-muted">
-                {spotify.currentTrack.artist}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-4 mt-3">
-            <button
-              className="text-text-secondary hover:text-white transition-colors"
-              onClick={previousTrack}
-            >
-              <SkipBack size={16} />
-            </button>
-            <button
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
-              onClick={togglePlay}
-            >
-              {spotify.isPlaying ? (
-                <Pause size={14} />
-              ) : (
-                <Play size={14} className="ml-0.5" />
-              )}
-            </button>
-            <button
-              className="text-text-secondary hover:text-white transition-colors"
-              onClick={nextTrack}
-            >
-              <SkipForward size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Error Message */}
+    <div className="border-t border-border bg-bg-elevated flex-shrink-0">
+      {/* Error banner */}
       {error && (
-        <div className="flex items-start gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 mb-3">
-          <AlertCircle
-            size={14}
-            className="text-red-400 flex-shrink-0 mt-0.5"
-          />
-          <p className="text-xs text-red-300">{error}</p>
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-red-500/10 border-b border-red-500/20">
+          <AlertCircle size={12} className="text-red-400 flex-shrink-0" />
+          <p className="text-xs text-red-300 flex-1">{error}</p>
           <button
-            className="ml-auto text-red-400 hover:text-red-300 flex-shrink-0"
+            className="text-red-400 hover:text-red-300"
             onClick={() => setError(null)}
           >
             <X size={12} />
@@ -478,193 +361,332 @@ export function SpotifyPanel() {
         </div>
       )}
 
-      {/* Song Search */}
-      <div className="glass-card overflow-hidden mb-3">
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
-          <Search size={14} className="text-text-muted" />
-          <input
-            type="text"
-            placeholder="Search songs to add..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 bg-transparent text-xs text-white placeholder:text-text-muted focus:outline-none"
-          />
-          {searching && (
-            <Loader2 size={12} className="text-text-muted animate-spin" />
-          )}
-          {searchQuery && (
-            <button
-              className="text-text-muted hover:text-text-secondary"
-              onClick={() => {
-                setSearchQuery("");
-                setSearchResults([]);
-              }}
-            >
-              <X size={12} />
-            </button>
-          )}
-        </div>
-        {searchResults.length > 0 && (
-          <div className="max-h-48 overflow-y-auto">
-            {searchResults.map((track) => (
-              <div
-                key={track.id}
-                className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 transition-colors"
-              >
-                {track.album.images?.[0] ? (
-                  <img
-                    src={
-                      track.album.images[track.album.images.length - 1]?.url ??
-                      track.album.images[0].url
-                    }
-                    alt=""
-                    className="w-7 h-7 rounded flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-7 h-7 rounded bg-bg flex items-center justify-center flex-shrink-0">
-                    <Music size={10} className="text-text-muted" />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs font-medium">
-                    {track.name}
-                  </div>
-                  <div className="truncate text-[10px] text-text-muted">
-                    {track.artists.map((a) => a.name).join(", ")} ·{" "}
-                    {formatDuration(track.duration_ms)}
-                  </div>
-                </div>
-                <button
-                  className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/40 transition-colors disabled:opacity-50"
-                  onClick={() => addToPlaylist(track.uri, track.id)}
-                  disabled={!selectedPlaylistId || addingTrackId === track.id}
-                  title={
-                    selectedPlaylistId
-                      ? "Add to playlist"
-                      : "Select a playlist first"
-                  }
-                >
-                  {addingTrackId === track.id ? (
-                    <Loader2 size={10} className="animate-spin" />
-                  ) : (
-                    <Plus size={12} />
+      {/* Expanded panel: playlists + search */}
+      {expanded && (
+        <div className="border-b border-border bg-bg/50">
+          <div className="flex gap-0 max-h-72">
+            {/* Playlists column */}
+            <div className="w-1/2 border-r border-border flex flex-col">
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-border">
+                <ListMusic size={14} className="text-text-muted" />
+                <span className="text-xs font-semibold text-text-secondary">
+                  Playlists
+                </span>
+                <div className="ml-auto flex items-center gap-1.5">
+                  {loadingPlaylists && (
+                    <Loader2 size={12} className="text-text-muted animate-spin" />
                   )}
-                </button>
+                  <button
+                    className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                    onClick={() => setShowCreateForm(!showCreateForm)}
+                    title="Create playlist"
+                  >
+                    {showCreateForm ? <X size={12} /> : <Plus size={12} />}
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
-        )}
-        {searchQuery && !searching && searchResults.length === 0 && (
-          <div className="px-3 py-3 text-center text-xs text-text-muted">
-            No results found
-          </div>
-        )}
-      </div>
 
-      {/* Playlists */}
-      <div className="glass-card overflow-hidden">
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
-          <ListMusic size={14} className="text-text-muted" />
-          <span className="text-xs font-medium text-text-secondary">
-            Your Playlists
-          </span>
-          <div className="ml-auto flex items-center gap-1">
-            {loadingPlaylists && (
-              <Loader2 size={12} className="text-text-muted animate-spin" />
-            )}
-            <button
-              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-emerald-400 hover:bg-emerald-500/10 transition-colors"
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              title="Create playlist"
-            >
-              {showCreateForm ? <X size={12} /> : <Plus size={12} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Create Playlist Form */}
-        {showCreateForm && (
-          <div className="px-3 py-2 border-b border-border bg-white/[0.02]">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Playlist name..."
-                value={newPlaylistName}
-                onChange={(e) => setNewPlaylistName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") createPlaylist();
-                  if (e.key === "Escape") {
-                    setShowCreateForm(false);
-                    setNewPlaylistName("");
-                  }
-                }}
-                className="flex-1 rounded bg-bg border border-border px-2 py-1 text-xs text-white placeholder:text-text-muted focus:outline-none focus:border-emerald-500"
-                autoFocus
-                disabled={creatingPlaylist}
-              />
-              <button
-                className="flex items-center gap-1 rounded bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
-                onClick={createPlaylist}
-                disabled={!newPlaylistName.trim() || creatingPlaylist}
-              >
-                {creatingPlaylist ? (
-                  <Loader2 size={10} className="animate-spin" />
-                ) : (
-                  <Plus size={10} />
-                )}
-                Create
-              </button>
-            </div>
-          </div>
-        )}
-        <div className="max-h-48 overflow-y-auto">
-          {playlists.length === 0 && !loadingPlaylists && (
-            <div className="px-3 py-4 text-center text-xs text-text-muted">
-              No playlists found
-            </div>
-          )}
-          {playlists.map((pl) => {
-            const isActive = selectedPlaylistUri === pl.uri;
-            return (
-              <button
-                key={pl.id}
-                className={cn(
-                  "flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-white/5 transition-colors",
-                  isActive && "bg-emerald-500/10",
-                )}
-                onClick={() => playPlaylist(pl.uri)}
-                disabled={startingPlayback}
-              >
-                {pl.images?.[0] ? (
-                  <img
-                    src={pl.images[0].url}
-                    alt=""
-                    className="w-8 h-8 rounded"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded bg-bg flex items-center justify-center">
-                    <Music size={12} className="text-text-muted" />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{pl.name}</div>
-                  <div className="text-xs text-text-muted">
-                    {typeof pl.tracks?.total === "number"
-                      ? pl.tracks.total === 0
-                        ? "Empty"
-                        : `${pl.tracks.total} tracks`
-                      : "Playlist"}
+              {showCreateForm && (
+                <div className="px-3 py-2 border-b border-border bg-white/[0.02]">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Playlist name..."
+                      value={newPlaylistName}
+                      onChange={(e) => setNewPlaylistName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") createPlaylist();
+                        if (e.key === "Escape") {
+                          setShowCreateForm(false);
+                          setNewPlaylistName("");
+                        }
+                      }}
+                      className="flex-1 rounded bg-bg border border-border px-2 py-1 text-xs text-white placeholder:text-text-muted focus:outline-none focus:border-emerald-500"
+                      autoFocus
+                      disabled={creatingPlaylist}
+                    />
+                    <button
+                      className="flex items-center gap-1 rounded bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                      onClick={createPlaylist}
+                      disabled={!newPlaylistName.trim() || creatingPlaylist}
+                    >
+                      {creatingPlaylist ? (
+                        <Loader2 size={10} className="animate-spin" />
+                      ) : (
+                        <Plus size={10} />
+                      )}
+                      Create
+                    </button>
                   </div>
                 </div>
-                {isActive && (
-                  <Check
-                    size={14}
-                    className="text-emerald-400 flex-shrink-0"
-                  />
+              )}
+
+              <div className="overflow-y-auto flex-1">
+                {playlists.length === 0 && !loadingPlaylists && (
+                  <div className="px-3 py-4 text-center text-xs text-text-muted">
+                    No playlists found
+                  </div>
                 )}
-              </button>
-            );
-          })}
+                {playlists.map((pl) => {
+                  const isActive = selectedPlaylistUri === pl.uri;
+                  return (
+                    <button
+                      key={pl.id}
+                      className={cn(
+                        "flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-white/5 transition-colors",
+                        isActive && "bg-emerald-500/10",
+                      )}
+                      onClick={() => playPlaylist(pl.uri)}
+                      disabled={startingPlayback}
+                    >
+                      {pl.images?.[0] ? (
+                        <img
+                          src={pl.images[0].url}
+                          alt=""
+                          className="w-8 h-8 rounded flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded bg-bg flex items-center justify-center flex-shrink-0">
+                          <Music size={12} className="text-text-muted" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-xs font-medium">
+                          {pl.name}
+                        </div>
+                        <div className="text-[10px] text-text-muted">
+                          {typeof pl.tracks?.total === "number"
+                            ? pl.tracks.total === 0
+                              ? "Empty"
+                              : `${pl.tracks.total} tracks`
+                            : "Playlist"}
+                        </div>
+                      </div>
+                      {isActive && (
+                        <Check
+                          size={14}
+                          className="text-emerald-400 flex-shrink-0"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Search column */}
+            <div className="w-1/2 flex flex-col">
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-border">
+                <Search size={14} className="text-text-muted" />
+                <input
+                  type="text"
+                  placeholder="Search songs to add..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-transparent text-xs text-white placeholder:text-text-muted focus:outline-none"
+                />
+                {searching && (
+                  <Loader2 size={12} className="text-text-muted animate-spin" />
+                )}
+                {searchQuery && (
+                  <button
+                    className="text-text-muted hover:text-text-secondary"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSearchResults([]);
+                    }}
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+
+              <div className="overflow-y-auto flex-1">
+                {searchResults.length > 0
+                  ? searchResults.map((track) => (
+                      <div
+                        key={track.id}
+                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 transition-colors"
+                      >
+                        {track.album.images?.[0] ? (
+                          <img
+                            src={
+                              track.album.images[
+                                track.album.images.length - 1
+                              ]?.url ?? track.album.images[0].url
+                            }
+                            alt=""
+                            className="w-8 h-8 rounded flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded bg-bg flex items-center justify-center flex-shrink-0">
+                            <Music size={10} className="text-text-muted" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-xs font-medium">
+                            {track.name}
+                          </div>
+                          <div className="truncate text-[10px] text-text-muted">
+                            {track.artists.map((a) => a.name).join(", ")} ·{" "}
+                            {formatDuration(track.duration_ms)}
+                          </div>
+                        </div>
+                        <button
+                          className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/40 transition-colors disabled:opacity-50"
+                          onClick={() => addToPlaylist(track.uri, track.id)}
+                          disabled={
+                            !selectedPlaylistId || addingTrackId === track.id
+                          }
+                          title={
+                            selectedPlaylistId
+                              ? "Add to playlist"
+                              : "Select a playlist first"
+                          }
+                        >
+                          {addingTrackId === track.id ? (
+                            <Loader2 size={10} className="animate-spin" />
+                          ) : (
+                            <Plus size={12} />
+                          )}
+                        </button>
+                      </div>
+                    ))
+                  : searchQuery &&
+                    !searching && (
+                      <div className="px-3 py-8 text-center text-xs text-text-muted">
+                        No results found
+                      </div>
+                    )}
+                {!searchQuery && (
+                  <div className="px-3 py-8 text-center text-xs text-text-muted">
+                    Search for songs to add to{" "}
+                    {selectedPlaylistName ? (
+                      <span className="text-emerald-400">
+                        {selectedPlaylistName}
+                      </span>
+                    ) : (
+                      "a playlist"
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main bar */}
+      <div className="flex items-center gap-4 px-4 py-2.5 min-h-[56px]">
+        {/* Left: Now Playing */}
+        <div className="flex items-center gap-3 min-w-0 w-1/3">
+          {spotify.currentTrack ? (
+            <>
+              {spotify.currentTrack.image_url && (
+                <img
+                  src={spotify.currentTrack.image_url}
+                  alt=""
+                  className="w-10 h-10 rounded flex-shrink-0"
+                />
+              )}
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium">
+                  {spotify.currentTrack.name}
+                </div>
+                <div className="truncate text-xs text-text-muted">
+                  {spotify.currentTrack.artist}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Music size={16} className="text-emerald-400" />
+              <span className="text-xs text-text-muted">No track playing</span>
+            </div>
+          )}
+        </div>
+
+        {/* Center: Playback controls */}
+        <div className="flex items-center justify-center gap-4 flex-shrink-0">
+          <button
+            className="text-text-secondary hover:text-white transition-colors"
+            onClick={previousTrack}
+          >
+            <SkipBack size={16} />
+          </button>
+          <button
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
+            onClick={togglePlay}
+          >
+            {spotify.isPlaying ? (
+              <Pause size={16} />
+            ) : (
+              <Play size={16} className="ml-0.5" />
+            )}
+          </button>
+          <button
+            className="text-text-secondary hover:text-white transition-colors"
+            onClick={nextTrack}
+          >
+            <SkipForward size={16} />
+          </button>
+        </div>
+
+        {/* Right: Playlist selector + controls */}
+        <div className="flex items-center gap-3 justify-end w-1/3">
+          {/* Volume */}
+          <div className="hidden md:flex items-center gap-1.5">
+            <Volume2 size={14} className="text-text-muted" />
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={spotify.volume}
+              onChange={(e) => {
+                const vol = Number(e.target.value);
+                spotify.setVolume(vol);
+                setPlayerVolume(vol);
+              }}
+              className="w-20 h-1 accent-emerald-500 cursor-pointer"
+            />
+          </div>
+
+          {/* Playlist indicator */}
+          {selectedPlaylistName && (
+            <div className="hidden md:flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1">
+              <ListMusic size={12} className="text-emerald-400" />
+              <span className="text-xs text-emerald-300 max-w-[100px] truncate">
+                {selectedPlaylistName}
+              </span>
+            </div>
+          )}
+
+          {/* Expand toggle */}
+          <button
+            className={cn(
+              "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
+              expanded
+                ? "bg-emerald-600/20 text-emerald-400"
+                : "text-text-secondary hover:bg-white/5 hover:text-text-primary",
+            )}
+            onClick={() => setExpanded(!expanded)}
+          >
+            <ListMusic size={14} />
+            <span className="hidden md:inline">
+              {expanded ? "Close" : "Playlists"}
+            </span>
+            {expanded ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+          </button>
+
+          {/* Reconnect */}
+          <a
+            href="/api/auth/spotify"
+            onClick={() => spotify.reset()}
+            className="text-text-muted hover:text-text-secondary transition-colors"
+            title="Reconnect Spotify"
+          >
+            <RefreshCw size={12} />
+          </a>
         </div>
       </div>
     </div>
