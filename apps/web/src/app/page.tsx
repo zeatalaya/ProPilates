@@ -58,9 +58,14 @@ export default function LandingPage() {
 
         <div className="relative z-10 max-w-3xl">
           <img
-            src="/propilates-logo.svg"
+            src="/propilates-logo-light.svg"
             alt="ProPilates"
-            className="mx-auto mb-8 h-14 md:h-20"
+            className="mx-auto mb-8 h-14 md:h-20 dark:hidden"
+          />
+          <img
+            src="/propilates-logo-dark.svg"
+            alt="ProPilates"
+            className="mx-auto mb-8 h-14 md:h-20 hidden dark:block"
           />
 
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-sm text-violet-400">

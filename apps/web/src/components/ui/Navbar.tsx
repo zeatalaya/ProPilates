@@ -78,17 +78,29 @@ export function Navbar() {
           href="/"
           className="flex items-center flex-shrink-0"
         >
-          {/* Mobile: square icon */}
+          {/* Mobile icon — light mode */}
           <img
-            src="/icon-70.svg"
+            src="/icon-70-light.svg"
             alt="ProPilates"
-            className="h-8 w-8 rounded-lg md:hidden"
+            className="block md:hidden dark:hidden h-8 w-8 rounded-lg"
           />
-          {/* Desktop: full logo */}
+          {/* Mobile icon — dark mode */}
           <img
-            src="/propilates-logo.svg"
+            src="/icon-70-dark.svg"
             alt="ProPilates"
-            className="hidden md:block h-8"
+            className="hidden dark:block dark:md:hidden h-8 w-8 rounded-lg"
+          />
+          {/* Desktop logo — light mode */}
+          <img
+            src="/propilates-logo-light.svg"
+            alt="ProPilates"
+            className="hidden md:block dark:hidden h-8"
+          />
+          {/* Desktop logo — dark mode */}
+          <img
+            src="/propilates-logo-dark.svg"
+            alt="ProPilates"
+            className="hidden dark:hidden dark:md:block h-8"
           />
         </Link>
 
