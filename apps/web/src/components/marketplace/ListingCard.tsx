@@ -1,27 +1,24 @@
 "use client";
 
-import { Clock, User, CreditCard, DollarSign } from "lucide-react";
+import { Clock, User, CreditCard, DollarSign, Loader2 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { useAuthStore } from "@/stores/auth";
 import { formatUsdc } from "@/lib/utils";
 import type { PilatesClass, Instructor } from "@/types";
-
-const crossmintCollectionId =
-  process.env.NEXT_PUBLIC_CROSSMINT_COLLECTION_ID ?? "";
 
 interface Props {
   pilatesClass: PilatesClass;
   instructor: Instructor;
   onPurchase?: () => void;
+  isPurchasing?: boolean;
 }
 
 export function MarketplaceListingCard({
   pilatesClass,
   instructor,
   onPurchase,
+  isPurchasing,
 }: Props) {
-  const { xionAddress } = useAuthStore();
 
   // Price in USDC (stored as decimal dollars)
   const priceUsdc =
@@ -75,9 +72,14 @@ export function MarketplaceListingCard({
           <button
             className="btn-primary flex items-center gap-1.5 text-sm"
             onClick={onPurchase}
+            disabled={isPurchasing}
           >
-            <CreditCard size={14} />
-            Purchase
+            {isPurchasing ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <CreditCard size={14} />
+            )}
+            {isPurchasing ? "Processing..." : "Purchase"}
           </button>
         </div>
       </CardBody>

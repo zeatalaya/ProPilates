@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, DollarSign, Trash2, Loader2, FolderOpen } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
-import { submitTransaction, buildMsgExecuteContract } from "@/lib/xion-transactions";
+import {
+  submitTransaction,
+  buildMarketplaceListMessages,
+  CONTRACTS,
+} from "@/lib/xion-transactions";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatDuration, formatUsdc } from "@/lib/utils";
-import {
-  buildMintAndListMsg,
-  buildDelistMsg,
-} from "@/contracts/marketplace";
 import type { PilatesClass } from "@/types";
 
 export default function PortfolioPage() {
@@ -64,34 +64,46 @@ export default function PortfolioPage() {
   }
 
   async function handleListOnMarketplace(cls: PilatesClass) {
-    if (!xionAddress || !cls.price) return;
+    if (!xionAddress || !cls.price || !instructor) return;
     setIsListing(true);
     try {
-      const result = buildMintAndListMsg(
-        xionAddress,
-        cls.id,
-        String(Math.floor(cls.price * 1_000_000)),
-        {
-          title: cls.title,
-          description: cls.description,
-          method: cls.method,
-          difficulty: cls.difficulty,
-          duration_minutes: cls.duration_minutes,
-        },
-      );
-      if (oauthAccessToken && result.contractAddress) {
-        const txMsg = buildMsgExecuteContract(
+      const tokenId = `propilates-${cls.id}-${Date.now()}`;
+      const priceUsdc = String(Math.floor(cls.price * 1_000_000));
+
+      // Check if contracts are configured (production mode)
+      if (oauthAccessToken && CONTRACTS.nft && CONTRACTS.marketplace) {
+        // Build the 3-step atomic transaction:
+        // 1. Mint NFT on CW721 contract
+        // 2. Approve marketplace to transfer
+        // 3. Create swap (listing) on marketplace
+        const { swapId, messages } = buildMarketplaceListMessages(
           xionAddress,
-          result.contractAddress,
-          result.msg,
+          tokenId,
+          priceUsdc,
+          {
+            class_id: cls.id,
+            title: cls.title,
+            description: cls.description,
+            method: cls.method,
+            difficulty: cls.difficulty,
+            duration_minutes: cls.duration_minutes,
+            instructor_id: instructor.id,
+          },
         );
-        await submitTransaction(oauthAccessToken, [txMsg]);
+        await submitTransaction(oauthAccessToken, messages);
+
+        // Record listing in Supabase for marketplace display
+        await supabase.from("classes").update({
+          token_id: tokenId,
+          swap_id: swapId,
+        }).eq("id", cls.id);
+
         alert("Listed successfully on the marketplace!");
       } else {
-        // Demo mode
-        console.log("Demo mode - marketplace listing:", result);
+        // Demo mode — contracts not deployed yet
+        console.log("Demo mode — listing:", { tokenId, priceUsdc, cls });
         await new Promise((r) => setTimeout(r, 1000));
-        alert("Listed on marketplace! (demo mode)");
+        alert("Listed on marketplace! (demo mode — contracts not yet deployed)");
       }
     } catch (err: any) {
       alert(`Listing failed: ${err.message}`);

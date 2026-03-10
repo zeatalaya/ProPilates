@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import { Search, ShoppingBag, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "@/stores/auth";
+import {
+  submitTransaction,
+  buildMarketplacePurchaseMsg,
+  CONTRACTS,
+} from "@/lib/xion-transactions";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatUsdc } from "@/lib/utils";
@@ -15,8 +21,10 @@ interface ListingWithDetails {
 }
 
 export default function MarketplacePage() {
+  const { xionAddress, oauthAccessToken } = useAuthStore();
   const [listings, setListings] = useState<ListingWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [methodFilter, setMethodFilter] = useState("");
 
@@ -41,6 +49,54 @@ export default function MarketplacePage() {
     }
     loadListings();
   }, []);
+
+  async function handlePurchase(listing: ListingWithDetails) {
+    const cls = listing.class;
+    if (!xionAddress || !cls.price) return;
+
+    if (!confirm(`Purchase "${cls.title}" for $${formatUsdc(cls.price)}?`))
+      return;
+
+    setIsPurchasing(cls.id);
+    try {
+      const priceUsdc = String(Math.floor(cls.price * 1_000_000));
+      const swapId = (cls as any).swap_id;
+
+      if (oauthAccessToken && CONTRACTS.marketplace && swapId) {
+        // Production: finish the swap on the marketplace contract
+        const txMsg = buildMarketplacePurchaseMsg(
+          xionAddress,
+          swapId,
+          priceUsdc,
+        );
+        await submitTransaction(oauthAccessToken, [txMsg]);
+
+        // Record purchase in Supabase
+        await supabase.from("portfolio_access").insert({
+          buyer_address: xionAddress,
+          seller_address: listing.instructor.xion_address,
+          class_id: cls.id,
+          token_id: (cls as any).token_id ?? "",
+          price_paid: cls.price,
+        });
+
+        alert(
+          "Purchase successful! The class has been added to your portfolio.",
+        );
+      } else {
+        // Demo mode — contracts not deployed yet
+        console.log("Demo mode — purchase:", { cls, priceUsdc });
+        await new Promise((r) => setTimeout(r, 1000));
+        alert(
+          "Purchase successful! (demo mode — contracts not yet deployed)",
+        );
+      }
+    } catch (err: any) {
+      alert(`Purchase failed: ${err.message}`);
+    } finally {
+      setIsPurchasing(null);
+    }
+  }
 
   const filtered = listings.filter((l) => {
     if (search && !l.class.title.toLowerCase().includes(search.toLowerCase()))
@@ -106,6 +162,8 @@ export default function MarketplacePage() {
               key={listing.class.id}
               pilatesClass={listing.class}
               instructor={listing.instructor}
+              onPurchase={() => handlePurchase(listing)}
+              isPurchasing={isPurchasing === listing.class.id}
             />
           ))}
         </div>

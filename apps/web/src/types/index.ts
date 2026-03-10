@@ -146,14 +146,27 @@ export interface TeachingState {
   totalElapsed: number;
 }
 
-// ── Marketplace ──
+// ── Marketplace (cw721-marketplace-permissioned CW721Swap) ──
+export interface MarketplaceSwap {
+  id: string; // swap ID on-chain
+  creator: string; // seller address
+  nft_contract: string; // CW721 contract address
+  payment_token: string | null; // null = native token
+  token_id: string; // CW721 token ID
+  expires: { at_height: number } | { at_time: string } | { never: Record<string, never> };
+  price: string; // Uint128 as string (micro-USDC)
+  swap_type: "sale" | "offer";
+}
+
+/** Supabase listing record that links classes to on-chain swaps */
 export interface MarketplaceListing {
+  swap_id: string;
   token_id: string;
   seller: string;
   class_id: string;
   pilatesClass?: PilatesClass;
   instructor?: Instructor;
-  price: string; // uxion amount
+  price: string; // micro-USDC amount
   listed_at: string;
 }
 
