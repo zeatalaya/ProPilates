@@ -8,6 +8,7 @@ import {
   useCrossmintCheckout,
 } from "@crossmint/client-sdk-react-ui";
 import { useAuthStore } from "@/stores/auth";
+import { useThemeStore } from "@/stores/theme";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const CROSSMINT_COLLECTION_ID =
@@ -20,6 +21,10 @@ interface Props {
 
 function CheckoutInner({ instructorId, xionAddress }: Props) {
   const { setTier } = useAuthStore();
+  const theme = useThemeStore((s) => s.theme);
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const { order } = useCrossmintCheckout();
   const [activated, setActivated] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -94,7 +99,7 @@ function CheckoutInner({ instructorId, xionAddress }: Props) {
           </div>
           <div className="text-right">
             <div className="text-xl font-bold" style={{ color: "#f0d898" }}>$4.99</div>
-            <div className="text-xs text-text-muted">USDC/month</div>
+            <div className="text-xs text-text-muted">/month</div>
           </div>
         </div>
       </div>
@@ -122,10 +127,10 @@ function CheckoutInner({ instructorId, xionAddress }: Props) {
         appearance={{
           variables: {
             colors: {
-              backgroundPrimary: "#1a1a2e",
-              textPrimary: "#e2e8f0",
-              textSecondary: "#94a3b8",
-              borderPrimary: "#334155",
+              backgroundPrimary: isDark ? "#1a1a2e" : "#ffffff",
+              textPrimary: isDark ? "#e2e8f0" : "#1a1a2e",
+              textSecondary: isDark ? "#94a3b8" : "#6b7280",
+              borderPrimary: isDark ? "#334155" : "#e4e4eb",
               accent: "#c9a96e",
             },
             borderRadius: "8px",

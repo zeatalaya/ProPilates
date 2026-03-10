@@ -7,9 +7,11 @@ import {
   ShoppingBag,
   ShieldCheck,
   Music,
-  Zap,
+  UserPlus,
   ArrowRight,
+  LogIn,
 } from "lucide-react";
+import { useOAuth3 } from "@/hooks/useOAuth3";
 
 const features = [
   {
@@ -25,12 +27,12 @@ const features = [
   {
     icon: ShoppingBag,
     title: "Marketplace",
-    desc: "Buy and sell class portfolios as NFTs on XION blockchain.",
+    desc: "Buy and sell class portfolios on the marketplace.",
   },
   {
     icon: ShieldCheck,
     title: "Credential Verification",
-    desc: "Verify BASI, STOTT, or Balanced Body certifications on-chain via ZK proofs.",
+    desc: "Verify BASI, STOTT, or Balanced Body certifications with secure digital verification.",
   },
   {
     icon: Music,
@@ -38,13 +40,15 @@ const features = [
     desc: "Connect your Spotify account and control music directly during teaching.",
   },
   {
-    icon: Zap,
-    title: "Gasless UX",
-    desc: "XION account abstraction means no gas fees and no seed phrases.",
+    icon: UserPlus,
+    title: "Easy Sign-Up",
+    desc: "Simple account creation with no technical barriers — just sign in and start building.",
   },
 ];
 
 export default function LandingPage() {
+  const { login } = useOAuth3();
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Hero */}
@@ -60,21 +64,20 @@ export default function LandingPage() {
           />
 
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-sm text-violet-400">
-            <Zap size={14} />
-            Powered by XION Blockchain
+            <ShieldCheck size={14} />
+            Professional Pilates Platform
           </div>
 
           <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-7xl">
             Your Pilates
             <span className="block bg-gradient-to-r from-violet-400 to-violet-600 bg-clip-text text-transparent">
-              Studio, On-Chain
+              Studio, Elevated
             </span>
           </h1>
 
           <p className="mx-auto mb-10 max-w-xl text-lg text-text-secondary">
             Build classes with 150+ exercises. Teach with live timers and
-            Spotify. Monetize your expertise through blockchain-powered
-            portfolios.
+            Spotify. Monetize your expertise through digital portfolios.
           </p>
 
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -85,7 +88,14 @@ export default function LandingPage() {
               Get Started
               <ArrowRight size={18} />
             </Link>
-            <Link href="/builder" className="btn-secondary px-8 py-3 text-lg">
+            <button
+              onClick={() => login()}
+              className="btn-secondary px-8 py-3 text-lg"
+            >
+              <LogIn size={18} />
+              Log In
+            </button>
+            <Link href="/builder" className="btn-ghost px-8 py-3 text-lg">
               Try Class Builder
             </Link>
           </div>
@@ -171,7 +181,7 @@ export default function LandingPage() {
                 Premium
               </div>
               <div className="mb-6 text-4xl font-bold">
-                $4.99 <span className="text-lg text-text-secondary">USDC/mo</span>
+                $4.99 <span className="text-lg text-text-secondary">/mo</span>
               </div>
               <ul className="mb-8 space-y-3 text-sm text-text-secondary">
                 <li className="flex items-center gap-2">
@@ -192,7 +202,7 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-emerald-400">&#10003;</span>
-                  On-chain credential badges
+                  Verified credential badges
                 </li>
               </ul>
               <Link href="/onboarding" className="btn-primary w-full text-center">
@@ -205,7 +215,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border px-4 py-8 text-center text-sm text-text-muted">
-        ProPilates &middot; Built on XION
+        ProPilates &middot; Professional Pilates Platform
       </footer>
     </div>
   );

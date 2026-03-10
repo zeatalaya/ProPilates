@@ -97,7 +97,7 @@ export function StepProve() {
               Verify {selectedProviderName}
             </h3>
             <Badge variant="violet" className="mt-2">
-              Reclaim zkTLS
+              Truth Engine
             </Badge>
           </div>
 
@@ -118,7 +118,7 @@ export function StepProve() {
               </div>
 
               <p className="text-sm text-text-secondary">
-                Complete the verification in the Reclaim portal, then return
+                Complete the verification in the Truth Engine portal, then return
                 here.
               </p>
 

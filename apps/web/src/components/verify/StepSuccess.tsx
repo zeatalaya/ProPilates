@@ -41,7 +41,7 @@ export function StepSuccess() {
             </h3>
             <p className="mt-2 text-sm text-text-secondary">
               Your {selectedProviderName} certification has been verified and
-              minted as an on-chain badge.
+              issued as a verified digital badge.
             </p>
           </div>
 

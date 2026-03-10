@@ -71,9 +71,9 @@ export function StepSubmit() {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold">Minting Your Badge</h3>
+            <h3 className="text-lg font-semibold">Issuing Your Badge</h3>
             <p className="mt-2 text-sm text-text-secondary">
-              Submitting your certification proof to the XION blockchain.
+              Submitting your certification verification.
               This may take a moment...
             </p>
           </div>
@@ -84,7 +84,7 @@ export function StepSubmit() {
           </div>
 
           <p className="text-xs text-text-muted">
-            Your badge will be permanently stored on-chain as a CW721 NFT.
+            Your badge will be permanently stored and verified.
           </p>
         </CardBody>
       </Card>

@@ -6,8 +6,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: { DEFAULT: "#0a0a0f", card: "#111118", elevated: "#1a1a24" },
-        border: { DEFAULT: "#2a2a3a", hover: "#3a3a4f" },
+        bg: {
+          DEFAULT: "rgb(var(--bg) / <alpha-value>)",
+          card: "rgb(var(--bg-card) / <alpha-value>)",
+          elevated: "rgb(var(--bg-elevated) / <alpha-value>)",
+        },
+        border: {
+          DEFAULT: "rgb(var(--border) / <alpha-value>)",
+          hover: "rgb(var(--border-hover) / <alpha-value>)",
+        },
         violet: {
           50: "#fdf8ec",
           100: "#faefd0",
@@ -21,7 +28,11 @@ const config: Config = {
           900: "#563f14",
           950: "#2e210a",
         },
-        text: { primary: "#f0f0f5", secondary: "#8888a0", muted: "#55556a" },
+        text: {
+          primary: "rgb(var(--text-primary) / <alpha-value>)",
+          secondary: "rgb(var(--text-secondary) / <alpha-value>)",
+          muted: "rgb(var(--text-muted) / <alpha-value>)",
+        },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],

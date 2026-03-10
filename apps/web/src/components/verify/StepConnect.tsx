@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Wallet, CheckCircle } from "lucide-react";
+import { LogIn, CheckCircle } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { useAuthStore } from "@/stores/auth";
 import { useOAuth3 } from "@/hooks/useOAuth3";
@@ -31,7 +31,7 @@ export function StepConnect() {
               </div>
               <div>
                 <p className="font-semibold text-emerald-400">
-                  Wallet Connected
+                  Account Connected
                 </p>
                 <p className="mt-1 font-mono text-sm text-text-muted">
                   {truncateAddress(xionAddress, 12)}
@@ -44,18 +44,18 @@ export function StepConnect() {
           ) : (
             <>
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/15">
-                <Wallet size={32} className="text-violet-400" />
+                <LogIn size={32} className="text-violet-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Connect Your Wallet</h3>
+                <h3 className="text-lg font-semibold">Connect Your Account</h3>
                 <p className="mt-1 text-sm text-text-secondary">
-                  Sign in with your XION account to start the verification
-                  process. Your badge will be minted to this address.
+                  Sign in to start the verification process. Your credential
+                  badge will be linked to your account.
                 </p>
               </div>
-              <button className="btn-primary w-full" onClick={login}>
-                <Wallet size={16} />
-                Connect with XION
+              <button className="btn-primary w-full" onClick={() => login()}>
+                <LogIn size={16} />
+                Sign In
               </button>
             </>
           )}

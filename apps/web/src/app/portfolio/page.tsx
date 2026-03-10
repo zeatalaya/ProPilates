@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, DollarSign, Trash2, Loader2, FolderOpen } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
+import { submitTransaction, buildMsgExecuteContract } from "@/lib/xion-transactions";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatDuration, formatUsdc } from "@/lib/utils";
@@ -14,9 +15,10 @@ import {
 import type { PilatesClass } from "@/types";
 
 export default function PortfolioPage() {
-  const { instructor, tier } = useAuthStore();
+  const { instructor, tier, oauthAccessToken, xionAddress } = useAuthStore();
   const [classes, setClasses] = useState<PilatesClass[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isListing, setIsListing] = useState(false);
 
   useEffect(() => {
     if (!instructor) return;
@@ -47,7 +49,7 @@ export default function PortfolioPage() {
   }
 
   async function setPrice(cls: PilatesClass) {
-    const input = prompt("Set price in USDC (0 for free):");
+    const input = prompt("Set price in USD (0 for free):");
     if (input === null) return;
     const price = parseFloat(input) || 0;
     const { error } = await supabase
@@ -62,22 +64,40 @@ export default function PortfolioPage() {
   }
 
   async function handleListOnMarketplace(cls: PilatesClass) {
-    if (!instructor || !cls.price) return;
-    const msg = buildMintAndListMsg(
-      instructor.xion_address ?? "",
-      cls.id,
-      String(Math.floor(cls.price * 1_000_000)),
-      {
-        title: cls.title,
-        description: cls.description,
-        method: cls.method,
-        difficulty: cls.difficulty,
-        duration_minutes: cls.duration_minutes,
-      },
-    );
-    // In production, execute via XION signing client
-    console.log("Marketplace list msg:", msg);
-    alert("Listing transaction prepared. Connect wallet to sign.");
+    if (!xionAddress || !cls.price) return;
+    setIsListing(true);
+    try {
+      const result = buildMintAndListMsg(
+        xionAddress,
+        cls.id,
+        String(Math.floor(cls.price * 1_000_000)),
+        {
+          title: cls.title,
+          description: cls.description,
+          method: cls.method,
+          difficulty: cls.difficulty,
+          duration_minutes: cls.duration_minutes,
+        },
+      );
+      if (oauthAccessToken && result.contractAddress) {
+        const txMsg = buildMsgExecuteContract(
+          xionAddress,
+          result.contractAddress,
+          result.msg,
+        );
+        await submitTransaction(oauthAccessToken, [txMsg]);
+        alert("Listed successfully on the marketplace!");
+      } else {
+        // Demo mode
+        console.log("Demo mode - marketplace listing:", result);
+        await new Promise((r) => setTimeout(r, 1000));
+        alert("Listed on marketplace! (demo mode)");
+      }
+    } catch (err: any) {
+      alert(`Listing failed: ${err.message}`);
+    } finally {
+      setIsListing(false);
+    }
   }
 
   async function handleDelete(classId: string) {
@@ -91,7 +111,7 @@ export default function PortfolioPage() {
   if (!instructor) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-        <p className="text-text-muted">Connect your wallet to view portfolio.</p>
+        <p className="text-text-muted">Sign in to view your portfolio.</p>
       </div>
     );
   }
@@ -173,14 +193,16 @@ export default function PortfolioPage() {
                   >
                     <DollarSign size={14} />
                     {cls.price != null
-                      ? `$${formatUsdc(cls.price)} USDC`
+                      ? `$${formatUsdc(cls.price)}`
                       : "Set Price"}
                   </button>
                   {cls.is_public && cls.price != null && cls.price > 0 && (
                     <button
                       className="btn-primary text-xs"
                       onClick={() => handleListOnMarketplace(cls)}
+                      disabled={isListing}
                     >
+                      {isListing && <Loader2 size={14} className="animate-spin" />}
                       List on Market
                     </button>
                   )}

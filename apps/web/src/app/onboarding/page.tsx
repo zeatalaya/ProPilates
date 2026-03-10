@@ -215,9 +215,9 @@ function OnboardingContent() {
     return (
       <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center gap-4">
         <Loader2 size={32} className="animate-spin text-violet-400" />
-        <p className="text-lg font-medium">Setting up your XION account…</p>
+        <p className="text-lg font-medium">Setting up your account...</p>
         <p className="text-sm text-text-secondary">
-          Creating your Meta Account and approving permissions
+          Creating your account and setting up permissions
         </p>
       </div>
     );

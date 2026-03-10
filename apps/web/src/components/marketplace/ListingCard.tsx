@@ -68,7 +68,7 @@ export function MarketplaceListingCard({
           <div className="flex items-center gap-1.5">
             <DollarSign size={16} className="text-emerald-400" />
             <span className="text-lg font-bold">
-              {priceUsdc != null ? `${priceUsdc} USDC` : "Free"}
+              {priceUsdc != null ? `$${priceUsdc}` : "Free"}
             </span>
           </div>
 

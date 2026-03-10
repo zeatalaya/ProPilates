@@ -26,7 +26,7 @@ const STEPS = [
   { key: "connecting" as const, label: "Connect", icon: Wallet },
   { key: "choosing" as const, label: "Choose", icon: ListChecks },
   { key: "proving" as const, label: "Prove", icon: Fingerprint },
-  { key: "submitting" as const, label: "Mint", icon: Coins },
+  { key: "submitting" as const, label: "Submit", icon: Coins },
   { key: "success" as const, label: "Done", icon: CheckCircle },
 ];
 
@@ -57,9 +57,9 @@ export default function VerifyPage() {
           Credential Verification
         </h1>
         <p className="mt-2 text-text-secondary">
-          Verify your Pilates certifications on-chain using Reclaim Protocol ZK
-          proofs. Verified credentials are minted as tamper-proof NFT badges on
-          the XION blockchain.
+          Verify your Pilates certifications using Truth Engine secure
+          verification. Verified credentials are issued as tamper-proof digital
+          badges.
         </p>
       </div>
 
@@ -110,7 +110,7 @@ export default function VerifyPage() {
             {
               step: 1,
               title: "Connect",
-              desc: "Sign in with your XION account to link your wallet.",
+              desc: "Sign in to your account to get started.",
             },
             {
               step: 2,
@@ -120,17 +120,17 @@ export default function VerifyPage() {
             {
               step: 3,
               title: "Prove",
-              desc: "Reclaim Protocol generates a ZK proof of your credential without exposing sensitive data.",
+              desc: "Truth Engine securely verifies your credential without exposing sensitive data.",
             },
             {
               step: 4,
-              title: "Mint",
-              desc: "The proof is submitted on-chain and your badge NFT is minted.",
+              title: "Submit",
+              desc: "Your verification is submitted and your credential badge is issued.",
             },
             {
               step: 5,
               title: "Share",
-              desc: "Your certification badge is permanently stored on XION — share it with anyone.",
+              desc: "Your certification badge is permanently stored and shareable with anyone.",
             },
           ].map(({ step: s, title, desc }) => (
             <div key={s} className="glass-card p-4">

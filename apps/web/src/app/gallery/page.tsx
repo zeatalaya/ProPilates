@@ -32,10 +32,10 @@ export default function GalleryPage() {
           Badge Gallery
         </h1>
         <p className="mt-2 text-text-secondary">
-          Browse all verified Pilates instructor certification badges on XION.
+          Browse all verified Pilates instructor certification badges.
           {totalCount > 0 && (
             <span className="ml-1 font-semibold text-violet-400">
-              {totalCount} badge{totalCount !== 1 ? "s" : ""} minted.
+              {totalCount} badge{totalCount !== 1 ? "s" : ""} issued.
             </span>
           )}
         </p>
@@ -51,7 +51,7 @@ export default function GalleryPage() {
             size={48}
             className="mx-auto mb-4 text-text-muted opacity-30"
           />
-          <p className="text-lg text-text-muted">No badges minted yet</p>
+          <p className="text-lg text-text-muted">No badges issued yet</p>
           <p className="mt-1 text-sm text-text-muted">
             Be the first to verify your certification and earn a badge.
           </p>

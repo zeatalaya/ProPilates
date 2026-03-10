@@ -96,7 +96,7 @@ export default function ProfilePage() {
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <div className="text-center">
           <User size={48} className="mx-auto mb-4 text-text-muted opacity-30" />
-          <p className="text-text-muted">Connect your wallet to view profile.</p>
+          <p className="text-text-muted">Sign in to view your profile.</p>
         </div>
       </div>
     );
@@ -171,13 +171,12 @@ export default function ProfilePage() {
         <Card>
           <CardHeader>
             <h3 className="flex items-center gap-2 font-semibold">
-              <Zap size={16} className="text-emerald-400" /> USDC Balance
+              <Zap size={16} className="text-emerald-400" /> Balance
             </h3>
           </CardHeader>
           <CardBody>
             <div className="text-3xl font-bold">
-              ${balance ?? "—"}{" "}
-              <span className="text-lg text-text-secondary">USDC</span>
+              ${balance ?? "—"}
             </div>
             {xionAddress && (
               <div className="mt-2 font-mono text-xs text-text-muted">
@@ -247,9 +246,9 @@ export default function ProfilePage() {
                   Verify Your Credentials
                 </h4>
                 <p className="mx-auto mb-4 max-w-md text-sm text-text-secondary">
-                  Use Reclaim Protocol to verify your Pilates certifications
-                  on-chain with zero-knowledge proofs. Verified credentials
-                  build trust with clients and unlock marketplace features.
+                  Use Truth Engine to securely verify your Pilates
+                  certifications. Verified credentials build trust with
+                  clients and unlock marketplace features.
                 </p>
                 <Link
                   href="/verify"
@@ -273,7 +272,7 @@ export default function ProfilePage() {
                         {v.provider.replace("_", " ")}
                       </div>
                       <div className="text-xs text-text-muted">
-                        {v.on_chain ? "Verified on-chain" : "Pending on-chain"}{" "}
+                        {v.on_chain ? "Verified" : "Pending"}{" "}
                         &middot;{" "}
                         {new Date(v.verified_at).toLocaleDateString()}
                       </div>
@@ -283,7 +282,7 @@ export default function ProfilePage() {
                         href="/verify"
                         className="text-xs text-violet-400 hover:text-violet-300"
                       >
-                        Verify on-chain
+                        Verify now
                         <ExternalLink size={10} className="ml-1 inline" />
                       </Link>
                     )}

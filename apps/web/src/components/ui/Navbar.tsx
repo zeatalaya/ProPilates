@@ -15,10 +15,14 @@ import {
   Award,
   ChevronDown,
   LogOut,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { useOAuth3 } from "@/hooks/useOAuth3";
+import { useThemeStore } from "@/stores/theme";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -37,6 +41,7 @@ export function Navbar() {
   const router = useRouter();
   const { isConnected, instructor } = useAuthStore();
   const { logout } = useOAuth3();
+  const { theme, setTheme } = useThemeStore();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -106,8 +111,26 @@ export function Navbar() {
           ))}
         </div>
 
-        {/* Connection status */}
-        <div className="relative flex items-center gap-3" ref={dropdownRef}>
+        {/* Theme toggle + Connection status */}
+        <div className="relative flex items-center gap-2" ref={dropdownRef}>
+          <button
+            onClick={() =>
+              setTheme(
+                theme === "dark" ? "light" : theme === "light" ? "system" : "dark",
+              )
+            }
+            className="rounded-lg p-2 text-text-secondary transition-colors hover:bg-bg-elevated hover:text-text-primary"
+            title={`Theme: ${theme}`}
+          >
+            {theme === "dark" ? (
+              <Moon size={16} />
+            ) : theme === "light" ? (
+              <Sun size={16} />
+            ) : (
+              <Monitor size={16} />
+            )}
+          </button>
+
           {isConnected ? (
             <>
               <button
@@ -142,14 +165,14 @@ export function Navbar() {
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-400 transition-colors hover:bg-bg hover:text-red-300"
                   >
                     <LogOut size={14} />
-                    Disconnect
+                    Sign Out
                   </button>
                 </div>
               )}
             </>
           ) : (
             <Link href="/" className="btn-primary text-sm">
-              Connect
+              Sign In
             </Link>
           )}
         </div>

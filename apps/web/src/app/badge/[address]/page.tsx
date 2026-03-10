@@ -56,7 +56,7 @@ export default function BadgePage() {
 
   function shareOnX() {
     const text = encodeURIComponent(
-      `I'm a verified Pilates instructor on-chain! Check my certification badge:`,
+      `I'm a verified Pilates instructor! Check my certification badge:`,
     );
     const url = encodeURIComponent(window.location.href);
     window.open(
@@ -141,7 +141,7 @@ export default function BadgePage() {
             </div>
             <div>
               <div className="text-xs text-text-muted">Verification Method</div>
-              <div className="text-sm">Reclaim zkTLS</div>
+              <div className="text-sm">Truth Engine</div>
             </div>
             <div>
               <div className="text-xs text-text-muted">Owner</div>

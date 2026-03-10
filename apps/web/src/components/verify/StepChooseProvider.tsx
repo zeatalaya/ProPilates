@@ -65,7 +65,7 @@ export function StepChooseProvider() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">{provider.name}</h3>
-                <Badge variant="violet">ZK Proof</Badge>
+                <Badge variant="violet">Verified</Badge>
               </div>
             </CardHeader>
             <CardBody>
