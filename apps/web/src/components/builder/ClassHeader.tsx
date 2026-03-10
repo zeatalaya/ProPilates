@@ -87,69 +87,72 @@ export function ClassHeader() {
   }
 
   return (
-    <div className="flex items-center gap-4 border-b border-border px-4 py-3">
-      <input
-        className="flex-1 bg-transparent text-lg font-semibold outline-none placeholder:text-text-muted"
-        placeholder="Class Title..."
-        value={store.title}
-        onChange={(e) => store.setTitle(e.target.value)}
-      />
+    <div className="border-b border-border px-3 md:px-4 py-2 md:py-3">
+      {/* Row 1: Title + selectors */}
+      <div className="flex items-center gap-2 md:gap-4">
+        <input
+          className="min-w-0 flex-1 bg-transparent text-base md:text-lg font-semibold outline-none placeholder:text-text-muted"
+          placeholder="Class Title..."
+          value={store.title}
+          onChange={(e) => store.setTitle(e.target.value)}
+        />
 
-      <select
-        className="input-field w-auto"
-        value={store.method}
-        onChange={(e) => store.setMethod(e.target.value as any)}
-      >
-        {METHODS.map((m) => (
-          <option key={m.value} value={m.value}>
-            {m.label}
-          </option>
-        ))}
-      </select>
+        <select
+          className="input-field w-auto text-sm"
+          value={store.method}
+          onChange={(e) => store.setMethod(e.target.value as any)}
+        >
+          {METHODS.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
 
-      <select
-        className="input-field w-auto"
-        value={store.difficulty}
-        onChange={(e) => store.setDifficulty(e.target.value as any)}
-      >
-        {DIFFICULTIES.map((d) => (
-          <option key={d.value} value={d.value}>
-            {d.label}
-          </option>
-        ))}
-      </select>
+        <select
+          className="hidden sm:block input-field w-auto text-sm"
+          value={store.difficulty}
+          onChange={(e) => store.setDifficulty(e.target.value as any)}
+        >
+          {DIFFICULTIES.map((d) => (
+            <option key={d.value} value={d.value}>
+              {d.label}
+            </option>
+          ))}
+        </select>
 
-      <div className="flex items-center gap-1.5 text-sm text-text-secondary">
-        <Clock size={14} />
-        {formatDuration(totalSec)}
+        <div className="hidden md:flex items-center gap-1.5 text-sm text-text-secondary">
+          <Clock size={14} />
+          {formatDuration(totalSec)}
+        </div>
+
+        <button
+          className="hidden lg:inline-flex btn-secondary text-sm"
+          onClick={() => router.push("/templates")}
+        >
+          <BookOpen size={14} />
+          Templates
+        </button>
+
+        <button
+          className="hidden sm:inline-flex btn-secondary text-sm"
+          onClick={handleSave}
+          disabled={!canSave || saving}
+          title={!canSave ? "Premium required to save" : ""}
+        >
+          <Save size={14} />
+          <span className="hidden md:inline">{saving ? "Saving..." : "Save"}</span>
+        </button>
+
+        <button
+          className="btn-primary text-sm"
+          onClick={() => router.push("/teach")}
+          disabled={store.blocks.length === 0}
+        >
+          <Play size={14} />
+          <span className="hidden sm:inline">Teach</span>
+        </button>
       </div>
-
-      <button
-        className="btn-secondary text-sm"
-        onClick={() => router.push("/templates")}
-      >
-        <BookOpen size={14} />
-        Templates
-      </button>
-
-      <button
-        className="btn-secondary text-sm"
-        onClick={handleSave}
-        disabled={!canSave || saving}
-        title={!canSave ? "Premium required to save" : ""}
-      >
-        <Save size={14} />
-        {saving ? "Saving..." : "Save"}
-      </button>
-
-      <button
-        className="btn-primary text-sm"
-        onClick={() => router.push("/teach")}
-        disabled={store.blocks.length === 0}
-      >
-        <Play size={14} />
-        Teach
-      </button>
     </div>
   );
 }

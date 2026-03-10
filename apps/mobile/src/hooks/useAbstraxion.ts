@@ -1,13 +1,18 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Platform } from "react-native";
 import { useAuthStore } from "@propilates/shared";
 
-// Types matching the Abstraxion RN hook interface
+// Full type matching the Abstraxion RN SDK hook interface
 interface AbstraxionAccountState {
   data: { bech32Address: string };
   isConnected: boolean;
   isConnecting: boolean;
+  isInitializing?: boolean;
+  isReturningFromAuth?: boolean;
+  isLoggingIn?: boolean;
   isLoading: boolean;
+  isError?: boolean;
+  error?: string;
   login: () => Promise<void>;
   logout: () => void;
 }
@@ -40,27 +45,33 @@ export function useAbstraxion(): AbstraxionAccountState {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const account = useNativeAbstraxionAccount();
 
-    // Sync Abstraxion state → Zustand store
-    if (account.isConnected && account.data.bech32Address) {
-      if (authStore.xionAddress !== account.data.bech32Address) {
-        authStore.setXionAddress(account.data.bech32Address);
+    // Sync Abstraxion state → Zustand store (in useEffect, not during render)
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+      if (account.isConnected && account.data.bech32Address) {
+        if (authStore.xionAddress !== account.data.bech32Address) {
+          authStore.setXionAddress(account.data.bech32Address);
+        }
       }
-    }
+    }, [account.isConnected, account.data.bech32Address]);
 
     return account;
   }
 
   // Web/fallback: use Zustand store as source of truth
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const login = useCallback(async () => {
     // Demo mode: generate a test address
     const demoAddress = "xion1demo" + Date.now().toString(36);
     authStore.setXionAddress(demoAddress);
   }, [authStore]);
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const logout = useCallback(() => {
     authStore.reset();
   }, [authStore]);
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   return useMemo(
     () => ({
       data: { bech32Address: authStore.xionAddress ?? "" },

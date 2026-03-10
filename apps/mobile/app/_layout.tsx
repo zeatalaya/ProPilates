@@ -1,3 +1,14 @@
+// Polyfills must be imported BEFORE anything that uses crypto
+import "react-native-get-random-values";
+import QuickCrypto, { install } from "react-native-quick-crypto";
+
+// Install sets global.Buffer from @craftzdog/react-native-buffer
+install();
+
+// Set global.crypto for CosmJS / Abstraxion compatibility
+// @ts-ignore – QuickCrypto provides Node-compatible crypto in RN
+global.crypto = QuickCrypto as any;
+
 import "../global.css";
 import React from "react";
 import { Stack } from "expo-router";

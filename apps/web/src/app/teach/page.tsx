@@ -126,29 +126,29 @@ export default function TeachPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col bg-bg">
       {/* Top bar */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-3">
+      <div className="flex items-center justify-between border-b border-border px-3 md:px-6 py-3">
         <button
           className="btn-ghost text-sm"
           onClick={() => router.push("/builder")}
         >
           <ArrowLeft size={16} />
-          Back to Builder
+          <span className="hidden sm:inline">Back to Builder</span>
         </button>
-        <div className="text-sm font-medium text-text-secondary">
+        <div className="text-sm font-medium text-text-secondary truncate px-2">
           {builderTitle || "Untitled Class"}
         </div>
-        <div className="text-sm text-text-muted">
+        <div className="text-sm text-text-muted whitespace-nowrap">
           {currentExerciseNumber()} / {totalExercises()}
         </div>
       </div>
 
       {/* Main teaching area */}
-      <div className="flex flex-1 items-center justify-center gap-12 px-8">
+      <div className="flex flex-1 flex-col md:flex-row items-center justify-center gap-6 md:gap-12 px-4 md:px-8 overflow-y-auto py-4 md:py-0">
         {/* Current exercise with timer */}
         <div className="flex flex-col items-center">
-          <TimerRing progress={prog} size={280} strokeWidth={8}>
+          <TimerRing progress={prog} size={200} strokeWidth={8}>
             <div className="text-center">
-              <div className="text-4xl font-bold font-mono">
+              <div className="text-3xl md:text-4xl font-bold font-mono">
                 {formatDuration(
                   Math.max(
                     0,
@@ -160,8 +160,8 @@ export default function TeachPage() {
             </div>
           </TimerRing>
 
-          <div className="mt-8 text-center">
-            <h1 className="text-3xl font-bold">
+          <div className="mt-4 md:mt-8 text-center">
+            <h1 className="text-2xl md:text-3xl font-bold">
               {exercise?.exercise?.name ?? "\u2014"}
             </h1>
             <div className="mt-2 flex justify-center gap-2">
@@ -199,7 +199,7 @@ export default function TeachPage() {
         </div>
 
         {/* Right sidebar: next exercise + block progress + now playing */}
-        <div className="w-72 space-y-6">
+        <div className="w-full md:w-72 space-y-4 md:space-y-6 pb-4 md:pb-0">
           {/* Block progress */}
           <div className="glass-card p-4">
             <h3 className="mb-3 text-sm font-semibold text-text-secondary">
@@ -333,7 +333,7 @@ export default function TeachPage() {
       </div>
 
       {/* Playback controls */}
-      <div className="flex items-center justify-center gap-6 border-t border-border py-6">
+      <div className="flex items-center justify-center gap-6 border-t border-border py-4 md:py-6">
         <button className="btn-ghost" onClick={skipPrev}>
           <SkipBack size={24} />
         </button>

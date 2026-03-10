@@ -1,5 +1,5 @@
 import React, { type ReactNode, useEffect } from "react";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { setContractConfig } from "@propilates/shared";
@@ -22,32 +22,14 @@ if (Platform.OS !== "web") {
   }
 }
 
-// Suppress the default Alert.alert so Abstraxion connection errors
-// don't block the UI on startup. Users can still connect on demand.
-const _origAlert = Alert.alert;
-let suppressAlerts = true;
-Alert.alert = (...args: Parameters<typeof Alert.alert>) => {
-  if (suppressAlerts) return;
-  _origAlert(...args);
-};
-
 const abstraxionConfig = {
   treasury: ENV.TREASURY_CONTRACT || undefined,
   rpcUrl: ENV.XION_RPC,
-  restUrl: ENV.XION_REST,
+  gasPrice: "0.001uxion",
   callbackUrl: "propilates://",
 };
 
 export function Providers({ children }: { children: ReactNode }) {
-  // Re-enable alerts after initial provider mount
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      suppressAlerts = false;
-      Alert.alert = _origAlert;
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
-
   useEffect(() => {
     setContractConfig({
       treasuryContract: ENV.TREASURY_CONTRACT,

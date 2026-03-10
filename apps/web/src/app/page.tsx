@@ -53,12 +53,18 @@ export default function LandingPage() {
         <div className="pointer-events-none absolute top-1/4 h-96 w-96 rounded-full bg-violet-600/20 blur-[128px]" />
 
         <div className="relative z-10 max-w-3xl">
+          <img
+            src="/propilates-logo.svg"
+            alt="ProPilates"
+            className="mx-auto mb-8 h-14 md:h-20"
+          />
+
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-sm text-violet-400">
             <Zap size={14} />
             Powered by XION Blockchain
           </div>
 
-          <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight md:text-7xl">
+          <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-7xl">
             Your Pilates
             <span className="block bg-gradient-to-r from-violet-400 to-violet-600 bg-clip-text text-transparent">
               Studio, On-Chain
