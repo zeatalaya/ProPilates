@@ -76,7 +76,7 @@ export default function PortfolioPage() {
         // 1. Mint NFT on CW721 contract
         // 2. Approve marketplace to transfer
         // 3. Create swap (listing) on marketplace
-        const { swapId, messages } = buildMarketplaceListMessages(
+        const { tokenId: mintedTokenId, messages } = buildMarketplaceListMessages(
           xionAddress,
           tokenId,
           priceUsdc,
@@ -94,8 +94,7 @@ export default function PortfolioPage() {
 
         // Record listing in Supabase for marketplace display
         await supabase.from("classes").update({
-          token_id: tokenId,
-          swap_id: swapId,
+          token_id: mintedTokenId,
         }).eq("id", cls.id);
 
         alert("Listed successfully on the marketplace!");

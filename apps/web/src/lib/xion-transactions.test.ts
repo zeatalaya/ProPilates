@@ -106,12 +106,18 @@ describe("xion-transactions", () => {
       expect(result.messages).toHaveLength(3);
       expect(result.tokenId).toBe("token-1");
 
-      // Message 1: mint
+      // Message 1: mint (cw721-base uses Empty extension, metadata in token_uri)
       const mint = result.messages[0];
       expect(mint.value.contract).toBe(CONTRACTS.nft);
       const mintDecoded = JSON.parse(atob(mint.value.msg as string));
       expect(mintDecoded.mint.token_id).toBe("token-1");
       expect(mintDecoded.mint.owner).toBe("xion1seller");
+      expect(mintDecoded.mint.extension).toEqual({});
+      expect(mintDecoded.mint.token_uri).toMatch(/^data:application\/json;base64,/);
+      // Verify metadata is encoded in token_uri
+      const uriData = JSON.parse(atob(mintDecoded.mint.token_uri.split(",")[1]));
+      expect(uriData.name).toBe("My Class");
+      expect(uriData.description).toBe("Desc");
 
       // Message 2: approve
       const approve = result.messages[1];

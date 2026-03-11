@@ -221,13 +221,28 @@ export function buildMarketplaceListMessages(
   const marketplaceContract = CONTRACTS.marketplace;
   const denom = process.env.NEXT_PUBLIC_USDC_DENOM ?? "uxion";
 
+  // Encode metadata as a data URI for token_uri
+  // cw721-base v0.19.0 uses Empty extension, so metadata goes in token_uri
+  const metadataJson = JSON.stringify({
+    name: metadata.title,
+    description: metadata.description,
+    attributes: [
+      { trait_type: "class_id", value: metadata.class_id },
+      { trait_type: "method", value: metadata.method },
+      { trait_type: "difficulty", value: metadata.difficulty },
+      { trait_type: "duration_minutes", value: String(metadata.duration_minutes) },
+      { trait_type: "instructor_id", value: metadata.instructor_id },
+    ],
+  });
+  const tokenUri = `data:application/json;base64,${btoa(metadataJson)}`;
+
   // Step 1: Mint the class NFT on CW721
   const mintMsg = buildMsgExecuteContract(sender, nftContract, {
     mint: {
       token_id: tokenId,
       owner: sender,
-      token_uri: null,
-      extension: metadata,
+      token_uri: tokenUri,
+      extension: {},
     },
   });
 
