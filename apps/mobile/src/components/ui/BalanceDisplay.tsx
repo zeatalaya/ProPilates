@@ -11,7 +11,7 @@ export function BalanceDisplay({ balance, isLoading }: BalanceDisplayProps) {
   if (isLoading) {
     return (
       <View className="flex-row items-center gap-2">
-        <ActivityIndicator size="small" color="#8257e5" />
+        <ActivityIndicator size="small" color="#c9a96e" />
         <Text className="text-text-muted text-sm">Loading...</Text>
       </View>
     );

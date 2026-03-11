@@ -28,7 +28,7 @@ export default function PersonalScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-primary">
+    <SafeAreaView className="flex-1 bg-bg">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"

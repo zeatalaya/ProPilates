@@ -73,10 +73,10 @@ export default function TeachScreen() {
 
   if (blocks.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-bg-primary">
+      <SafeAreaView className="flex-1 bg-bg">
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/20 items-center justify-center mb-6">
-            <Play size={36} color="#8257e5" />
+            <Play size={36} color="#c9a96e" />
           </View>
           <Text className="text-2xl font-bold text-text-primary mb-2 text-center">
             No Active Session
@@ -91,7 +91,7 @@ export default function TeachScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-primary">
+    <SafeAreaView className="flex-1 bg-bg">
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-3">
         <TouchableOpacity onPress={reset}>
@@ -106,9 +106,9 @@ export default function TeachScreen() {
         >
           <Text className="text-violet-400 text-sm mr-1">Up Next</Text>
           {showUpNext ? (
-            <ChevronUp size={16} color="#8257e5" />
+            <ChevronUp size={16} color="#c9a96e" />
           ) : (
-            <ChevronDown size={16} color="#8257e5" />
+            <ChevronDown size={16} color="#c9a96e" />
           )}
         </TouchableOpacity>
       </View>

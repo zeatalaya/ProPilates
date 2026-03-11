@@ -549,7 +549,7 @@ export default function BuilderScreen() {
                     </Text>
                   </View>
                 </View>
-                <Plus size={20} color="#8257e5" />
+                <Plus size={20} color="#c9a96e" />
               </TouchableOpacity>
             )}
           />

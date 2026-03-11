@@ -43,7 +43,7 @@ export default function PracticeScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-primary">
+    <SafeAreaView className="flex-1 bg-bg">
       <ScrollView className="flex-1 px-6">
         <View className="mt-8 mb-4">
           <Text className="text-sm font-medium text-violet-400 mb-1">

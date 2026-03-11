@@ -49,7 +49,7 @@ export function TemplateDetailModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView className="flex-1 bg-bg-primary">
+      <SafeAreaView className="flex-1 bg-bg">
         {/* Header */}
         <View className="flex-row items-start justify-between border-b border-border px-5 py-4">
           <View className="flex-1 mr-3">

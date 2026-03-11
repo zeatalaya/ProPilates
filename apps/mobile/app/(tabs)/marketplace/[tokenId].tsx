@@ -25,7 +25,7 @@ export default function ListingDetailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-primary">
+    <SafeAreaView className="flex-1 bg-bg">
       {/* Header */}
       <View className="flex-row items-center px-6 py-3 border-b border-border">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
@@ -64,7 +64,7 @@ export default function ListingDetailScreen() {
         <View className="flex-row gap-3 mb-4">
           <Card className="flex-1">
             <CardBody className="items-center">
-              <Layers size={20} color="#8257e5" />
+              <Layers size={20} color="#c9a96e" />
               <Text className="text-text-primary font-semibold mt-1">
                 {listing.exerciseCount}
               </Text>
@@ -73,7 +73,7 @@ export default function ListingDetailScreen() {
           </Card>
           <Card className="flex-1">
             <CardBody className="items-center">
-              <Clock size={20} color="#8257e5" />
+              <Clock size={20} color="#c9a96e" />
               <Text className="text-text-primary font-semibold mt-1">
                 {Math.round(listing.duration / 60)}m
               </Text>
@@ -87,7 +87,7 @@ export default function ListingDetailScreen() {
           <CardBody>
             <View className="flex-row items-center">
               <View className="w-10 h-10 rounded-full bg-violet-500/20 items-center justify-center mr-3">
-                <User size={20} color="#8257e5" />
+                <User size={20} color="#c9a96e" />
               </View>
               <View>
                 <Text className="text-text-primary font-medium">

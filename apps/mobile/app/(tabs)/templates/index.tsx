@@ -140,7 +140,7 @@ export default function TemplatesScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-primary">
+    <SafeAreaView className="flex-1 bg-bg">
       {/* Header */}
       <View className="px-6 pt-4 pb-3">
         <Text className="text-2xl font-bold text-text-primary mb-1">
@@ -230,12 +230,12 @@ export default function TemplatesScreen() {
       {/* Template list */}
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#8257e5" />
+          <ActivityIndicator size="large" color="#c9a96e" />
         </View>
       ) : filtered.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
-            <BookOpen size={36} color="#8257e5" />
+            <BookOpen size={36} color="#c9a96e" />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">
             {templates.length === 0

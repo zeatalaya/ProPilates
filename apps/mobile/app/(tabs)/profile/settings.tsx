@@ -45,7 +45,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-primary">
+    <SafeAreaView className="flex-1 bg-bg">
       {/* Header */}
       <View className="flex-row items-center px-6 py-3 border-b border-border">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
@@ -66,7 +66,7 @@ export default function SettingsScreen() {
 
         <Card className="mb-6">
           <TouchableOpacity className="flex-row items-center px-4 py-4 border-b border-border">
-            <Wallet size={20} color="#8257e5" />
+            <Wallet size={20} color="#c9a96e" />
             <View className="flex-1 ml-3">
               <Text className="text-text-primary font-medium">
                 XION Wallet

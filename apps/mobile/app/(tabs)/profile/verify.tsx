@@ -46,7 +46,7 @@ export default function VerifyScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-primary">
+    <SafeAreaView className="flex-1 bg-bg">
       {/* Header */}
       <View className="flex-row items-center px-6 py-3 border-b border-border">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
@@ -60,7 +60,7 @@ export default function VerifyScreen() {
       <ScrollView className="flex-1 px-6">
         <View className="mt-6 mb-4">
           <View className="flex-row items-center mb-2">
-            <Shield size={24} color="#8257e5" />
+            <Shield size={24} color="#c9a96e" />
             <Text className="text-xl font-bold text-text-primary ml-2">
               On-Chain Verification
             </Text>

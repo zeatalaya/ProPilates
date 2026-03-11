@@ -60,7 +60,7 @@ export default function PortfolioScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-primary">
+    <SafeAreaView className="flex-1 bg-bg">
       {/* Header */}
       <View className="px-6 pt-4 pb-3">
         <View className="flex-row items-center justify-between mb-4">
@@ -114,15 +114,15 @@ export default function PortfolioScreen() {
       {/* Content */}
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#8257e5" />
+          <ActivityIndicator size="large" color="#c9a96e" />
         </View>
       ) : items.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
             {activeTab === "built" ? (
-              <Layers size={36} color="#8257e5" />
+              <Layers size={36} color="#c9a96e" />
             ) : (
-              <Briefcase size={36} color="#8257e5" />
+              <Briefcase size={36} color="#c9a96e" />
             )}
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">

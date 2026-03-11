@@ -57,7 +57,7 @@ export default function ConfirmationScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-primary">
+    <SafeAreaView className="flex-1 bg-bg">
       <View className="flex-1 items-center justify-center px-6">
         <View className="w-24 h-24 rounded-full bg-emerald-500/20 items-center justify-center mb-8">
           <CheckCircle size={48} color="#34d399" />

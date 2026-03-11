@@ -37,7 +37,7 @@ export function TimerRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#8257e5"
+          stroke="#c9a96e"
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={`${circumference}`}

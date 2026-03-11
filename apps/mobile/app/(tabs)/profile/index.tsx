@@ -35,10 +35,10 @@ export default function ProfileScreen() {
 
   if (!isConnected) {
     return (
-      <SafeAreaView className="flex-1 bg-bg-primary">
+      <SafeAreaView className="flex-1 bg-bg">
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
-            <User size={36} color="#8257e5" />
+            <User size={36} color="#c9a96e" />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">
             Not Connected
@@ -53,7 +53,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-primary">
+    <SafeAreaView className="flex-1 bg-bg">
       <ScrollView className="flex-1 px-6">
         {/* Header */}
         <View className="pt-4 pb-6">
@@ -64,7 +64,7 @@ export default function ProfileScreen() {
           {/* Avatar + Info */}
           <View className="items-center mb-6">
             <View className="w-24 h-24 rounded-full bg-violet-500/20 items-center justify-center mb-4">
-              <User size={40} color="#8257e5" />
+              <User size={40} color="#c9a96e" />
             </View>
             <Text className="text-xl font-bold text-text-primary">
               {instructor?.name || "Instructor"}
@@ -140,7 +140,7 @@ export default function ProfileScreen() {
             className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-4"
             onPress={() => router.push("/(tabs)/profile/verify")}
           >
-            <Shield size={20} color="#8257e5" />
+            <Shield size={20} color="#c9a96e" />
             <Text className="text-text-primary font-medium ml-3 flex-1">
               Verify Credentials
             </Text>
