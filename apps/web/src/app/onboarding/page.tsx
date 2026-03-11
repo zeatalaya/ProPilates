@@ -61,10 +61,44 @@ function OnboardingContent() {
   // Track whether we're waiting for the OAuth exchange to complete
   const [waitingForAuth, setWaitingForAuth] = useState(isOAuthCallback);
 
-  // Once connected after OAuth callback, save pending onboarding data
+  // If user already has a profile in Supabase, skip onboarding
   useEffect(() => {
-    if (isConnected && waitingForAuth) {
-      setWaitingForAuth(false);
+    if (!isConnected || !xionAddress || isOAuthCallback) return;
+    async function checkExistingProfile() {
+      try {
+        const { data: existing } = await supabase
+          .from("instructors")
+          .select("id")
+          .eq("xion_address", xionAddress)
+          .maybeSingle();
+        if (existing) {
+          router.replace("/builder");
+        }
+      } catch { /* ignore */ }
+    }
+    checkExistingProfile();
+  }, [isConnected, xionAddress, isOAuthCallback, router]);
+
+  // Once connected after OAuth callback, check profile or save pending data
+  useEffect(() => {
+    if (!isConnected || !waitingForAuth) return;
+    setWaitingForAuth(false);
+
+    async function handlePostAuth() {
+      // Check if user already has a profile (returning user)
+      const addr = useAuthStore.getState().xionAddress;
+      if (addr) {
+        const { data: existing } = await supabase
+          .from("instructors")
+          .select("*")
+          .eq("xion_address", addr)
+          .maybeSingle();
+        if (existing) {
+          setInstructor(existing);
+          router.replace("/builder");
+          return;
+        }
+      }
 
       // Check for pending onboarding data saved before the OAuth redirect
       const pendingRaw = sessionStorage.getItem(PENDING_ONBOARDING_KEY);
@@ -73,13 +107,13 @@ function OnboardingContent() {
         try {
           const pendingData: OnboardingData = JSON.parse(pendingRaw);
           sessionStorage.removeItem(PENDING_ONBOARDING_KEY);
-          // Auto-save profile with the real XION address
           saveProfile(pendingData);
         } catch {
           sessionStorage.removeItem(PENDING_ONBOARDING_KEY);
         }
       }
     }
+    handlePostAuth();
   }, [isConnected, waitingForAuth]);
 
   // Handle Spotify callback return to onboarding

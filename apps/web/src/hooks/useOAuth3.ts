@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/auth";
+import { supabase } from "@/lib/supabase";
 import {
   isOAuth3Configured,
   generatePKCE,
@@ -56,6 +57,37 @@ export function useOAuth3() {
     setLoading(false);
     setIsInitialized(true);
   }, [setXionAddress, setConnected, setLoading, setOAuthAccessToken]);
+
+  // Auto-restore instructor profile from Supabase when xionAddress is available
+  useEffect(() => {
+    const { instructor, setInstructor, setTier } = useAuthStore.getState();
+    const xionAddr = session?.user?.xionAddress;
+    if (!xionAddr || instructor) return;
+
+    async function restoreProfile() {
+      try {
+        const { data } = await supabase
+          .from("instructors")
+          .select("*")
+          .eq("xion_address", xionAddr)
+          .maybeSingle();
+        if (data) {
+          setInstructor(data);
+          // Also restore subscription tier
+          const { data: sub } = await supabase
+            .from("subscriptions")
+            .select("tier")
+            .eq("instructor_id", data.id)
+            .eq("status", "active")
+            .maybeSingle();
+          if (sub?.tier) setTier(sub.tier);
+        }
+      } catch (err) {
+        console.error("Failed to restore instructor profile:", err);
+      }
+    }
+    restoreProfile();
+  }, [session]);
 
   // Handle OAuth callback result — supports both direct session data and code exchange
   useEffect(() => {
