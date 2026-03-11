@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as Clipboard from "expo-clipboard";
 import {
   User,
   Shield,
@@ -10,7 +11,7 @@ import {
   Copy,
   CheckCircle,
 } from "lucide-react-native";
-import { useAuthStore } from "@propilates/shared";
+import { useAuthStore, useSpotifyStore } from "@propilates/shared";
 import { truncateAddress } from "@propilates/shared";
 import { useUsdcBalance } from "../../../src/hooks/useBalance";
 import { BalanceDisplay } from "../../../src/components/ui/BalanceDisplay";
@@ -20,11 +21,14 @@ import { Badge } from "../../../src/components/ui/Badge";
 export default function ProfileScreen() {
   const router = useRouter();
   const { xionAddress, instructor, isConnected } = useAuthStore();
+  const { accessToken: spotifyAccessToken } = useSpotifyStore();
   const { balance, isLoading: balanceLoading } = useUsdcBalance(xionAddress);
   const [copied, setCopied] = React.useState(false);
 
-  const handleCopyAddress = () => {
-    // In production, use expo-clipboard
+  const handleCopyAddress = async () => {
+    if (xionAddress) {
+      await Clipboard.setStringAsync(xionAddress);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -148,7 +152,9 @@ export default function ProfileScreen() {
             <Text className="text-text-primary font-medium ml-3 flex-1">
               Spotify
             </Text>
-            <Text className="text-text-secondary text-sm">Not connected</Text>
+            <Text className="text-text-secondary text-sm">
+              {spotifyAccessToken ? "Connected" : "Not connected"}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity

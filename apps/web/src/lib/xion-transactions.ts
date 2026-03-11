@@ -195,10 +195,10 @@ export function buildClearanceMintMsg(
 /**
  * Build the 3-message transaction to list a class NFT on the marketplace.
  *
- * Uses the real cw721-marketplace-permissioned contract flow:
+ * Uses the xion_nft_marketplace contract flow:
  *   Step 1: Mint the NFT on the CW721 contract
  *   Step 2: Approve marketplace to transfer the NFT
- *   Step 3: Create a swap (listing) on the marketplace
+ *   Step 3: Call list_item on the marketplace
  *
  * All 3 messages are submitted as a single atomic transaction.
  * Requires MsgExecuteContract grants for both NFT_CONTRACT and MARKETPLACE_CONTRACT.
@@ -206,7 +206,7 @@ export function buildClearanceMintMsg(
 export function buildMarketplaceListMessages(
   sender: string,
   tokenId: string,
-  priceUsdc: string,
+  priceAmount: string,
   metadata: {
     class_id: string;
     title: string;
@@ -216,9 +216,10 @@ export function buildMarketplaceListMessages(
     duration_minutes: number;
     instructor_id: string;
   },
-): { swapId: string; messages: TransactionMessage[] } {
+): { tokenId: string; messages: TransactionMessage[] } {
   const nftContract = CONTRACTS.nft;
   const marketplaceContract = CONTRACTS.marketplace;
+  const denom = process.env.NEXT_PUBLIC_USDC_DENOM ?? "uxion";
 
   // Step 1: Mint the class NFT on CW721
   const mintMsg = buildMsgExecuteContract(sender, nftContract, {
@@ -239,58 +240,52 @@ export function buildMarketplaceListMessages(
     },
   });
 
-  // Step 3: Create marketplace swap (listing)
-  const swapId = `propilates-${tokenId}-${Date.now()}`;
-  const createSwapMsg = buildMsgExecuteContract(sender, marketplaceContract, {
-    create: {
-      id: swapId,
-      cw721: nftContract,
-      payment_token: null, // native USDC
+  // Step 3: List item on marketplace
+  const listMsg = buildMsgExecuteContract(sender, marketplaceContract, {
+    list_item: {
+      collection: nftContract,
       token_id: tokenId,
-      expires: { never: {} },
-      price: priceUsdc,
-      swap_type: "sale",
+      price: { denom, amount: priceAmount },
     },
   });
 
   return {
-    swapId,
-    messages: [mintMsg, approveMsg, createSwapMsg],
+    tokenId,
+    messages: [mintMsg, approveMsg, listMsg],
   };
 }
 
 /**
- * Purchase an NFT from the marketplace (finish a swap).
+ * Purchase an NFT from the marketplace (buy_item).
  *
- * Uses the real cw721-marketplace-permissioned "Finish" message.
- * Must attach the listing price as native USDC funds.
+ * Must attach the listing price as funds.
  * Requires MsgExecuteContract grant for MARKETPLACE_CONTRACT in the Treasury.
  */
 export function buildMarketplacePurchaseMsg(
   sender: string,
-  swapId: string,
-  priceUsdc: string,
+  listingId: string,
+  priceAmount: string,
 ): TransactionMessage {
+  const denom = process.env.NEXT_PUBLIC_USDC_DENOM ?? "uxion";
+  const price = { denom, amount: priceAmount };
   return buildMsgExecuteContract(
     sender,
     CONTRACTS.marketplace,
-    { finish: { id: swapId } },
-    [{ denom: process.env.NEXT_PUBLIC_USDC_DENOM ?? "ibc/usdc", amount: priceUsdc }],
+    { buy_item: { listing_id: listingId, price } },
+    [price],
   );
 }
 
 /**
- * Cancel a marketplace listing (cancel a swap).
- *
- * Uses the real cw721-marketplace-permissioned "Cancel" message.
+ * Cancel a marketplace listing.
  * Only the listing creator can cancel.
  * Requires MsgExecuteContract grant for MARKETPLACE_CONTRACT in the Treasury.
  */
 export function buildMarketplaceCancelMsg(
   sender: string,
-  swapId: string,
+  listingId: string,
 ): TransactionMessage {
   return buildMsgExecuteContract(sender, CONTRACTS.marketplace, {
-    cancel: { id: swapId },
+    cancel_listing: { listing_id: listingId },
   });
 }

@@ -19,7 +19,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   instructor: null,
   xionAddress: null,
   isConnected: false,
-  isLoading: false,
+  isLoading: true,
   tier: "free",
   setInstructor: (instructor) =>
     set({ instructor, tier: instructor?.tier ?? "free" }),

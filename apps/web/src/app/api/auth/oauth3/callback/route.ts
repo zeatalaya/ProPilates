@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeCodeForTokens, getUserInfo } from "@/lib/oauth3";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -10,8 +9,10 @@ export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   if (error) {
+    // Sanitize error to prevent injection — only allow alphanumeric, underscore, space
+    const safeError = error.replace(/[^a-zA-Z0-9_ ]/g, "").slice(0, 100);
     return NextResponse.redirect(
-      `${appUrl}/onboarding?oauth_result=error&error=${encodeURIComponent(error)}`,
+      `${appUrl}/onboarding?oauth_result=error&error=${encodeURIComponent(safeError)}`,
     );
   }
 
@@ -21,22 +22,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  try {
-    // The PKCE verifier is stored client-side in sessionStorage,
-    // so we pass the code back to the client to complete the exchange.
-    // For a server-side flow, we'd need the verifier here.
-    // Using a hybrid approach: redirect back with the code for client exchange.
-    const sessionData = JSON.stringify({
-      code,
-      state,
-    });
+  // The PKCE verifier is stored client-side in sessionStorage,
+  // so we pass the code back to the client to complete the exchange.
+  const sessionData = JSON.stringify({ code, state });
 
-    return NextResponse.redirect(
-      `${appUrl}/onboarding?oauth_result=code&code_data=${encodeURIComponent(sessionData)}`,
-    );
-  } catch (err: any) {
-    return NextResponse.redirect(
-      `${appUrl}/onboarding?oauth_result=error&error=${encodeURIComponent(err.message)}`,
-    );
-  }
+  return NextResponse.redirect(
+    `${appUrl}/onboarding?oauth_result=code&code_data=${encodeURIComponent(sessionData)}`,
+  );
 }

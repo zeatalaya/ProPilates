@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { useSpotifyStore } from "@propilates/shared";
@@ -23,6 +23,7 @@ const SCOPES = [
 export function useSpotifyMobile() {
   const store = useSpotifyStore();
   const redirectUri = AuthSession.makeRedirectUri({ scheme: "propilates" });
+  const isRefreshingRef = useRef(false);
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -53,7 +54,11 @@ export function useSpotifyMobile() {
         discovery,
       );
       if (tokenRes.accessToken && tokenRes.refreshToken) {
-        store.setTokens(tokenRes.accessToken, tokenRes.refreshToken);
+        store.setTokens(
+          tokenRes.accessToken,
+          tokenRes.refreshToken,
+          tokenRes.expiresIn ?? undefined,
+        );
         store.setReady(true);
       }
     } catch (err) {
@@ -61,52 +66,130 @@ export function useSpotifyMobile() {
     }
   };
 
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    const currentRefreshToken = useSpotifyStore.getState().refreshToken;
+    if (!currentRefreshToken || isRefreshingRef.current) return false;
+
+    isRefreshingRef.current = true;
+    try {
+      const body = new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: currentRefreshToken,
+        client_id: ENV.SPOTIFY_CLIENT_ID,
+      });
+
+      const res = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+      });
+
+      if (!res.ok) return false;
+
+      const data = await res.json();
+      if (data.access_token) {
+        store.setTokens(
+          data.access_token,
+          data.refresh_token ?? currentRefreshToken,
+          data.expires_in ?? undefined,
+        );
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Spotify token refresh failed:", err);
+      return false;
+    } finally {
+      isRefreshingRef.current = false;
+    }
+  }, [store]);
+
+  const spotifyFetch = useCallback(
+    async (
+      url: string,
+      options: RequestInit = {},
+    ): Promise<Response | null> => {
+      const token = useSpotifyStore.getState().accessToken;
+      if (!token) return null;
+
+      const doFetch = (accessToken: string) =>
+        fetch(url, {
+          ...options,
+          headers: {
+            ...options.headers,
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+      let res = await doFetch(token);
+
+      if (res.status === 401) {
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          const newToken = useSpotifyStore.getState().accessToken;
+          if (newToken) {
+            res = await doFetch(newToken);
+          }
+        }
+      }
+
+      return res;
+    },
+    [refreshToken],
+  );
+
   const login = useCallback(() => {
     promptAsync();
   }, [promptAsync]);
 
   const play = useCallback(
     async (uri?: string) => {
-      if (!store.accessToken) return;
+      if (!useSpotifyStore.getState().accessToken) return;
       const body = uri ? JSON.stringify({ uris: [uri] }) : undefined;
-      await fetch("https://api.spotify.com/v1/me/player/play", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${store.accessToken}`,
-          "Content-Type": "application/json",
+      const res = await spotifyFetch(
+        "https://api.spotify.com/v1/me/player/play",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body,
         },
-        body,
-      });
-      store.setPlaying(true);
+      );
+      if (res?.ok) {
+        store.setPlaying(true);
+      }
     },
-    [store.accessToken],
+    [spotifyFetch, store],
   );
 
   const pause = useCallback(async () => {
-    if (!store.accessToken) return;
-    await fetch("https://api.spotify.com/v1/me/player/pause", {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${store.accessToken}` },
-    });
-    store.setPlaying(false);
-  }, [store.accessToken]);
+    if (!useSpotifyStore.getState().accessToken) return;
+    const res = await spotifyFetch(
+      "https://api.spotify.com/v1/me/player/pause",
+      { method: "PUT" },
+    );
+    if (res?.ok) {
+      store.setPlaying(false);
+    }
+  }, [spotifyFetch, store]);
 
   const skip = useCallback(async () => {
-    if (!store.accessToken) return;
-    await fetch("https://api.spotify.com/v1/me/player/next", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${store.accessToken}` },
-    });
-  }, [store.accessToken]);
+    if (!useSpotifyStore.getState().accessToken) return;
+    const res = await spotifyFetch(
+      "https://api.spotify.com/v1/me/player/next",
+      { method: "POST" },
+    );
+    if (!res?.ok) {
+      console.error("Spotify skip failed:", res?.status);
+    }
+  }, [spotifyFetch]);
 
   const getCurrentTrack = useCallback(async () => {
-    if (!store.accessToken) return null;
+    if (!useSpotifyStore.getState().accessToken) return null;
     try {
-      const res = await fetch(
+      const res = await spotifyFetch(
         "https://api.spotify.com/v1/me/player/currently-playing",
-        { headers: { Authorization: `Bearer ${store.accessToken}` } },
       );
-      if (!res.ok || res.status === 204) return null;
+      if (!res || !res.ok || res.status === 204) return null;
       const data = await res.json();
       if (!data.item) return null;
       const track = {
@@ -124,7 +207,7 @@ export function useSpotifyMobile() {
     } catch {
       return null;
     }
-  }, [store.accessToken]);
+  }, [spotifyFetch, store]);
 
   return {
     login,
@@ -132,6 +215,7 @@ export function useSpotifyMobile() {
     pause,
     skip,
     getCurrentTrack,
+    refreshToken,
     isReady: store.isReady,
     isPlaying: store.isPlaying,
     currentTrack: store.currentTrack,

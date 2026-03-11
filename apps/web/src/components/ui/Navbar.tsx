@@ -100,7 +100,7 @@ export function Navbar() {
           <img
             src="/propilates-logo-dark.svg"
             alt="ProPilates"
-            className="hidden dark:hidden dark:md:block h-8"
+            className="hidden dark:md:block h-8"
           />
         </Link>
 

@@ -32,3 +32,11 @@ export function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 }
+
+export function isValidXionAddress(address: string): boolean {
+  return /^xion1[a-z0-9]{38,58}$/.test(address);
+}
+
+export function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}

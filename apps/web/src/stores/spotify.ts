@@ -28,6 +28,9 @@ interface SpotifyState {
   getValidToken: () => Promise<string | null>;
 }
 
+// Module-level lock to prevent concurrent token refreshes
+let refreshPromise: Promise<string | null> | null = null;
+
 export const useSpotifyStore = create<SpotifyState>()(persist((set, get) => ({
   accessToken: null,
   refreshToken: null,
@@ -67,34 +70,43 @@ export const useSpotifyStore = create<SpotifyState>()(persist((set, get) => ({
     }),
 
   refreshAccessToken: async () => {
+    // Deduplicate concurrent refresh calls
+    if (refreshPromise) return refreshPromise;
+
     const { refreshToken } = get();
     if (!refreshToken) return null;
-    try {
-      const res = await fetch("/api/spotify/refresh", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
-      const newToken = data.access_token as string;
-      const expiresIn = (data.expires_in as number) ?? 3300;
-      set({
-        accessToken: newToken,
-        expiresAt: Date.now() + expiresIn * 1000,
-      });
-      return newToken;
-    } catch (err) {
-      console.error("[Spotify] Token refresh failed:", err);
-      return null;
-    }
+
+    refreshPromise = (async () => {
+      try {
+        const res = await fetch("/api/spotify/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const newToken = data.access_token as string;
+        const expiresIn = (data.expires_in as number) ?? 3300;
+        set({
+          accessToken: newToken,
+          expiresAt: Date.now() + expiresIn * 1000,
+        });
+        return newToken;
+      } catch (err) {
+        console.error("[Spotify] Token refresh failed:", err);
+        return null;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+
+    return refreshPromise;
   },
 
   getValidToken: async () => {
     const { accessToken, expiresAt, refreshAccessToken } = get();
     // If token expires in less than 2 minutes, proactively refresh
     if (accessToken && expiresAt && expiresAt - Date.now() < 120_000) {
-      console.log("[Spotify] Token expiring soon, refreshing...");
       const newToken = await refreshAccessToken();
       return newToken ?? accessToken; // fallback to old token if refresh fails
     }
@@ -106,5 +118,6 @@ export const useSpotifyStore = create<SpotifyState>()(persist((set, get) => ({
     accessToken: state.accessToken,
     refreshToken: state.refreshToken,
     expiresAt: state.expiresAt,
+    volume: state.volume,
   }),
 }));

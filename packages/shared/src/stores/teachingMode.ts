@@ -61,8 +61,28 @@ export const useTeachingModeStore = create<TeachingModeState>((set, get) => ({
     const newTotalElapsed = state.totalElapsed + 1;
 
     if (newElapsed >= currentEx.duration) {
-      state.skipNext();
-      set({ totalElapsed: newTotalElapsed });
+      // Combine skipNext logic and totalElapsed update into one set call
+      // to avoid losing totalElapsed when skipNext sets state
+      const { blocks, currentBlockIndex, currentExerciseIndex } = get();
+      const block = blocks[currentBlockIndex];
+      if (!block) return;
+
+      if (currentExerciseIndex < block.exercises.length - 1) {
+        set({
+          currentExerciseIndex: currentExerciseIndex + 1,
+          elapsed: 0,
+          totalElapsed: newTotalElapsed,
+        });
+      } else if (currentBlockIndex < blocks.length - 1) {
+        set({
+          currentBlockIndex: currentBlockIndex + 1,
+          currentExerciseIndex: 0,
+          elapsed: 0,
+          totalElapsed: newTotalElapsed,
+        });
+      } else {
+        set({ isPlaying: false, totalElapsed: newTotalElapsed });
+      }
     } else {
       set({ elapsed: newElapsed, totalElapsed: newTotalElapsed });
     }
@@ -104,12 +124,21 @@ export const useTeachingModeStore = create<TeachingModeState>((set, get) => ({
     }
   },
 
-  goToExercise: (blockIndex, exerciseIndex) =>
+  goToExercise: (blockIndex, exerciseIndex) => {
+    const { blocks } = get();
+    if (blocks.length === 0) return;
+    const clampedBlock = Math.max(0, Math.min(blockIndex, blocks.length - 1));
+    const block = blocks[clampedBlock];
+    const clampedExercise = Math.max(
+      0,
+      Math.min(exerciseIndex, block.exercises.length - 1),
+    );
     set({
-      currentBlockIndex: blockIndex,
-      currentExerciseIndex: exerciseIndex,
+      currentBlockIndex: clampedBlock,
+      currentExerciseIndex: clampedExercise,
       elapsed: 0,
-    }),
+    });
+  },
 
   reset: () =>
     set({

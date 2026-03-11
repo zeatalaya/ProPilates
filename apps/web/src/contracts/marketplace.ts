@@ -1,271 +1,152 @@
 /**
- * cw721-marketplace-permissioned contract message builders.
+ * xion_nft_marketplace contract message builders (web-specific).
  *
- * Based on the XION marketplace contract:
- * https://docs.burnt.com/xion/developers/re-using-existing-contracts/marketplace
- * https://docs.rs/cw721-marketplace-permissioned/0.1.7
+ * Uses env vars for contract addresses. For the shared package version
+ * that uses getContractConfig(), see packages/shared/src/contracts/marketplace.ts.
  *
- * ExecuteMsg: Create, Finish, Cancel, Update, UpdateConfig, AddNft, RemoveNft, Withdraw
- * QueryMsg:   GetListings, GetOffers, SwapsOf, Details, Config, GetTotal, etc.
+ * Based on burnt-labs/contracts marketplace (code ID 1879 on xion-testnet-2).
  *
  * Listing flow:
- *   1. Mint NFT on CW721 contract        (see nft.ts → buildMintMsg)
- *   2. Approve marketplace to transfer    (see nft.ts → buildApproveMsg)
- *   3. Create a swap (listing) here       (buildCreateSwapMsg)
- *   4. Buyer calls Finish to purchase     (buildFinishSwapMsg)
+ *   1. Mint NFT on CW721 contract
+ *   2. Approve marketplace to transfer (cw721 approve msg)
+ *   3. Call list_item on marketplace
+ *   4. Buyer calls buy_item with funds attached
  */
 
 export const MARKETPLACE_CONTRACT =
   process.env.NEXT_PUBLIC_MARKETPLACE_CONTRACT ?? "";
 export const NFT_CONTRACT = process.env.NEXT_PUBLIC_NFT_CONTRACT ?? "";
-export const USDC_DENOM =
-  process.env.NEXT_PUBLIC_USDC_DENOM ?? "ibc/usdc";
+export const LISTING_DENOM =
+  process.env.NEXT_PUBLIC_USDC_DENOM ?? "uxion";
 
 // ── Types matching the real contract ──
 
-export type SwapType = "sale" | "offer";
-
-export type Expiration =
-  | { at_height: number }
-  | { at_time: string } // nanoseconds as string
-  | { never: Record<string, never> };
-
-export interface SwapMsg {
-  id: string;
-  cw721: string;
-  payment_token: string | null; // null = native token
-  token_id: string;
-  expires: Expiration;
-  price: string; // Uint128 as string
-  swap_type: SwapType;
+export interface Coin {
+  denom: string;
+  amount: string;
 }
 
-export interface FinishSwapMsg {
-  id: string;
+export type ListingStatus = "Active" | "Reserved";
+
+// ── Query message builders ──
+
+/** Get marketplace configuration */
+export function buildQueryConfig() {
+  return { config: {} };
 }
 
-export interface CancelMsg {
-  id: string;
+/** Get a listing by its ID */
+export function buildQueryListing(listingId: string) {
+  return { listing: { listing_id: listingId } };
 }
 
-export interface UpdateSwapMsg {
-  id: string;
-  expires: Expiration;
-  price: string; // Uint128 as string
+/** Get an offer by its ID */
+export function buildQueryOffer(offerId: string) {
+  return { offer: { offer_id: offerId } };
+}
+
+/** Get paginated pending sales */
+export function buildQueryPendingSales(startAfter?: number, limit?: number) {
+  return {
+    pending_sales: {
+      ...(startAfter != null && { start_after: startAfter }),
+      ...(limit != null && { limit }),
+    },
+  };
 }
 
 // ── Execute message builders ──
 
 /**
- * Create a swap (list an NFT for sale on the marketplace).
+ * List an NFT for sale on the marketplace.
  *
- * Prerequisites:
- *   - The NFT must already be minted on the CW721 contract
- *   - The marketplace must be approved to transfer the NFT
- *   - The CW721 contract must be on the marketplace's approved list
- *
- * @param tokenId - CW721 token ID being listed
- * @param priceUsdc - Price in micro-USDC (6 decimals), e.g. "4990000" for $4.99
- * @param expiresInDays - Days until listing expires (0 = never)
+ * @param collection - CW721 contract address
+ * @param tokenId - Token ID being listed
+ * @param priceAmount - Price amount in listing denom (e.g. "1000000" for 1 XION)
+ * @param reservedFor - Optional buyer address restriction
  */
-export function buildCreateSwapMsg(
+export function buildListItemMsg(
+  collection: string,
   tokenId: string,
-  priceUsdc: string,
-  expiresInDays: number = 0,
+  priceAmount: string,
+  reservedFor?: string,
 ) {
-  const swapId = `propilates-${tokenId}-${Date.now()}`;
-
-  const expires: Expiration =
-    expiresInDays > 0
-      ? {
-          at_time: String(
-            (Math.floor(Date.now() / 1000) + expiresInDays * 86400) *
-              1_000_000_000,
-          ),
-        }
-      : { never: {} };
-
+  const price: Coin = { denom: LISTING_DENOM, amount: priceAmount };
   return {
-    swapId,
     contractAddress: MARKETPLACE_CONTRACT,
     msg: {
-      create: {
-        id: swapId,
-        cw721: NFT_CONTRACT,
-        payment_token: null,
+      list_item: {
+        collection,
         token_id: tokenId,
-        expires,
-        price: priceUsdc,
-        swap_type: "sale" as SwapType,
-      } satisfies SwapMsg,
-    },
-  };
-}
-
-/**
- * Finish a swap (purchase an NFT from the marketplace).
- * Must attach the listing price as native USDC funds.
- *
- * @param swapId - The swap/listing ID to purchase
- * @param priceUsdc - Price in micro-USDC to attach as funds
- */
-export function buildFinishSwapMsg(swapId: string, priceUsdc: string) {
-  return {
-    contractAddress: MARKETPLACE_CONTRACT,
-    msg: {
-      finish: {
-        id: swapId,
-      } satisfies FinishSwapMsg,
-    },
-    funds: [
-      {
-        denom: USDC_DENOM,
-        amount: priceUsdc,
+        price,
+        ...(reservedFor && { reserved_for: reservedFor }),
       },
-    ],
-  };
-}
-
-/**
- * Cancel a swap (remove listing from marketplace).
- * Only the listing creator can cancel.
- */
-export function buildCancelSwapMsg(swapId: string) {
-  return {
-    contractAddress: MARKETPLACE_CONTRACT,
-    msg: {
-      cancel: {
-        id: swapId,
-      } satisfies CancelMsg,
     },
   };
 }
 
 /**
- * Update a swap's price and/or expiration.
- * Only the listing creator can update.
+ * Buy a listed NFT. Attaches the price as funds.
  */
-export function buildUpdateSwapMsg(
-  swapId: string,
-  newPriceUsdc: string,
-  expiresInDays: number = 0,
-) {
-  const expires: Expiration =
-    expiresInDays > 0
-      ? {
-          at_time: String(
-            (Math.floor(Date.now() / 1000) + expiresInDays * 86400) *
-              1_000_000_000,
-          ),
-        }
-      : { never: {} };
-
+export function buildBuyItemMsg(listingId: string, priceAmount: string) {
+  const price: Coin = { denom: LISTING_DENOM, amount: priceAmount };
   return {
     contractAddress: MARKETPLACE_CONTRACT,
-    msg: {
-      update: {
-        id: swapId,
-        expires,
-        price: newPriceUsdc,
-      } satisfies UpdateSwapMsg,
-    },
+    msg: { buy_item: { listing_id: listingId, price } },
+    funds: [price],
   };
 }
 
-// ── Query message builders ──
-
-/** Get paginated sale listings */
-export function buildQueryGetListings(page?: number, limit?: number) {
+/**
+ * Cancel a listing. Only the seller can cancel.
+ */
+export function buildCancelListingMsg(listingId: string) {
   return {
-    get_listings: {
-      ...(page != null && { page }),
-      ...(limit != null && { limit }),
-    },
+    contractAddress: MARKETPLACE_CONTRACT,
+    msg: { cancel_listing: { listing_id: listingId } },
   };
 }
 
-/** Get paginated offers (bids) */
-export function buildQueryGetOffers(page?: number, limit?: number) {
-  return {
-    get_offers: {
-      ...(page != null && { page }),
-      ...(limit != null && { limit }),
-    },
-  };
-}
-
-/** Get all swaps by a specific address */
-export function buildQuerySwapsOf(
-  address: string,
-  swapType?: SwapType,
-  page?: number,
-  limit?: number,
-) {
-  return {
-    swaps_of: {
-      address,
-      ...(swapType && { swap_type: swapType }),
-      ...(page != null && { page }),
-      ...(limit != null && { limit }),
-    },
-  };
-}
-
-/** Get swap details by ID */
-export function buildQueryDetails(swapId: string) {
-  return {
-    details: { id: swapId },
-  };
-}
-
-/** Get total number of swaps */
-export function buildQueryGetTotal(swapType?: SwapType) {
-  return {
-    get_total: {
-      ...(swapType && { swap_type: swapType }),
-    },
-  };
-}
-
-/** Get listings for a specific token */
-export function buildQueryListingsOfToken(
+/**
+ * Create an offer on a specific NFT. Attach funds with the message.
+ */
+export function buildCreateOfferMsg(
+  collection: string,
   tokenId: string,
-  cw721: string = NFT_CONTRACT,
-  swapType?: SwapType,
-  page?: number,
-  limit?: number,
+  priceAmount: string,
 ) {
+  const price: Coin = { denom: LISTING_DENOM, amount: priceAmount };
   return {
-    listings_of_token: {
-      token_id: tokenId,
-      cw721,
-      ...(swapType && { swap_type: swapType }),
-      ...(page != null && { page }),
-      ...(limit != null && { limit }),
-    },
+    contractAddress: MARKETPLACE_CONTRACT,
+    msg: { create_offer: { collection, token_id: tokenId, price } },
+    funds: [price],
   };
 }
 
-/** Get swaps filtered by price range */
-export function buildQuerySwapsByPrice(
-  min?: string,
-  max?: string,
-  swapType?: SwapType,
-  page?: number,
-  limit?: number,
-) {
+/**
+ * Cancel an offer.
+ */
+export function buildCancelOfferMsg(id: string) {
   return {
-    swaps_by_price: {
-      ...(min && { min }),
-      ...(max && { max }),
-      ...(swapType && { swap_type: swapType }),
-      ...(page != null && { page }),
-      ...(limit != null && { limit }),
-    },
+    contractAddress: MARKETPLACE_CONTRACT,
+    msg: { cancel_offer: { id } },
   };
 }
 
-/** Get marketplace configuration */
-export function buildQueryConfig() {
-  return { config: {} };
+// ── CW721 helpers ──
+
+/**
+ * Approve marketplace to transfer an NFT.
+ */
+export function buildApproveMsg(tokenId: string) {
+  return {
+    contractAddress: NFT_CONTRACT,
+    msg: {
+      approve: {
+        spender: MARKETPLACE_CONTRACT,
+        token_id: tokenId,
+        expires: null,
+      },
+    },
+  };
 }

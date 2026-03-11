@@ -215,6 +215,10 @@ export const useClassBuilderStore = create<ClassBuilderState>((set, get) => ({
       blocks: data.blocks,
       selectedBlockId: data.blocks[0]?.id ?? null,
       selectedExerciseId: null,
+      browserSearch: "",
+      browserMethod: "all",
+      browserCategory: "",
+      browserDifficulty: "",
     }),
 
   resetBuilder: () => set(initialState),

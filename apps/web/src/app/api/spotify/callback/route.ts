@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSpotifyClient } from "@/lib/spotify";
 
+// Allowed redirect paths to prevent open redirect
+const ALLOWED_PATHS: Record<string, string> = {
+  builder: "/builder",
+  teach: "/teach",
+  profile: "/profile",
+  templates: "/templates",
+  onboarding: "/onboarding",
+};
+
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state") || "builder";
@@ -14,31 +23,66 @@ export async function GET(request: NextRequest) {
   try {
     const client = createSpotifyClient();
     const data = await client.authorizationCodeGrant(code);
-
     const { access_token, refresh_token, expires_in } = data.body;
 
-    // If user connected Spotify from onboarding, redirect back to onboarding
+    // Only allow known redirect paths — prevent open redirect
+    const redirectPath = ALLOWED_PATHS[state] ?? "/builder";
+
     if (state === "onboarding") {
       const redirectUrl = new URL("/onboarding", request.url);
       redirectUrl.searchParams.set("spotify_connected", "true");
-      return NextResponse.redirect(redirectUrl);
+      const response = NextResponse.redirect(redirectUrl);
+      setSpotifyCookies(response, access_token, refresh_token, expires_in);
+      return response;
     }
 
-    // Map state to redirect path — supports any origin page
-    const stateToPath: Record<string, string> = {
-      builder: "/builder",
-      teach: "/teach",
-      profile: "/profile",
-      templates: "/templates",
-    };
-    const redirectPath = stateToPath[state] ?? `/${state}`;
-    const redirectUrl = new URL(redirectPath, request.url);
-    redirectUrl.hash = `access_token=${access_token}&refresh_token=${refresh_token}&expires_in=${expires_in}`;
-
-    return NextResponse.redirect(redirectUrl);
+    // Store tokens in secure httpOnly cookies instead of URL hash
+    const redirectUrl = new URL(
+      `${redirectPath}?spotify_connected=true`,
+      request.url,
+    );
+    const response = NextResponse.redirect(redirectUrl);
+    setSpotifyCookies(response, access_token, refresh_token, expires_in);
+    return response;
   } catch {
     return NextResponse.redirect(
       new URL("/?error=spotify_auth_failed", request.url),
     );
   }
+}
+
+function setSpotifyCookies(
+  response: NextResponse,
+  accessToken: string,
+  refreshToken: string,
+  expiresIn: number,
+) {
+  const secure = process.env.NODE_ENV === "production";
+  const maxAge = expiresIn || 3600;
+
+  // Access token — expires with the token
+  response.cookies.set("spotify_access_token", accessToken, {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+    maxAge,
+  });
+
+  // Refresh token — long-lived
+  response.cookies.set("spotify_refresh_token", refreshToken, {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+  });
+
+  // Expires-in for client-side scheduling (not sensitive, not httpOnly)
+  response.cookies.set("spotify_expires_in", String(expiresIn), {
+    secure,
+    sameSite: "lax",
+    path: "/",
+    maxAge,
+  });
 }

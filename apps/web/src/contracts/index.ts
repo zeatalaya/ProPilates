@@ -1,6 +1,6 @@
 // Re-export contract modules. Import directly from the specific module
 // when you need a specific function to avoid name collisions.
-// e.g. import { buildCreateSwapMsg } from "@/contracts/marketplace";
+// e.g. import { buildListItemMsg } from "@/contracts/marketplace";
 
 export * from "./treasury";
 
@@ -8,27 +8,21 @@ export * from "./treasury";
 export {
   MARKETPLACE_CONTRACT,
   NFT_CONTRACT,
-  buildCreateSwapMsg,
-  buildFinishSwapMsg,
-  buildCancelSwapMsg,
-  buildUpdateSwapMsg,
-  buildQueryGetListings,
-  buildQueryGetOffers,
-  buildQuerySwapsOf,
-  buildQueryDetails,
-  buildQueryGetTotal,
-  buildQueryListingsOfToken,
-  buildQuerySwapsByPrice,
+  LISTING_DENOM,
+  buildListItemMsg,
+  buildBuyItemMsg,
+  buildCancelListingMsg,
+  buildCreateOfferMsg,
+  buildCancelOfferMsg,
   buildQueryConfig,
+  buildQueryListing,
+  buildQueryOffer,
+  buildQueryPendingSales,
 } from "./marketplace";
 
 export type {
-  SwapType,
-  Expiration,
-  SwapMsg,
-  FinishSwapMsg,
-  CancelMsg,
-  UpdateSwapMsg,
+  Coin as MarketplaceCoin,
+  ListingStatus,
 } from "./marketplace";
 
 // NFT (CW721) — re-export non-conflicting items
