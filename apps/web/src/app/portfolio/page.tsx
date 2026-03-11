@@ -96,6 +96,11 @@ export default function PortfolioPage() {
           token_id: tokenId,
         }).eq("id", cls.id);
 
+        // Update local state so UI shows "Listed" immediately
+        setClasses((prev) =>
+          prev.map((c) => (c.id === cls.id ? { ...c, token_id: tokenId } : c)),
+        );
+
         alert("Listed successfully on the marketplace!");
       } else {
         // Demo mode — contracts not deployed yet
@@ -207,14 +212,20 @@ export default function PortfolioPage() {
                       : "Set Price"}
                   </button>
                   {cls.is_public && cls.price != null && cls.price > 0 && (
-                    <button
-                      className="btn-primary text-xs"
-                      onClick={() => handleListOnMarketplace(cls)}
-                      disabled={isListing}
-                    >
-                      {isListing && <Loader2 size={14} className="animate-spin" />}
-                      List on Market
-                    </button>
+                    cls.token_id ? (
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-bg-elevated px-3 py-1.5 text-xs text-text-muted">
+                        Listed
+                      </span>
+                    ) : (
+                      <button
+                        className="btn-primary text-xs"
+                        onClick={() => handleListOnMarketplace(cls)}
+                        disabled={isListing}
+                      >
+                        {isListing && <Loader2 size={14} className="animate-spin" />}
+                        List on Market
+                      </button>
+                    )
                   )}
                   <button
                     className="btn-ghost text-xs text-red-400"
