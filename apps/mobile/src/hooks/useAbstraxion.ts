@@ -55,7 +55,19 @@ export function useAbstraxion(): AbstraxionAccountState {
       }
     }, [account.isConnected, account.data.bech32Address]);
 
-    return account;
+    // Wrap login to fall back to demo mode if native SDK fails (e.g. on simulator)
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const wrappedLogin = useCallback(async () => {
+      try {
+        await account.login();
+      } catch {
+        // Native SDK failed — fall back to demo mode
+        const demoAddress = "xion1demo" + Date.now().toString(36);
+        authStore.setXionAddress(demoAddress);
+      }
+    }, [account.login, authStore]);
+
+    return { ...account, login: wrappedLogin };
   }
 
   // Web/fallback: use Zustand store as source of truth

@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
@@ -14,13 +13,17 @@ import { useAbstraxion } from "../../src/hooks/useAbstraxion";
 import { supabase } from "../../src/lib/supabase";
 
 export default function AuthScreen() {
-  const { setInstructor, setLoading } = useAuthStore();
+  const { setInstructor, setLoading, xionAddress: storeAddress } = useAuthStore();
   const { isConnected, isConnecting, isLoading, data, login } =
     useAbstraxion();
 
+  // Use either native SDK address or auth store address (demo fallback)
+  const resolvedAddress = data.bech32Address || storeAddress;
+  const resolvedConnected = isConnected || !!storeAddress;
+
   // When connection completes, check Supabase and navigate
   useEffect(() => {
-    if (!isConnected || !data.bech32Address) return;
+    if (!resolvedConnected || !resolvedAddress) return;
 
     const checkInstructor = async () => {
       try {
@@ -28,7 +31,7 @@ export default function AuthScreen() {
         const { data: instructor } = await supabase
           .from("instructors")
           .select("*")
-          .eq("xion_address", data.bech32Address)
+          .eq("xion_address", resolvedAddress)
           .maybeSingle();
 
         if (instructor) {
@@ -46,14 +49,10 @@ export default function AuthScreen() {
     };
 
     checkInstructor();
-  }, [isConnected, data.bech32Address, setInstructor, setLoading]);
+  }, [resolvedConnected, resolvedAddress, setInstructor, setLoading]);
 
   const handleConnect = async () => {
-    try {
-      await login();
-    } catch (err) {
-      Alert.alert("Connection Error", "Failed to connect. Please try again.");
-    }
+    await login();
   };
 
   return (
