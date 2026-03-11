@@ -7,10 +7,15 @@ const monorepoRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
-// Watch all files in the monorepo
-config.watchFolders = [monorepoRoot];
+// Expo CLI uses the monorepo root as Metro server root (via workspace detection).
+// We must match that: set projectRoot to monorepo root so entry file resolution
+// is consistent, but use watchFolders and nodeModulesPaths for correct resolution.
+config.projectRoot = monorepoRoot;
 
-// Resolve modules from the monorepo root node_modules
+// Watch the mobile app and shared packages
+config.watchFolders = [projectRoot, path.resolve(monorepoRoot, "packages")];
+
+// Resolve modules from both local and monorepo root node_modules
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(monorepoRoot, "node_modules"),
