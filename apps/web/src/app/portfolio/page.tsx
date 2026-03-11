@@ -4,11 +4,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, DollarSign, Trash2, Loader2, FolderOpen } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
-import {
-  submitTransaction,
-  buildMarketplaceListMessages,
-  CONTRACTS,
-} from "@/lib/xion-transactions";
+import { CONTRACTS } from "@/lib/xion-transactions";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatDuration, formatUsdc } from "@/lib/utils";
@@ -71,14 +67,14 @@ export default function PortfolioPage() {
       const priceUsdc = String(Math.floor(cls.price * 1_000_000));
 
       // Check if contracts are configured (production mode)
-      if (oauthAccessToken && CONTRACTS.nft && CONTRACTS.marketplace) {
-        // Step 1: Mint NFT server-side (deployer is the CW721 minter)
-        const mintRes = await fetch("/api/nft/mint", {
+      if (CONTRACTS.nft && CONTRACTS.marketplace) {
+        // Server-side: mint NFT + approve marketplace + list — all atomic
+        const res = await fetch("/api/nft/mint", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            owner: xionAddress,
             tokenId,
+            priceAmount: priceUsdc,
             metadata: {
               class_id: cls.id,
               title: cls.title,
@@ -90,18 +86,10 @@ export default function PortfolioPage() {
             },
           }),
         });
-        if (!mintRes.ok) {
-          const err = await mintRes.json();
-          throw new Error(`Mint failed: ${err.error}`);
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error);
         }
-
-        // Step 2: Approve marketplace + list via OAuth (user's authz grant)
-        const { messages } = buildMarketplaceListMessages(
-          xionAddress,
-          tokenId,
-          priceUsdc,
-        );
-        await submitTransaction(oauthAccessToken, messages);
 
         // Record listing in Supabase for marketplace display
         await supabase.from("classes").update({

@@ -22,6 +22,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Route grant-setup flow to the treasury setup endpoint
+  if (state === "grant-setup") {
+    return NextResponse.redirect(
+      `${appUrl}/api/treasury/setup-grants?code=${encodeURIComponent(code)}`,
+    );
+  }
+
   // The PKCE verifier is stored client-side in sessionStorage,
   // so we pass the code back to the client to complete the exchange.
   const sessionData = JSON.stringify({ code, state });
