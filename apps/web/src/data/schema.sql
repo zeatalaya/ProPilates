@@ -31,7 +31,7 @@ create table instructors (
   updated_at        timestamptz not null default now()
 );
 
--- ── Exercises (seeded) ──
+-- ── Exercises (seeded + user-created custom) ──
 create table exercises (
   id                uuid primary key default gen_random_uuid(),
   name              text not null,
@@ -43,11 +43,21 @@ create table exercises (
   cues              text[] not null default '{}',
   default_duration  int not null default 45,
   image_url         text,
-  video_url         text
+  video_url         text,
+  objective         text,
+  apparatus         text,
+  start_position    text,
+  movement          text[],
+  pace              text,
+  school            text,
+  creator_id        uuid references instructors(id) on delete set null,
+  is_custom         boolean not null default false,
+  is_public         boolean not null default false
 );
 create index idx_exercises_method on exercises(method);
 create index idx_exercises_category on exercises(category);
 create index idx_exercises_difficulty on exercises(difficulty);
+create index idx_exercises_creator on exercises(creator_id) where creator_id is not null;
 
 -- ── Classes ──
 create table classes (

@@ -48,6 +48,9 @@ export interface Exercise {
   movement: string[] | null;
   pace: ExercisePace | null;
   school: PilatesSchool | null;
+  creator_id: string | null;
+  is_custom: boolean;
+  is_public: boolean;
 }
 
 export interface ClassBlock {
@@ -82,6 +85,7 @@ export interface PilatesClass {
   is_public: boolean;
   is_template: boolean;
   price: number | null; // in XION
+  token_id: string | null;
   playlist_id: string | null;
   blocks: ClassBlock[];
   created_at: string;

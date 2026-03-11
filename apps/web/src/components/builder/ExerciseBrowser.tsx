@@ -1,14 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
-import { Search, Plus, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Search, Plus, Loader2, Sparkles } from "lucide-react";
 import { useClassBuilderStore } from "@/stores/classBuilder";
 import { Badge } from "@/components/ui/Badge";
+import { CreateExerciseModal } from "./CreateExerciseModal";
 import type { Exercise, PilatesMethod, Difficulty } from "@/types";
+
+type ExerciseFilter = "all" | "library" | "custom";
 
 interface Props {
   exercises: Exercise[];
   isLoading: boolean;
+  onExerciseCreated: (exercise: Exercise) => void;
+  isPremium: boolean;
 }
 
 const METHODS: { value: PilatesMethod | "all"; label: string }[] = [
@@ -36,7 +41,7 @@ const CATEGORIES = [
   "cardio",
 ];
 
-export function ExerciseBrowser({ exercises, isLoading }: Props) {
+export function ExerciseBrowser({ exercises, isLoading, onExerciseCreated, isPremium }: Props) {
   const {
     browserSearch,
     browserMethod,
@@ -49,10 +54,14 @@ export function ExerciseBrowser({ exercises, isLoading }: Props) {
     selectedBlockId,
     addExerciseToBlock,
   } = useClassBuilderStore();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState<ExerciseFilter>("all");
 
   const filtered = useMemo(() => {
     const query = browserSearch.toLowerCase();
     return exercises.filter((ex) => {
+      if (sourceFilter === "library" && ex.is_custom) return false;
+      if (sourceFilter === "custom" && !ex.is_custom) return false;
       if (browserMethod !== "all" && ex.method !== browserMethod) return false;
       if (browserCategory && ex.category !== browserCategory) return false;
       if (browserDifficulty && ex.difficulty !== browserDifficulty) return false;
@@ -70,7 +79,7 @@ export function ExerciseBrowser({ exercises, isLoading }: Props) {
       }
       return true;
     });
-  }, [exercises, browserSearch, browserMethod, browserCategory, browserDifficulty]);
+  }, [exercises, browserSearch, browserMethod, browserCategory, browserDifficulty, sourceFilter]);
 
   function handleAdd(exercise: Exercise) {
     if (!selectedBlockId) return;
@@ -80,7 +89,33 @@ export function ExerciseBrowser({ exercises, isLoading }: Props) {
   return (
     <div className="flex h-full flex-col">
       <div className="space-y-3 border-b border-border p-3">
-        <h3 className="section-title">Exercises</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="section-title">Exercises</h3>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-1 rounded-lg bg-violet-600 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-violet-500"
+          >
+            <Plus size={12} />
+            Create
+          </button>
+        </div>
+
+        {/* Source filter */}
+        <div className="flex gap-1">
+          {(["all", "library", "custom"] as ExerciseFilter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setSourceFilter(f)}
+              className={`rounded px-2 py-0.5 text-xs transition-colors ${
+                sourceFilter === f
+                  ? "bg-violet-600 text-white"
+                  : "bg-bg-elevated text-text-muted hover:text-text-secondary"
+              }`}
+            >
+              {f === "all" ? "All" : f === "library" ? "Library" : "My Custom"}
+            </button>
+          ))}
+        </div>
 
         {/* Search */}
         <div className="relative">
@@ -214,6 +249,12 @@ export function ExerciseBrowser({ exercises, isLoading }: Props) {
                     <span className="text-[10px] text-text-muted">
                       {ex.default_duration}s
                     </span>
+                    {ex.is_custom && (
+                      <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
+                        <Sparkles size={8} />
+                        {ex.id.startsWith("temp-") ? "Session" : "Custom"}
+                      </span>
+                    )}
                   </div>
                   {ex.objective && (
                     <p className="mt-0.5 truncate text-[11px] text-text-muted">
@@ -238,6 +279,13 @@ export function ExerciseBrowser({ exercises, isLoading }: Props) {
           </div>
         )}
       </div>
+
+      <CreateExerciseModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={onExerciseCreated}
+        isPremium={isPremium}
+      />
     </div>
   );
 }

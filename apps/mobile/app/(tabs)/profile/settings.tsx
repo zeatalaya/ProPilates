@@ -12,13 +12,13 @@ import {
   ChevronRight,
 } from "lucide-react-native";
 import { useAuthStore, useSpotifyStore } from "@propilates/shared";
-import { useAbstraxion } from "../../../src/hooks/useAbstraxion";
+import { useOAuth3Mobile } from "../../../src/hooks/useOAuth3Mobile";
 import { Card, CardBody } from "../../../src/components/ui/Card";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { reset: authReset, xionAddress } = useAuthStore();
-  const { logout: abstraxionLogout } = useAbstraxion();
+  const { xionAddress } = useAuthStore();
+  const { logout } = useOAuth3Mobile();
   const spotifyReady = useSpotifyStore((s) => s.isReady);
   const spotifyReset = useSpotifyStore((s) => s.reset);
 
@@ -28,9 +28,8 @@ export default function SettingsScreen() {
       {
         text: "Sign Out",
         style: "destructive",
-        onPress: () => {
-          abstraxionLogout();
-          authReset();
+        onPress: async () => {
+          await logout();
           router.replace("/(auth)");
         },
       },

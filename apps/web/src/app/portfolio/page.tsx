@@ -1,30 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, DollarSign, Trash2, Loader2, FolderOpen } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  DollarSign,
+  Trash2,
+  Loader2,
+  FolderOpen,
+  Globe,
+  Lock,
+  Sparkles,
+  Dumbbell,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
 import { CONTRACTS } from "@/lib/xion-transactions";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatDuration, formatUsdc } from "@/lib/utils";
-import type { PilatesClass } from "@/types";
+import type { PilatesClass, Exercise } from "@/types";
+
+type PortfolioTab = "classes" | "exercises";
 
 export default function PortfolioPage() {
   const { instructor, tier, oauthAccessToken, xionAddress } = useAuthStore();
   const [classes, setClasses] = useState<PilatesClass[]>([]);
+  const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isListing, setIsListing] = useState(false);
+  const [activeTab, setActiveTab] = useState<PortfolioTab>("classes");
 
   useEffect(() => {
     if (!instructor) return;
     async function load() {
-      const { data } = await supabase
-        .from("classes")
-        .select("*")
-        .eq("instructor_id", instructor!.id)
-        .order("updated_at", { ascending: false });
-      if (data) setClasses(data as PilatesClass[]);
+      const [classesRes, exercisesRes] = await Promise.all([
+        supabase
+          .from("classes")
+          .select("*")
+          .eq("instructor_id", instructor!.id)
+          .order("updated_at", { ascending: false }),
+        supabase
+          .from("exercises")
+          .select("*")
+          .eq("is_custom", true)
+          .eq("creator_id", instructor!.id)
+          .order("name"),
+      ]);
+      if (classesRes.data) setClasses(classesRes.data as PilatesClass[]);
+      if (exercisesRes.data) setCustomExercises(exercisesRes.data as Exercise[]);
       setIsLoading(false);
     }
     load();
@@ -66,9 +90,7 @@ export default function PortfolioPage() {
       const tokenId = `propilates-${cls.id}-${Date.now()}`;
       const priceUsdc = String(Math.floor(cls.price * 1_000_000));
 
-      // Check if contracts are configured (production mode)
       if (CONTRACTS.nft && CONTRACTS.marketplace) {
-        // Server-side: mint NFT + approve marketplace + list — all atomic
         const res = await fetch("/api/nft/mint", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -91,22 +113,24 @@ export default function PortfolioPage() {
           throw new Error(err.error);
         }
 
-        // Record listing in Supabase for marketplace display
-        await supabase.from("classes").update({
-          token_id: tokenId,
-        }).eq("id", cls.id);
+        await supabase
+          .from("classes")
+          .update({ token_id: tokenId })
+          .eq("id", cls.id);
 
-        // Update local state so UI shows "Listed" immediately
         setClasses((prev) =>
-          prev.map((c) => (c.id === cls.id ? { ...c, token_id: tokenId } : c)),
+          prev.map((c) =>
+            c.id === cls.id ? { ...c, token_id: tokenId } : c,
+          ),
         );
 
         alert("Listed successfully on the marketplace!");
       } else {
-        // Demo mode — contracts not deployed yet
         console.log("Demo mode — listing:", { tokenId, priceUsdc, cls });
         await new Promise((r) => setTimeout(r, 1000));
-        alert("Listed on marketplace! (demo mode — contracts not yet deployed)");
+        alert(
+          "Listed on marketplace! (demo mode — contracts not yet deployed)",
+        );
       }
     } catch (err: any) {
       alert(`Listing failed: ${err.message}`);
@@ -117,9 +141,37 @@ export default function PortfolioPage() {
 
   async function handleDelete(classId: string) {
     if (!confirm("Delete this class? This cannot be undone.")) return;
-    const { error } = await supabase.from("classes").delete().eq("id", classId);
+    const { error } = await supabase
+      .from("classes")
+      .delete()
+      .eq("id", classId);
     if (!error) {
       setClasses((prev) => prev.filter((c) => c.id !== classId));
+    }
+  }
+
+  async function toggleExercisePublic(exercise: Exercise) {
+    const { error } = await supabase
+      .from("exercises")
+      .update({ is_public: !exercise.is_public })
+      .eq("id", exercise.id);
+    if (!error) {
+      setCustomExercises((prev) =>
+        prev.map((e) =>
+          e.id === exercise.id ? { ...e, is_public: !e.is_public } : e,
+        ),
+      );
+    }
+  }
+
+  async function handleDeleteExercise(exerciseId: string) {
+    if (!confirm("Delete this exercise? This cannot be undone.")) return;
+    const { error } = await supabase
+      .from("exercises")
+      .delete()
+      .eq("id", exerciseId);
+    if (!error) {
+      setCustomExercises((prev) => prev.filter((e) => e.id !== exerciseId));
     }
   }
 
@@ -135,10 +187,13 @@ export default function PortfolioPage() {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <div className="text-center">
-          <FolderOpen size={48} className="mx-auto mb-4 text-text-muted opacity-30" />
+          <FolderOpen
+            size={48}
+            className="mx-auto mb-4 text-text-muted opacity-30"
+          />
           <h2 className="text-xl font-bold">Premium Required</h2>
           <p className="mt-2 text-text-secondary">
-            Upgrade to premium to save and monetize your classes.
+            Upgrade to premium to save and monetize your classes and exercises.
           </p>
         </div>
       </div>
@@ -147,97 +202,222 @@ export default function PortfolioPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold">My Portfolio</h1>
         <p className="mt-2 text-text-secondary">
-          Manage your saved classes, set visibility, and list on the
-          marketplace.
+          Manage your saved classes and custom exercises.
         </p>
+      </div>
+
+      {/* Tab selector */}
+      <div className="mb-6 flex gap-1 rounded-xl bg-bg-elevated p-1">
+        <button
+          onClick={() => setActiveTab("classes")}
+          className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+            activeTab === "classes"
+              ? "bg-violet-600 text-white"
+              : "text-text-muted hover:text-text-secondary"
+          }`}
+        >
+          Classes{" "}
+          {classes.length > 0 && (
+            <span className="ml-1 text-xs opacity-70">({classes.length})</span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("exercises")}
+          className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+            activeTab === "exercises"
+              ? "bg-violet-600 text-white"
+              : "text-text-muted hover:text-text-secondary"
+          }`}
+        >
+          Exercises{" "}
+          {customExercises.length > 0 && (
+            <span className="ml-1 text-xs opacity-70">
+              ({customExercises.length})
+            </span>
+          )}
+        </button>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
           <Loader2 size={24} className="animate-spin text-violet-400" />
         </div>
-      ) : classes.length === 0 ? (
-        <div className="py-24 text-center">
-          <FolderOpen size={48} className="mx-auto mb-4 text-text-muted opacity-30" />
-          <p className="text-text-muted">
-            No saved classes yet. Build your first class!
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {classes.map((cls) => (
-            <Card key={cls.id}>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <h3 className="font-semibold">{cls.title}</h3>
-                  <div className="mt-1 flex gap-2">
-                    <Badge variant="violet">{cls.method}</Badge>
-                    <Badge variant="gray">{cls.difficulty}</Badge>
+      ) : activeTab === "classes" ? (
+        /* ── Classes Tab ── */
+        classes.length === 0 ? (
+          <div className="py-24 text-center">
+            <FolderOpen
+              size={48}
+              className="mx-auto mb-4 text-text-muted opacity-30"
+            />
+            <p className="text-text-muted">
+              No saved classes yet. Build your first class!
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {classes.map((cls) => (
+              <Card key={cls.id}>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold">{cls.title}</h3>
+                    <div className="mt-1 flex gap-2">
+                      <Badge variant="violet">{cls.method}</Badge>
+                      <Badge variant="gray">{cls.difficulty}</Badge>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  {cls.is_public ? (
-                    <Badge variant="emerald">Public</Badge>
-                  ) : (
-                    <Badge variant="gray">Private</Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardBody>
-                <p className="mb-4 text-sm text-text-secondary line-clamp-2">
-                  {cls.description || "No description"}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className="btn-ghost text-xs"
-                    onClick={() => togglePublic(cls)}
-                  >
+                  <div className="flex items-center gap-1">
                     {cls.is_public ? (
-                      <EyeOff size={14} />
+                      <Badge variant="emerald">Public</Badge>
                     ) : (
-                      <Eye size={14} />
+                      <Badge variant="gray">Private</Badge>
                     )}
-                    {cls.is_public ? "Make Private" : "Make Public"}
-                  </button>
-                  <button
-                    className="btn-ghost text-xs"
-                    onClick={() => setPrice(cls)}
-                  >
-                    <DollarSign size={14} />
-                    {cls.price != null
-                      ? `$${formatUsdc(cls.price)}`
-                      : "Set Price"}
-                  </button>
-                  {cls.is_public && cls.price != null && cls.price > 0 && (
-                    cls.token_id ? (
-                      <span className="inline-flex items-center gap-1 rounded-lg bg-bg-elevated px-3 py-1.5 text-xs text-text-muted">
-                        Listed
-                      </span>
+                  </div>
+                </CardHeader>
+                <CardBody>
+                  <p className="mb-4 text-sm text-text-secondary line-clamp-2">
+                    {cls.description || "No description"}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className="btn-ghost text-xs"
+                      onClick={() => togglePublic(cls)}
+                    >
+                      {cls.is_public ? (
+                        <EyeOff size={14} />
+                      ) : (
+                        <Eye size={14} />
+                      )}
+                      {cls.is_public ? "Make Private" : "Make Public"}
+                    </button>
+                    <button
+                      className="btn-ghost text-xs"
+                      onClick={() => setPrice(cls)}
+                    >
+                      <DollarSign size={14} />
+                      {cls.price != null
+                        ? `$${formatUsdc(cls.price)}`
+                        : "Set Price"}
+                    </button>
+                    {cls.is_public &&
+                      cls.price != null &&
+                      cls.price > 0 &&
+                      (cls.token_id ? (
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-bg-elevated px-3 py-1.5 text-xs text-text-muted">
+                          Listed
+                        </span>
+                      ) : (
+                        <button
+                          className="btn-primary text-xs"
+                          onClick={() => handleListOnMarketplace(cls)}
+                          disabled={isListing}
+                        >
+                          {isListing && (
+                            <Loader2 size={14} className="animate-spin" />
+                          )}
+                          List on Market
+                        </button>
+                      ))}
+                    <button
+                      className="btn-ghost text-xs text-red-400"
+                      onClick={() => handleDelete(cls.id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        )
+      ) : (
+        /* ── Exercises Tab ── */
+        customExercises.length === 0 ? (
+          <div className="py-24 text-center">
+            <Dumbbell
+              size={48}
+              className="mx-auto mb-4 text-text-muted opacity-30"
+            />
+            <p className="text-text-muted">
+              No custom exercises yet. Create one in the Builder!
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {customExercises.map((exercise) => (
+              <Card key={exercise.id}>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={14} className="flex-shrink-0 text-amber-400" />
+                      <h3 className="truncate font-semibold">{exercise.name}</h3>
+                    </div>
+                    <div className="mt-1 flex gap-2">
+                      <Badge variant="violet">{exercise.method}</Badge>
+                      <Badge variant="gray">{exercise.difficulty}</Badge>
+                      <Badge variant="blue">{exercise.category}</Badge>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {exercise.is_public ? (
+                      <Badge variant="emerald">Public</Badge>
                     ) : (
-                      <button
-                        className="btn-primary text-xs"
-                        onClick={() => handleListOnMarketplace(cls)}
-                        disabled={isListing}
+                      <Badge variant="gray">Private</Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardBody>
+                  <p className="mb-2 text-sm text-text-secondary line-clamp-2">
+                    {exercise.description || "No description"}
+                  </p>
+                  <div className="mb-3 flex flex-wrap gap-1">
+                    {exercise.muscle_groups.map((mg) => (
+                      <span
+                        key={mg}
+                        className="rounded bg-bg-elevated px-1.5 py-0.5 text-[10px] text-text-muted"
                       >
-                        {isListing && <Loader2 size={14} className="animate-spin" />}
-                        List on Market
-                      </button>
-                    )
-                  )}
-                  <button
-                    className="btn-ghost text-xs text-red-400"
-                    onClick={() => handleDelete(cls.id)}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
+                        {mg.replace("_", " ")}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-text-muted">
+                    <span>{exercise.default_duration}s default</span>
+                    {exercise.cues.length > 0 && (
+                      <span>{exercise.cues.length} cues</span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      className="btn-ghost text-xs"
+                      onClick={() => toggleExercisePublic(exercise)}
+                      title={
+                        exercise.is_public
+                          ? "Make private — only you and buyers of your classes can use it"
+                          : "Make public — everyone can use it for free"
+                      }
+                    >
+                      {exercise.is_public ? (
+                        <Lock size={14} />
+                      ) : (
+                        <Globe size={14} />
+                      )}
+                      {exercise.is_public ? "Make Private" : "Make Public"}
+                    </button>
+                    <button
+                      className="btn-ghost text-xs text-red-400"
+                      onClick={() => handleDeleteExercise(exercise.id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        )
       )}
     </div>
   );

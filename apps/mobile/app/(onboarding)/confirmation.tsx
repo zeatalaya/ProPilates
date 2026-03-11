@@ -11,38 +11,68 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CheckCircle, ArrowRight } from "lucide-react-native";
 import { useAuthStore } from "@propilates/shared";
 import { useOnboardingStore } from "../../src/stores/onboarding";
+import { useOAuth3Mobile } from "../../src/hooks/useOAuth3Mobile";
 import { supabase, isSupabaseConfigured } from "../../src/lib/supabase";
 
 export default function ConfirmationScreen() {
   const router = useRouter();
-  const { xionAddress, setInstructor } = useAuthStore();
+  const { xionAddress, setInstructor, isConnected } = useAuthStore();
   const onboarding = useOnboardingStore();
+  const { login, isAuthenticating } = useOAuth3Mobile();
   const [saving, setSaving] = useState(false);
+
+  const saveProfile = async (address: string) => {
+    if (!isSupabaseConfigured) return;
+    const { data: instructor, error } = await supabase
+      .from("instructors")
+      .upsert(
+        {
+          xion_address: address,
+          name: onboarding.name,
+          bio: onboarding.bio,
+          location: onboarding.location,
+          methods: onboarding.methods,
+          tier: "free",
+          onboarding_complete: true,
+        },
+        { onConflict: "xion_address" },
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (instructor) setInstructor(instructor);
+  };
 
   const handleFinish = async () => {
     setSaving(true);
     try {
-      if (isSupabaseConfigured && xionAddress) {
-        const { data: instructor, error } = await supabase
-          .from("instructors")
-          .upsert(
-            {
-              xion_address: xionAddress,
-              name: onboarding.name,
-              bio: onboarding.bio,
-              location: onboarding.location,
-              methods: onboarding.methods,
-              tier: "free",
-              onboarding_complete: true,
-            },
-            { onConflict: "xion_address" },
-          )
-          .select()
-          .single();
-
-        if (error) throw error;
-        if (instructor) setInstructor(instructor);
+      // If not authenticated yet, trigger OAuth first
+      let address = xionAddress;
+      if (!isConnected || !address) {
+        try {
+          await login();
+          // After login, get the updated address from the store
+          address = useAuthStore.getState().xionAddress;
+          if (!address) {
+            Alert.alert(
+              "Auth Required",
+              "Please sign in to save your profile.",
+            );
+            setSaving(false);
+            return;
+          }
+        } catch {
+          Alert.alert(
+            "Auth Failed",
+            "Could not authenticate. Your profile will be saved when you sign in.",
+          );
+          router.replace("/(tabs)/builder");
+          return;
+        }
       }
+
+      await saveProfile(address);
       onboarding.reset();
       router.replace("/(tabs)/builder");
     } catch {
@@ -121,16 +151,23 @@ export default function ConfirmationScreen() {
 
       <View className="px-6 pb-6">
         <TouchableOpacity
-          className="flex-row items-center justify-center rounded-xl py-4 bg-violet-600"
+          className={`flex-row items-center justify-center rounded-xl py-4 ${
+            saving || isAuthenticating ? "bg-violet-600/50" : "bg-violet-600"
+          }`}
           onPress={handleFinish}
-          disabled={saving}
+          disabled={saving || isAuthenticating}
         >
-          {saving ? (
-            <ActivityIndicator size="small" color="#fff" />
+          {saving || isAuthenticating ? (
+            <>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text className="text-white text-base font-semibold ml-2">
+                {isAuthenticating ? "Authenticating..." : "Saving..."}
+              </Text>
+            </>
           ) : (
             <>
               <Text className="text-white text-base font-semibold mr-2">
-                Start Building
+                {isConnected ? "Start Building" : "Sign In & Start"}
               </Text>
               <ArrowRight size={18} color="#fff" />
             </>

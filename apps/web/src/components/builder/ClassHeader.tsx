@@ -36,6 +36,42 @@ export function ClassHeader() {
     if (!canSave || !instructor) return;
     setSaving(true);
     try {
+      // First: persist any temp custom exercises to Supabase
+      const tempExerciseIdMap = new Map<string, string>();
+      for (const block of store.blocks) {
+        for (const ex of block.exercises) {
+          if (ex.exercise_id.startsWith("temp-") && ex.exercise) {
+            // Save custom exercise to DB
+            const { data: saved } = await supabase
+              .from("exercises")
+              .insert({
+                name: ex.exercise.name,
+                method: ex.exercise.method,
+                category: ex.exercise.category,
+                difficulty: ex.exercise.difficulty,
+                muscle_groups: ex.exercise.muscle_groups,
+                description: ex.exercise.description,
+                cues: ex.exercise.cues,
+                default_duration: ex.exercise.default_duration,
+                objective: ex.exercise.objective,
+                apparatus: ex.exercise.apparatus,
+                start_position: ex.exercise.start_position,
+                movement: ex.exercise.movement,
+                pace: ex.exercise.pace,
+                school: ex.exercise.school,
+                creator_id: instructor.id,
+                is_custom: true,
+                is_public: false,
+              })
+              .select()
+              .single();
+            if (saved) {
+              tempExerciseIdMap.set(ex.exercise_id, saved.id);
+            }
+          }
+        }
+      }
+
       // Create class
       const { data: cls, error } = await supabase
         .from("classes")
@@ -67,9 +103,11 @@ export function ClassHeader() {
 
         if (blk) {
           for (const ex of block.exercises) {
+            const resolvedExerciseId =
+              tempExerciseIdMap.get(ex.exercise_id) || ex.exercise_id;
             await supabase.from("block_exercises").insert({
               block_id: blk.id,
-              exercise_id: ex.exercise_id,
+              exercise_id: resolvedExerciseId,
               order_index: ex.order_index,
               duration: ex.duration,
               reps: ex.reps,

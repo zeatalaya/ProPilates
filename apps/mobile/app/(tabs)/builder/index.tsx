@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import {
   ChevronUp,
   Clock,
   Search,
+  Sparkles,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import {
@@ -29,6 +30,7 @@ import {
 } from "@propilates/shared";
 import { Badge } from "../../../src/components/ui/Badge";
 import { DurationPicker } from "../../../src/components/ui/DurationPicker";
+import { CreateExerciseSheet } from "../../../src/components/builder/CreateExerciseSheet";
 import { supabase } from "../../../src/lib/supabase";
 import { cn } from "../../../src/lib/cn";
 
@@ -43,17 +45,71 @@ export default function BuilderScreen() {
   const [segment, setSegment] = useState<Segment>("exercises");
   const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
   const [newBlockName, setNewBlockName] = useState("");
+  const [showCreateSheet, setShowCreateSheet] = useState(false);
+  const isPremium = tier === "premium";
 
   useEffect(() => {
-    supabase
-      .from("exercises")
-      .select("*")
-      .order("method")
-      .order("name")
-      .then(({ data }) => {
-        if (data) setExercises(data);
-      });
-  }, []);
+    async function loadExercises() {
+      const { data: library } = await supabase
+        .from("exercises")
+        .select("*")
+        .or("is_custom.is.null,is_custom.eq.false")
+        .order("method")
+        .order("name");
+
+      let all: Exercise[] = (library ?? []).map((e: any) => ({
+        ...e,
+        is_custom: e.is_custom ?? false,
+        is_public: e.is_public ?? false,
+        creator_id: e.creator_id ?? null,
+      }));
+
+      if (instructor?.id) {
+        const { data: custom } = await supabase
+          .from("exercises")
+          .select("*")
+          .eq("is_custom", true)
+          .eq("creator_id", instructor.id)
+          .order("name");
+        if (custom) all = [...all, ...(custom as Exercise[])];
+      }
+
+      setExercises(all);
+    }
+    loadExercises();
+  }, [instructor]);
+
+  const handleExerciseCreated = useCallback(
+    async (exercise: Exercise) => {
+      if (isPremium && instructor) {
+        const { data } = await supabase
+          .from("exercises")
+          .insert({
+            name: exercise.name,
+            method: exercise.method,
+            category: exercise.category,
+            difficulty: exercise.difficulty,
+            muscle_groups: exercise.muscle_groups,
+            description: exercise.description,
+            cues: exercise.cues,
+            default_duration: exercise.default_duration,
+            creator_id: instructor.id,
+            is_custom: true,
+            is_public: false,
+          })
+          .select()
+          .single();
+        if (data) {
+          setExercises((prev) => [...prev, data as Exercise]);
+        } else {
+          setExercises((prev) => [...prev, { ...exercise, creator_id: instructor.id }]);
+        }
+      } else {
+        setExercises((prev) => [...prev, exercise]);
+      }
+    },
+    [isPremium, instructor],
+  );
 
   const filteredExercises = useMemo(() => {
     return exercises.filter((ex) => {
@@ -95,6 +151,33 @@ export default function BuilderScreen() {
   const handleSave = async () => {
     if (!instructor || tier !== "premium") return;
     try {
+      // Persist temp custom exercises first
+      const tempIdMap = new Map<string, string>();
+      for (const block of store.blocks) {
+        for (const ex of block.exercises) {
+          if (ex.exercise_id.startsWith("temp-") && ex.exercise) {
+            const { data: saved } = await supabase
+              .from("exercises")
+              .insert({
+                name: ex.exercise.name,
+                method: ex.exercise.method,
+                category: ex.exercise.category,
+                difficulty: ex.exercise.difficulty,
+                muscle_groups: ex.exercise.muscle_groups,
+                description: ex.exercise.description,
+                cues: ex.exercise.cues,
+                default_duration: ex.exercise.default_duration,
+                creator_id: instructor.id,
+                is_custom: true,
+                is_public: false,
+              })
+              .select()
+              .single();
+            if (saved) tempIdMap.set(ex.exercise_id, saved.id);
+          }
+        }
+      }
+
       const { data: classData, error } = await supabase
         .from("classes")
         .insert({
@@ -125,9 +208,10 @@ export default function BuilderScreen() {
 
         if (blockData) {
           for (const ex of block.exercises) {
+            const resolvedId = tempIdMap.get(ex.exercise_id) || ex.exercise_id;
             await supabase.from("block_exercises").insert({
               block_id: blockData.id,
-              exercise_id: ex.exercise_id,
+              exercise_id: resolvedId,
               order_index: ex.order_index,
               duration: ex.duration,
               reps: ex.reps,
@@ -464,8 +548,8 @@ export default function BuilderScreen() {
 
       {segment === "exercises" && (
         <View className="flex-1 pt-4">
-          <View className="px-4 mb-3">
-            <View className="flex-row items-center rounded-lg border border-border bg-bg-elevated px-3">
+          <View className="px-4 mb-3 flex-row items-center gap-2">
+            <View className="flex-1 flex-row items-center rounded-lg border border-border bg-bg-elevated px-3">
               <Search size={16} color="#55556a" />
               <TextInput
                 className="flex-1 py-2 pl-2 text-text-primary"
@@ -475,6 +559,12 @@ export default function BuilderScreen() {
                 onChangeText={store.setBrowserSearch}
               />
             </View>
+            <TouchableOpacity
+              onPress={() => setShowCreateSheet(true)}
+              className="rounded-lg bg-violet-600 px-3 py-2.5"
+            >
+              <Plus size={18} color="white" />
+            </TouchableOpacity>
           </View>
           <ScrollView
             horizontal
@@ -539,14 +629,24 @@ export default function BuilderScreen() {
                 className="flex-row items-center justify-between border-b border-border py-3"
               >
                 <View className="flex-1">
-                  <Text className="font-medium text-text-primary">
-                    {item.name}
-                  </Text>
+                  <View className="flex-row items-center gap-1.5">
+                    <Text className="font-medium text-text-primary">
+                      {item.name}
+                    </Text>
+                    {item.is_custom && (
+                      <Sparkles size={12} color="#d4a44e" />
+                    )}
+                  </View>
                   <View className="mt-1 flex-row items-center gap-2">
                     <Badge variant="violet">{item.method}</Badge>
                     <Text className="text-xs text-text-muted">
                       {item.default_duration}s
                     </Text>
+                    {item.is_custom && (
+                      <Text className="text-[10px] text-amber-400">
+                        {item.id.startsWith("temp-") ? "Session" : "Custom"}
+                      </Text>
+                    )}
                   </View>
                 </View>
                 <Plus size={20} color="#c9a96e" />
@@ -555,6 +655,12 @@ export default function BuilderScreen() {
           />
         </View>
       )}
+      <CreateExerciseSheet
+        visible={showCreateSheet}
+        onClose={() => setShowCreateSheet(false)}
+        onCreated={handleExerciseCreated}
+        isPremium={isPremium}
+      />
     </SafeAreaView>
   );
 }

@@ -16,4 +16,6 @@ export const ENV = {
   CROSSMINT_API_KEY: process.env.EXPO_PUBLIC_CROSSMINT_API_KEY ?? "",
   CROSSMINT_COLLECTION_ID: process.env.EXPO_PUBLIC_CROSSMINT_COLLECTION_ID ?? "",
   SPOTIFY_CLIENT_ID: process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID ?? "",
+  OAUTH3_SERVER: process.env.EXPO_PUBLIC_OAUTH3_SERVER ?? "https://oauth2.testnet.burnt.com",
+  OAUTH3_CLIENT_ID: process.env.EXPO_PUBLIC_OAUTH3_CLIENT_ID ?? "",
 };
