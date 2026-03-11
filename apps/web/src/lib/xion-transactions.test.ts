@@ -88,44 +88,24 @@ describe("xion-transactions", () => {
   });
 
   describe("buildMarketplaceListMessages", () => {
-    it("returns 3 messages: mint, approve, list_item", () => {
+    it("returns 2 messages: approve, list_item (mint is server-side)", () => {
       const result = buildMarketplaceListMessages(
         "xion1seller",
         "token-1",
         "4990000",
-        {
-          class_id: "class-1",
-          title: "My Class",
-          description: "Desc",
-          method: "mat",
-          difficulty: "intermediate",
-          duration_minutes: 55,
-          instructor_id: "instr-1",
-        },
       );
-      expect(result.messages).toHaveLength(3);
+      expect(result.messages).toHaveLength(2);
       expect(result.tokenId).toBe("token-1");
 
-      // Message 1: mint (cw721-base uses Empty extension, metadata in token_uri)
-      const mint = result.messages[0];
-      expect(mint.value.contract).toBe(CONTRACTS.nft);
-      const mintDecoded = JSON.parse(atob(mint.value.msg as string));
-      expect(mintDecoded.mint.token_id).toBe("token-1");
-      expect(mintDecoded.mint.owner).toBe("xion1seller");
-      expect(mintDecoded.mint.extension).toEqual({});
-      expect(mintDecoded.mint.token_uri).toMatch(/^data:application\/json;base64,/);
-      // Verify metadata is encoded in token_uri
-      const uriData = JSON.parse(atob(mintDecoded.mint.token_uri.split(",")[1]));
-      expect(uriData.name).toBe("My Class");
-      expect(uriData.description).toBe("Desc");
-
-      // Message 2: approve
-      const approve = result.messages[1];
+      // Message 1: approve
+      const approve = result.messages[0];
+      expect(approve.value.contract).toBe(CONTRACTS.nft);
       const approveDecoded = JSON.parse(atob(approve.value.msg as string));
       expect(approveDecoded.approve.spender).toBe(CONTRACTS.marketplace);
+      expect(approveDecoded.approve.token_id).toBe("token-1");
 
-      // Message 3: list_item
-      const list = result.messages[2];
+      // Message 2: list_item
+      const list = result.messages[1];
       expect(list.value.contract).toBe(CONTRACTS.marketplace);
       const listDecoded = JSON.parse(atob(list.value.msg as string));
       expect(listDecoded.list_item.collection).toBe(CONTRACTS.nft);

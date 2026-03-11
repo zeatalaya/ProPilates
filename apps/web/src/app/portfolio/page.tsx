@@ -72,29 +72,40 @@ export default function PortfolioPage() {
 
       // Check if contracts are configured (production mode)
       if (oauthAccessToken && CONTRACTS.nft && CONTRACTS.marketplace) {
-        // Build the 3-step atomic transaction:
-        // 1. Mint NFT on CW721 contract
-        // 2. Approve marketplace to transfer
-        // 3. Create swap (listing) on marketplace
-        const { tokenId: mintedTokenId, messages } = buildMarketplaceListMessages(
+        // Step 1: Mint NFT server-side (deployer is the CW721 minter)
+        const mintRes = await fetch("/api/nft/mint", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            owner: xionAddress,
+            tokenId,
+            metadata: {
+              class_id: cls.id,
+              title: cls.title,
+              description: cls.description,
+              method: cls.method,
+              difficulty: cls.difficulty,
+              duration_minutes: cls.duration_minutes,
+              instructor_id: instructor.id,
+            },
+          }),
+        });
+        if (!mintRes.ok) {
+          const err = await mintRes.json();
+          throw new Error(`Mint failed: ${err.error}`);
+        }
+
+        // Step 2: Approve marketplace + list via OAuth (user's authz grant)
+        const { messages } = buildMarketplaceListMessages(
           xionAddress,
           tokenId,
           priceUsdc,
-          {
-            class_id: cls.id,
-            title: cls.title,
-            description: cls.description,
-            method: cls.method,
-            difficulty: cls.difficulty,
-            duration_minutes: cls.duration_minutes,
-            instructor_id: instructor.id,
-          },
         );
         await submitTransaction(oauthAccessToken, messages);
 
         // Record listing in Supabase for marketplace display
         await supabase.from("classes").update({
-          token_id: mintedTokenId,
+          token_id: tokenId,
         }).eq("id", cls.id);
 
         alert("Listed successfully on the marketplace!");

@@ -193,60 +193,25 @@ export function buildClearanceMintMsg(
 }
 
 /**
- * Build the 3-message transaction to list a class NFT on the marketplace.
+ * Build the approve + list messages for a marketplace listing.
  *
- * Uses the xion_nft_marketplace contract flow:
- *   Step 1: Mint the NFT on the CW721 contract
- *   Step 2: Approve marketplace to transfer the NFT
- *   Step 3: Call list_item on the marketplace
+ * NFT minting is handled server-side via /api/nft/mint (deployer is the minter).
+ * This builds the 2 remaining messages submitted via OAuth:
+ *   Step 1: Approve marketplace to transfer the NFT
+ *   Step 2: Call list_item on the marketplace
  *
- * All 3 messages are submitted as a single atomic transaction.
  * Requires MsgExecuteContract grants for both NFT_CONTRACT and MARKETPLACE_CONTRACT.
  */
 export function buildMarketplaceListMessages(
   sender: string,
   tokenId: string,
   priceAmount: string,
-  metadata: {
-    class_id: string;
-    title: string;
-    description: string;
-    method: string;
-    difficulty: string;
-    duration_minutes: number;
-    instructor_id: string;
-  },
 ): { tokenId: string; messages: TransactionMessage[] } {
   const nftContract = CONTRACTS.nft;
   const marketplaceContract = CONTRACTS.marketplace;
   const denom = process.env.NEXT_PUBLIC_USDC_DENOM ?? "uxion";
 
-  // Encode metadata as a data URI for token_uri
-  // cw721-base v0.19.0 uses Empty extension, so metadata goes in token_uri
-  const metadataJson = JSON.stringify({
-    name: metadata.title,
-    description: metadata.description,
-    attributes: [
-      { trait_type: "class_id", value: metadata.class_id },
-      { trait_type: "method", value: metadata.method },
-      { trait_type: "difficulty", value: metadata.difficulty },
-      { trait_type: "duration_minutes", value: String(metadata.duration_minutes) },
-      { trait_type: "instructor_id", value: metadata.instructor_id },
-    ],
-  });
-  const tokenUri = `data:application/json;base64,${btoa(metadataJson)}`;
-
-  // Step 1: Mint the class NFT on CW721
-  const mintMsg = buildMsgExecuteContract(sender, nftContract, {
-    mint: {
-      token_id: tokenId,
-      owner: sender,
-      token_uri: tokenUri,
-      extension: {},
-    },
-  });
-
-  // Step 2: Approve marketplace to transfer the NFT
+  // Step 1: Approve marketplace to transfer the NFT
   const approveMsg = buildMsgExecuteContract(sender, nftContract, {
     approve: {
       spender: marketplaceContract,
@@ -255,7 +220,7 @@ export function buildMarketplaceListMessages(
     },
   });
 
-  // Step 3: List item on marketplace
+  // Step 2: List item on marketplace
   const listMsg = buildMsgExecuteContract(sender, marketplaceContract, {
     list_item: {
       collection: nftContract,
@@ -266,7 +231,7 @@ export function buildMarketplaceListMessages(
 
   return {
     tokenId,
-    messages: [mintMsg, approveMsg, listMsg],
+    messages: [approveMsg, listMsg],
   };
 }
 
