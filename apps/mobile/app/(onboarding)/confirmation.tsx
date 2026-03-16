@@ -142,7 +142,7 @@ export default function ConfirmationScreen() {
                 Sell on Marketplace
               </Text>
               <Text className="text-text-secondary text-sm">
-                List your classes as NFTs and earn USDC
+                List your classes as digital portfolios and earn revenue
               </Text>
             </View>
           </View>

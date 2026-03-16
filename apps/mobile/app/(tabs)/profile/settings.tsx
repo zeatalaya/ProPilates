@@ -6,8 +6,7 @@ import {
   ArrowLeft,
   LogOut,
   Music,
-  Wallet,
-  Globe,
+  User,
   Info,
   ChevronRight,
 } from "lucide-react-native";
@@ -18,7 +17,7 @@ import { Card, CardBody } from "../../../src/components/ui/Card";
 export default function SettingsScreen() {
   const router = useRouter();
   const { xionAddress } = useAuthStore();
-  const { logout } = useOAuth3Mobile();
+  const { logout, login, isAuthenticating } = useOAuth3Mobile();
   const spotifyReady = useSpotifyStore((s) => s.isReady);
   const spotifyReset = useSpotifyStore((s) => s.reset);
 
@@ -34,6 +33,15 @@ export default function SettingsScreen() {
         },
       },
     ]);
+  };
+
+  const handleConnectAccount = async () => {
+    if (xionAddress) return; // Already connected
+    try {
+      await login();
+    } catch {
+      Alert.alert("Connection Failed", "Could not connect your account. Please try again.");
+    }
   };
 
   const handleSpotifyToggle = () => {
@@ -64,17 +72,21 @@ export default function SettingsScreen() {
         </View>
 
         <Card className="mb-6">
-          <TouchableOpacity className="flex-row items-center px-4 py-4 border-b border-border">
-            <Wallet size={20} color="#c9a96e" />
+          <TouchableOpacity
+            className="flex-row items-center px-4 py-4 border-b border-border"
+            onPress={handleConnectAccount}
+            disabled={!!xionAddress || isAuthenticating}
+          >
+            <User size={20} color="#c9a96e" />
             <View className="flex-1 ml-3">
               <Text className="text-text-primary font-medium">
-                XION Wallet
+                XION Account
               </Text>
               <Text className="text-text-secondary text-sm">
-                {xionAddress ? "Connected" : "Not connected"}
+                {xionAddress ? "Connected" : isAuthenticating ? "Connecting..." : "Not connected"}
               </Text>
             </View>
-            <ChevronRight size={18} color="#55556a" />
+            {!xionAddress && <ChevronRight size={18} color="#55556a" />}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -102,14 +114,6 @@ export default function SettingsScreen() {
         </View>
 
         <Card className="mb-6">
-          <TouchableOpacity className="flex-row items-center px-4 py-4 border-b border-border">
-            <Globe size={20} color="#a0a0b8" />
-            <Text className="text-text-primary font-medium ml-3 flex-1">
-              Network
-            </Text>
-            <Text className="text-text-secondary text-sm">XION Testnet-2</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity className="flex-row items-center px-4 py-4">
             <Info size={20} color="#a0a0b8" />
             <Text className="text-text-primary font-medium ml-3 flex-1">

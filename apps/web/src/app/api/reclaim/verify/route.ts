@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       success: true,
       isValid: true,
       proofHash,
-      message: "Proof validated. Submit on-chain to mint your badge.",
+      message: "Proof validated. Submit to receive your credential badge.",
     });
   } catch {
     return NextResponse.json(

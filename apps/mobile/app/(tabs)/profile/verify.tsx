@@ -111,12 +111,12 @@ export default function VerifyScreen() {
           <View className="flex-row items-center mb-2">
             <Shield size={24} color="#c9a96e" />
             <Text className="text-xl font-bold text-text-primary ml-2">
-              On-Chain Verification
+              Credential Verification
             </Text>
           </View>
           <Text className="text-text-secondary">
-            Verify your Pilates certifications on-chain using Reclaim Protocol.
-            Verified credentials are stored as attestations on XION.
+            Verify your Pilates certifications using Reclaim Protocol.
+            Verified credentials are securely stored and shareable.
           </Text>
         </View>
 

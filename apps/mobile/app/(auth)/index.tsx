@@ -174,7 +174,7 @@ export default function AuthScreen() {
         </TouchableOpacity>
 
         <Text className="mt-4 text-center text-xs text-text-muted">
-          Sign in with email, Google, or passkey via XION Meta Account
+          Sign in with email, Google, or passkey
         </Text>
       </View>
     </SafeAreaView>

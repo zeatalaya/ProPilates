@@ -44,8 +44,7 @@ export default function ProfileScreen() {
             Not Connected
           </Text>
           <Text className="text-text-secondary text-center mb-6">
-            Connect your XION wallet to view your profile and manage your
-            account.
+            Sign in to view your profile and manage your account.
           </Text>
         </View>
       </SafeAreaView>
@@ -144,7 +143,7 @@ export default function ProfileScreen() {
             <Text className="text-text-primary font-medium ml-3 flex-1">
               Verify Credentials
             </Text>
-            <Text className="text-text-secondary text-sm">On-chain</Text>
+            <Text className="text-text-secondary text-sm">Verified</Text>
           </TouchableOpacity>
 
           <TouchableOpacity className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-4">

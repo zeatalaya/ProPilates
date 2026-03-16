@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import {
   ShieldCheck,
-  Wallet,
+  UserCheck,
   ListChecks,
   Fingerprint,
   Coins,
@@ -23,7 +23,7 @@ import { StepSubmit } from "@/components/verify/StepSubmit";
 import { StepSuccess } from "@/components/verify/StepSuccess";
 
 const STEPS = [
-  { key: "connecting" as const, label: "Connect", icon: Wallet },
+  { key: "connecting" as const, label: "Connect", icon: UserCheck },
   { key: "choosing" as const, label: "Choose", icon: ListChecks },
   { key: "proving" as const, label: "Prove", icon: Fingerprint },
   { key: "submitting" as const, label: "Submit", icon: Coins },
