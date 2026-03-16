@@ -57,6 +57,7 @@ export default function PersonalScreen() {
                 placeholderTextColor="#55556a"
                 value={name}
                 onChangeText={setName}
+                maxLength={100}
               />
             </View>
 
@@ -70,6 +71,7 @@ export default function PersonalScreen() {
                 placeholderTextColor="#55556a"
                 value={bio}
                 onChangeText={setBio}
+                maxLength={500}
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
@@ -87,6 +89,7 @@ export default function PersonalScreen() {
                 placeholderTextColor="#55556a"
                 value={location}
                 onChangeText={setLocation}
+                maxLength={100}
               />
             </View>
           </View>

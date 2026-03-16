@@ -1,48 +1,97 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, ScrollView, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Shield, CheckCircle, ExternalLink } from "lucide-react-native";
 import { Card, CardBody } from "../../../src/components/ui/Card";
 import { Badge } from "../../../src/components/ui/Badge";
+import { useAuthStore, type VerificationProvider } from "@propilates/shared";
+import { supabase } from "../../../src/lib/supabase";
 
-const VERIFIABLE_CREDS = [
+interface VerifiableCred {
+  id: string;
+  name: string;
+  description: string;
+  provider: VerificationProvider;
+  verified: boolean;
+  verifiedAt?: string;
+}
+
+const BASE_CREDS: Omit<VerifiableCred, "verified" | "verifiedAt">[] = [
   {
     id: "pma",
     name: "PMA Certification",
     description: "Pilates Method Alliance certified instructor",
-    provider: "Reclaim Protocol",
-    verified: false,
+    provider: "other",
   },
   {
-    id: "balanced-body",
+    id: "balanced_body",
     name: "Balanced Body",
     description: "Balanced Body certified instructor",
-    provider: "Reclaim Protocol",
-    verified: false,
+    provider: "balanced_body",
   },
   {
     id: "stott",
     name: "STOTT PILATES",
     description: "Merrithew STOTT PILATES certified",
-    provider: "Reclaim Protocol",
-    verified: false,
+    provider: "stott",
   },
   {
     id: "basi",
     name: "BASI Pilates",
     description: "Body Arts and Science International certified",
-    provider: "Reclaim Protocol",
-    verified: false,
+    provider: "basi",
   },
 ];
 
 export default function VerifyScreen() {
   const router = useRouter();
+  const { instructor } = useAuthStore();
+  const [creds, setCreds] = useState<VerifiableCred[]>(
+    BASE_CREDS.map((c) => ({ ...c, verified: false })),
+  );
 
-  const handleVerify = (credId: string) => {
-    // In production: open Reclaim Protocol verification flow
-    console.log("Verify:", credId);
+  useEffect(() => {
+    if (!instructor) return;
+    async function loadVerifications() {
+      const { data } = await supabase
+        .from("verifications")
+        .select("*")
+        .eq("instructor_id", instructor!.id);
+
+      if (data && data.length > 0) {
+        setCreds((prev) =>
+          prev.map((cred) => {
+            const match = data.find(
+              (v: any) => v.provider === cred.provider,
+            );
+            return match
+              ? { ...cred, verified: true, verifiedAt: match.verified_at }
+              : cred;
+          }),
+        );
+      }
+    }
+    loadVerifications();
+  }, [instructor]);
+
+  const handleVerify = (cred: VerifiableCred) => {
+    if (!instructor) {
+      Alert.alert("Sign In Required", "Please sign in to verify credentials.");
+      return;
+    }
+    // Direct user to the web verification flow
+    Alert.alert(
+      "Verify Credential",
+      `To verify your ${cred.name} certification, please use the web app at pro-pilates.vercel.app/verify. The verification uses Reclaim Protocol for zero-knowledge proof generation.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Open Web",
+          onPress: () => Linking.openURL("https://pro-pilates.vercel.app/verify"),
+        },
+      ],
+    );
   };
 
   return (
@@ -72,7 +121,7 @@ export default function VerifyScreen() {
         </View>
 
         <View className="gap-3 mb-8">
-          {VERIFIABLE_CREDS.map((cred) => (
+          {creds.map((cred) => (
             <Card key={cred.id}>
               <CardBody>
                 <View className="flex-row items-start justify-between">
@@ -82,7 +131,7 @@ export default function VerifyScreen() {
                         {cred.name}
                       </Text>
                       {cred.verified && (
-                        <CheckCircle size={16} color="#34d399" className="ml-2" />
+                        <CheckCircle size={16} color="#34d399" style={{ marginLeft: 8 }} />
                       )}
                     </View>
                     <Text className="text-text-secondary text-sm mb-2">
@@ -91,12 +140,17 @@ export default function VerifyScreen() {
                     <Badge variant={cred.verified ? "emerald" : "gray"}>
                       {cred.verified ? "Verified" : "Not Verified"}
                     </Badge>
+                    {cred.verifiedAt && (
+                      <Text className="text-text-muted text-xs mt-1">
+                        Verified {new Date(cred.verifiedAt).toLocaleDateString()}
+                      </Text>
+                    )}
                   </View>
                   <TouchableOpacity
                     className={`px-4 py-2 rounded-lg ${
                       cred.verified ? "bg-bg-card border border-border" : "bg-violet-600"
                     }`}
-                    onPress={() => handleVerify(cred.id)}
+                    onPress={() => handleVerify(cred)}
                     disabled={cred.verified}
                   >
                     <Text

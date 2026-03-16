@@ -18,7 +18,7 @@ export const isOAuth3Configured = !!(OAUTH3_SERVER && OAUTH3_CLIENT_ID);
 
 // The redirect URI must match what's registered with the OAuth2 server.
 // We use the web callback URL which then deep-links back to the mobile app.
-const WEB_CALLBACK_URL = "http://localhost:3000/api/auth/oauth3/callback";
+const WEB_CALLBACK_URL = "https://pro-pilates.vercel.app/api/auth/oauth3/callback";
 
 // Deep link URI that the web callback redirects to
 export const MOBILE_DEEP_LINK = "propilates://auth/callback";
@@ -87,8 +87,7 @@ export async function exchangeCodeForTokens(
     }).toString(),
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Token exchange failed (${res.status}): ${text}`);
+    throw new Error(`Token exchange failed (${res.status})`);
   }
   return res.json() as Promise<{
     access_token: string;

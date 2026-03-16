@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,29 +13,65 @@ import { Search, ShoppingBag } from "lucide-react-native";
 import { Card, CardBody } from "../../../src/components/ui/Card";
 import { Badge } from "../../../src/components/ui/Badge";
 import { MOBILE_METHODS } from "@propilates/shared";
+import { supabase } from "../../../src/lib/supabase";
 
-interface Listing {
-  tokenId: string;
-  name: string;
-  instructor: string;
+interface MarketplaceListing {
+  id: string;
+  title: string;
+  description: string;
   method: string;
   difficulty: string;
-  price: number;
-  exerciseCount: number;
+  duration_minutes: number;
+  price: number | null;
+  instructor_name: string;
+  instructor_id: string;
 }
 
 export default function MarketplaceScreen() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [filterMethod, setFilterMethod] = useState<string | null>(null);
-  const [listings] = useState<Listing[]>([]);
-  const [loading] = useState(false);
+  const [listings, setListings] = useState<MarketplaceListing[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadListings() {
+      try {
+        const { data, error } = await supabase
+          .from("classes")
+          .select("*, instructor:instructors(name)")
+          .eq("is_public", true)
+          .not("price", "is", null)
+          .order("created_at", { ascending: false });
+
+        if (data && !error) {
+          setListings(
+            data.map((c: any) => ({
+              id: c.id,
+              title: c.title,
+              description: c.description || "",
+              method: c.method,
+              difficulty: c.difficulty,
+              duration_minutes: c.duration_minutes,
+              price: c.price,
+              instructor_name: c.instructor?.name || "Unknown",
+              instructor_id: c.instructor_id,
+            })),
+          );
+        }
+      } catch {
+        // Silently fail — show empty state
+      }
+      setLoading(false);
+    }
+    loadListings();
+  }, []);
 
   const filtered = listings.filter((l) => {
     const matchesSearch =
       !search ||
-      l.name.toLowerCase().includes(search.toLowerCase()) ||
-      l.instructor.toLowerCase().includes(search.toLowerCase());
+      l.title.toLowerCase().includes(search.toLowerCase()) ||
+      l.instructor_name.toLowerCase().includes(search.toLowerCase());
     const matchesMethod = !filterMethod || l.method === filterMethod;
     return matchesSearch && matchesMethod;
   });
@@ -45,31 +81,38 @@ export default function MarketplaceScreen() {
     ...MOBILE_METHODS.map((m) => ({ value: m.value as string | null, label: m.label })),
   ];
 
-  const renderListing = ({ item }: { item: Listing }) => (
+  const renderListing = ({ item }: { item: MarketplaceListing }) => (
     <TouchableOpacity
       className="mb-3"
-      onPress={() => router.push(`/(tabs)/marketplace/${item.tokenId}`)}
+      onPress={() => router.push(`/(tabs)/marketplace/${item.id}`)}
     >
       <Card>
         <CardBody>
           <View className="flex-row items-start justify-between mb-2">
             <View className="flex-1 mr-3">
               <Text className="text-text-primary font-semibold text-base">
-                {item.name}
+                {item.title}
               </Text>
               <Text className="text-text-secondary text-sm mt-0.5">
-                by {item.instructor}
+                by {item.instructor_name}
               </Text>
             </View>
-            <Text className="text-emerald-400 font-bold text-lg">
-              ${(item.price / 1_000_000).toFixed(2)}
-            </Text>
+            {item.price != null && (
+              <Text className="text-emerald-400 font-bold text-lg">
+                ${Number(item.price).toFixed(2)}
+              </Text>
+            )}
           </View>
-          <View className="flex-row items-center gap-2 mt-2">
+          {item.description ? (
+            <Text className="text-text-muted text-sm mb-2" numberOfLines={2}>
+              {item.description}
+            </Text>
+          ) : null}
+          <View className="flex-row items-center gap-2 mt-1">
             <Badge variant="violet">{item.method}</Badge>
             <Badge variant="blue">{item.difficulty}</Badge>
             <Text className="text-text-secondary text-xs ml-auto">
-              {item.exerciseCount} exercises
+              {item.duration_minutes}m
             </Text>
           </View>
         </CardBody>
@@ -148,7 +191,7 @@ export default function MarketplaceScreen() {
         <FlatList
           data={filtered}
           renderItem={renderListing}
-          keyExtractor={(item) => item.tokenId}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
         />
       )}

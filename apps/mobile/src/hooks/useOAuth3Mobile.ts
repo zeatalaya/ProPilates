@@ -19,6 +19,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as SecureStore from "expo-secure-store";
 import { useAuthStore } from "@propilates/shared";
 import { supabase } from "../lib/supabase";
+import * as Crypto from "expo-crypto";
 import {
   isOAuth3Configured,
   generatePKCE,
@@ -141,26 +142,17 @@ export function useOAuth3Mobile() {
     if (isAuthenticating) return;
 
     if (!isOAuth3Configured) {
-      // Demo mode
-      const demoAddress = "xion1demo" + Date.now().toString(36);
-      const demoSession: OAuth3Session = {
-        accessToken: "demo-token",
-        expiresAt: Date.now() + 86400000,
-        user: { xionAddress: demoAddress },
-      };
-      setSession(demoSession);
-      setOAuthAccessToken(demoSession.accessToken);
-      await persistSession(demoSession);
-      setXionAddress(demoAddress);
-      setConnected(true);
-      return;
+      throw new Error("OAuth3 is not configured. Please set EXPO_PUBLIC_OAUTH3_SERVER and EXPO_PUBLIC_OAUTH3_CLIENT_ID.");
     }
 
     setIsAuthenticating(true);
     try {
       // Step 1: Generate PKCE
       const { verifier, challenge } = await generatePKCE();
-      const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      const stateBytes = await Crypto.getRandomBytesAsync(16);
+      const state = Array.from(new Uint8Array(stateBytes))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
 
       // Step 2: Build authorize URL (state prefixed with "mobile:" for web callback routing)
       const authorizeUrl = getAuthorizeUrl(challenge, state);

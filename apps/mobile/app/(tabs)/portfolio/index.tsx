@@ -18,6 +18,7 @@ import {
   Lock,
   Trash2,
   Dumbbell,
+  ShoppingBag,
 } from "lucide-react-native";
 import { useAuthStore, type Exercise, type PilatesClass } from "@propilates/shared";
 import { Card, CardBody } from "../../../src/components/ui/Card";
@@ -26,12 +27,26 @@ import { supabase } from "../../../src/lib/supabase";
 
 type Tab = "classes" | "exercises" | "purchased";
 
+interface PurchasedClass {
+  id: string;
+  class_id: string;
+  token_id: string;
+  price_paid: number;
+  purchased_at: string;
+  title: string;
+  method: string;
+  difficulty: string;
+  duration_minutes: number;
+  instructor_name: string;
+}
+
 export default function PortfolioScreen() {
   const router = useRouter();
-  const { instructor, tier } = useAuthStore();
+  const { instructor, tier, xionAddress } = useAuthStore();
   const [activeTab, setActiveTab] = useState<Tab>("classes");
   const [classes, setClasses] = useState<PilatesClass[]>([]);
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
+  const [purchased, setPurchased] = useState<PurchasedClass[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,10 +70,37 @@ export default function PortfolioScreen() {
       ]);
       if (classesRes.data) setClasses(classesRes.data as PilatesClass[]);
       if (exercisesRes.data) setCustomExercises(exercisesRes.data as Exercise[]);
+
+      // Load purchased classes
+      if (xionAddress) {
+        const { data: purchases } = await supabase
+          .from("portfolio_access")
+          .select("*, class:classes(title, method, difficulty, duration_minutes, instructor:instructors(name))")
+          .eq("buyer_address", xionAddress)
+          .order("purchased_at", { ascending: false });
+
+        if (purchases) {
+          setPurchased(
+            purchases.map((p: any) => ({
+              id: p.id,
+              class_id: p.class_id,
+              token_id: p.token_id,
+              price_paid: p.price_paid,
+              purchased_at: p.purchased_at,
+              title: p.class?.title || "Unknown Class",
+              method: p.class?.method || "mat",
+              difficulty: p.class?.difficulty || "intermediate",
+              duration_minutes: p.class?.duration_minutes || 0,
+              instructor_name: p.class?.instructor?.name || "Unknown",
+            })),
+          );
+        }
+      }
+
       setLoading(false);
     }
     load();
-  }, [instructor]);
+  }, [instructor, xionAddress]);
 
   async function toggleExercisePublic(exercise: Exercise) {
     const { error } = await supabase
@@ -216,7 +258,7 @@ export default function PortfolioScreen() {
                   ? `Classes${classes.length > 0 ? ` (${classes.length})` : ""}`
                   : tab === "exercises"
                     ? `Exercises${customExercises.length > 0 ? ` (${customExercises.length})` : ""}`
-                    : "Purchased"}
+                    : `Purchased${purchased.length > 0 ? ` (${purchased.length})` : ""}`}
               </Text>
             </TouchableOpacity>
           ))}
@@ -282,10 +324,10 @@ export default function PortfolioScreen() {
             contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
           />
         )
-      ) : (
+      ) : purchased.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
-            <Briefcase size={36} color="#c9a96e" />
+            <ShoppingBag size={36} color="#c9a96e" />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">
             No Purchases Yet
@@ -294,6 +336,41 @@ export default function PortfolioScreen() {
             Classes you purchase from the marketplace will appear here.
           </Text>
         </View>
+      ) : (
+        <FlatList
+          data={purchased}
+          renderItem={({ item }) => (
+            <View className="mb-3">
+              <Card>
+                <CardBody>
+                  <Text className="text-text-primary font-semibold text-base mb-1">
+                    {item.title}
+                  </Text>
+                  <Text className="text-text-secondary text-sm mb-2">
+                    by {item.instructor_name}
+                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    <Badge variant="violet">{item.method}</Badge>
+                    <Badge variant="blue">{item.difficulty}</Badge>
+                    <Text className="text-text-muted text-xs ml-auto">
+                      {item.duration_minutes}m
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center justify-between mt-2 pt-2 border-t border-border">
+                    <Text className="text-text-muted text-xs">
+                      Purchased {new Date(item.purchased_at).toLocaleDateString()}
+                    </Text>
+                    <Text className="text-emerald-400 text-xs font-medium">
+                      ${Number(item.price_paid).toFixed(2)} USDC
+                    </Text>
+                  </View>
+                </CardBody>
+              </Card>
+            </View>
+          )}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
+        />
       )}
     </SafeAreaView>
   );

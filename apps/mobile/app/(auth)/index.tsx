@@ -173,17 +173,6 @@ export default function AuthScreen() {
           )}
         </TouchableOpacity>
 
-        {/* Try Builder (ghost) */}
-        <TouchableOpacity
-          onPress={() => router.replace("/(tabs)/builder")}
-          className="w-full items-center rounded-xl px-6 py-3"
-          activeOpacity={0.8}
-        >
-          <Text className="text-base font-medium text-text-secondary">
-            Try Class Builder
-          </Text>
-        </TouchableOpacity>
-
         <Text className="mt-4 text-center text-xs text-text-muted">
           Sign in with email, Google, or passkey via XION Meta Account
         </Text>

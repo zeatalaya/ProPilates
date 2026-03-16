@@ -15,7 +15,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.propilates.app"
+      "bundleIdentifier": "com.propilates.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "ProPilates needs camera access for profile photos.",
+        "NSPhotoLibraryUsageDescription": "ProPilates needs photo library access for profile photos.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "associatedDomains": [
+        "applinks:pro-pilates.vercel.app"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -35,6 +43,11 @@
     "plugins": [
       "expo-router",
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "propilates"
+      }
+    }
   }
 }

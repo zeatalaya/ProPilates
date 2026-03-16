@@ -14,6 +14,8 @@ import type {
   ExerciseCategory,
   Difficulty,
   MuscleGroup,
+  ExercisePace,
+  PilatesSchool,
 } from "@propilates/shared";
 
 interface Props {
@@ -37,6 +39,12 @@ const MUSCLE_GROUPS: MuscleGroup[] = [
   "core", "legs", "arms", "back", "glutes", "shoulders", "full_body", "hip_flexors", "chest",
 ];
 
+const PACES: ExercisePace[] = ["deliberate", "moderate", "flowing", "dynamic"];
+
+const SCHOOLS: PilatesSchool[] = [
+  "classical", "basi", "stott", "romana", "fletcher", "polestar", "balanced_body", "contemporary",
+];
+
 export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: Props) {
   const [name, setName] = useState("");
   const [method, setMethod] = useState<PilatesMethod>("mat");
@@ -46,6 +54,12 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
   const [description, setDescription] = useState("");
   const [cues, setCues] = useState<string[]>([""]);
   const [defaultDuration, setDefaultDuration] = useState("30");
+  const [objective, setObjective] = useState("");
+  const [apparatus, setApparatus] = useState("");
+  const [startPosition, setStartPosition] = useState("");
+  const [movement, setMovement] = useState<string[]>([""]);
+  const [pace, setPace] = useState<ExercisePace | "">("");
+  const [school, setSchool] = useState<PilatesSchool | "">("");
 
   function toggleMuscle(mg: MuscleGroup) {
     setMuscleGroups((prev) =>
@@ -68,12 +82,12 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
       default_duration: parseInt(defaultDuration) || 30,
       image_url: null,
       video_url: null,
-      objective: null,
-      apparatus: null,
-      start_position: null,
-      movement: null,
-      pace: null,
-      school: null,
+      objective: objective.trim() || null,
+      apparatus: apparatus.trim() || null,
+      start_position: startPosition.trim() || null,
+      movement: movement.filter((m) => m.trim()).length > 0 ? movement.filter((m) => m.trim()) : null,
+      pace: pace || null,
+      school: school || null,
       creator_id: null,
       is_custom: true,
       is_public: false,
@@ -93,6 +107,12 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
     setDescription("");
     setCues([""]);
     setDefaultDuration("30");
+    setObjective("");
+    setApparatus("");
+    setStartPosition("");
+    setMovement([""]);
+    setPace("");
+    setSchool("");
   }
 
   return (
@@ -243,10 +263,112 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
               )}
             </View>
           ))}
-          <TouchableOpacity onPress={() => setCues([...cues, ""])} className="mb-6 flex-row items-center gap-1">
+          <TouchableOpacity onPress={() => setCues([...cues, ""])} className="mb-4 flex-row items-center gap-1">
             <Plus size={14} color="#c9a96e" />
             <Text className="text-xs text-violet-400">Add cue</Text>
           </TouchableOpacity>
+
+          {/* Objective */}
+          <Text className="mb-1 text-xs font-medium text-text-secondary">Objective (optional)</Text>
+          <TextInput
+            className="mb-4 rounded-lg border border-border bg-bg-elevated px-3 py-2.5 text-text-primary"
+            placeholder="Learning goal..."
+            placeholderTextColor="#55556a"
+            value={objective}
+            onChangeText={setObjective}
+          />
+
+          {/* Start Position */}
+          <Text className="mb-1 text-xs font-medium text-text-secondary">Start Position (optional)</Text>
+          <TextInput
+            className="mb-4 rounded-lg border border-border bg-bg-elevated px-3 py-2.5 text-text-primary"
+            placeholder="e.g. Supine, knees bent..."
+            placeholderTextColor="#55556a"
+            value={startPosition}
+            onChangeText={setStartPosition}
+          />
+
+          {/* Movement Steps */}
+          <Text className="mb-1 text-xs font-medium text-text-secondary">Movement Steps (optional)</Text>
+          {movement.map((step, i) => (
+            <View key={i} className="mb-2 flex-row items-center gap-2">
+              <Text className="text-xs text-text-muted w-4">{i + 1}.</Text>
+              <TextInput
+                className="flex-1 rounded-lg border border-border bg-bg-elevated px-3 py-2 text-text-primary"
+                placeholder={`Step ${i + 1}`}
+                placeholderTextColor="#55556a"
+                value={step}
+                onChangeText={(v) => {
+                  const next = [...movement];
+                  next[i] = v;
+                  setMovement(next);
+                }}
+              />
+              {movement.length > 1 && (
+                <TouchableOpacity onPress={() => setMovement(movement.filter((_, j) => j !== i))}>
+                  <Minus size={18} color="#ef4444" />
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+          <TouchableOpacity onPress={() => setMovement([...movement, ""])} className="mb-4 flex-row items-center gap-1">
+            <Plus size={14} color="#c9a96e" />
+            <Text className="text-xs text-violet-400">Add step</Text>
+          </TouchableOpacity>
+
+          {/* Pace */}
+          <Text className="mb-1 text-xs font-medium text-text-secondary">Pace (optional)</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4" contentContainerStyle={{ gap: 6 }}>
+            <TouchableOpacity
+              onPress={() => setPace("")}
+              className={`rounded-lg px-3 py-1.5 ${pace === "" ? "bg-violet-600" : "bg-bg-elevated border border-border"}`}
+            >
+              <Text className={`text-xs font-medium ${pace === "" ? "text-white" : "text-text-secondary"}`}>None</Text>
+            </TouchableOpacity>
+            {PACES.map((p) => (
+              <TouchableOpacity
+                key={p}
+                onPress={() => setPace(p)}
+                className={`rounded-lg px-3 py-1.5 ${pace === p ? "bg-violet-600" : "bg-bg-elevated border border-border"}`}
+              >
+                <Text className={`text-xs font-medium capitalize ${pace === p ? "text-white" : "text-text-secondary"}`}>
+                  {p}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* School */}
+          <Text className="mb-1 text-xs font-medium text-text-secondary">School (optional)</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4" contentContainerStyle={{ gap: 6 }}>
+            <TouchableOpacity
+              onPress={() => setSchool("")}
+              className={`rounded-lg px-3 py-1.5 ${school === "" ? "bg-violet-600" : "bg-bg-elevated border border-border"}`}
+            >
+              <Text className={`text-xs font-medium ${school === "" ? "text-white" : "text-text-secondary"}`}>None</Text>
+            </TouchableOpacity>
+            {SCHOOLS.map((s) => (
+              <TouchableOpacity
+                key={s}
+                onPress={() => setSchool(s)}
+                className={`rounded-lg px-3 py-1.5 ${school === s ? "bg-violet-600" : "bg-bg-elevated border border-border"}`}
+              >
+                <Text className={`text-xs font-medium capitalize ${school === s ? "text-white" : "text-text-secondary"}`}>
+                  {s.replace("_", " ")}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Apparatus */}
+          <Text className="mb-1 text-xs font-medium text-text-secondary">Apparatus / Equipment (optional)</Text>
+          <TextInput
+            className="mb-6 rounded-lg border border-border bg-bg-elevated px-3 py-2.5 text-text-primary"
+            placeholder="e.g. Reformer with box"
+            placeholderTextColor="#55556a"
+            value={apparatus}
+            onChangeText={setApparatus}
+          />
 
           <View className="h-8" />
         </ScrollView>
