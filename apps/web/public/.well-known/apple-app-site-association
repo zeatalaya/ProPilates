@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["85A34A7PB2.com.propilates.app"],
+        "components": [
+          {
+            "/": "/api/auth/oauth3/callback*"
+          }
+        ]
+      }
+    ]
+  }
+}

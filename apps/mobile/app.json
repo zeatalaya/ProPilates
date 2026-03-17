@@ -15,6 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
+      "buildNumber": "1",
       "bundleIdentifier": "com.propilates.app",
       "infoPlist": {
         "NSCameraUsageDescription": "ProPilates needs camera access for profile photos.",
@@ -35,8 +36,15 @@
         {
           "action": "VIEW",
           "autoVerify": true,
-          "data": [{ "scheme": "propilates" }],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "data": [
+            {
+              "scheme": "propilates"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -46,8 +54,12 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "propilates"
+        "projectId": "7f8be31b-0bfb-4359-ae26-f8c8433980ba"
+      },
+      "router": {
+        "origin": false
       }
-    }
+    },
+    "owner": "zeatalaya"
   }
 }

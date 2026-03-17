@@ -22,7 +22,7 @@ export const isOAuth3Configured = !!(OAUTH3_SERVER && OAUTH3_CLIENT_ID);
 // For production: register https://pro-pilates.vercel.app/api/auth/oauth3/callback and update this
 const WEB_CALLBACK_URL =
   process.env.EXPO_PUBLIC_OAUTH_REDIRECT_URL ||
-  "http://localhost:3000/api/auth/oauth3/callback";
+  "https://pro-pilates.vercel.app/api/auth/oauth3/callback";
 
 // Deep link URI that the web callback redirects to
 export const MOBILE_DEEP_LINK = "propilates://auth/callback";
