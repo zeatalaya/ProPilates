@@ -19,10 +19,21 @@ import {
   Trash2,
   Dumbbell,
   ShoppingBag,
+  Play,
+  BookOpen,
 } from "lucide-react-native";
-import { useAuthStore, type Exercise, type PilatesClass } from "@propilates/shared";
+import {
+  useAuthStore,
+  useClassBuilderStore,
+  useTeachingModeStore,
+  type Exercise,
+  type PilatesClass,
+  type ClassBlock,
+  type BlockExercise,
+} from "@propilates/shared";
 import { Card, CardBody } from "../../../src/components/ui/Card";
 import { Badge } from "../../../src/components/ui/Badge";
+import { CreateExerciseSheet } from "../../../src/components/builder/CreateExerciseSheet";
 import { supabase } from "../../../src/lib/supabase";
 
 type Tab = "classes" | "exercises" | "purchased";
@@ -43,11 +54,14 @@ interface PurchasedClass {
 export default function PortfolioScreen() {
   const router = useRouter();
   const { instructor, tier, xionAddress } = useAuthStore();
+  const builderStore = useClassBuilderStore();
+  const teachingStore = useTeachingModeStore();
   const [activeTab, setActiveTab] = useState<Tab>("classes");
   const [classes, setClasses] = useState<PilatesClass[]>([]);
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [purchased, setPurchased] = useState<PurchasedClass[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateSheet, setShowCreateSheet] = useState(false);
 
   useEffect(() => {
     if (!instructor) {
@@ -135,10 +149,131 @@ export default function PortfolioScreen() {
     ]);
   }
 
+  async function handleLoadClass(classId: string, navigateTo: "builder" | "teach") {
+    try {
+      // Fetch the class data
+      const { data: classData } = await supabase
+        .from("classes")
+        .select("*")
+        .eq("id", classId)
+        .single();
+
+      if (!classData) {
+        Alert.alert("Error", "Class not found.");
+        return;
+      }
+
+      // Fetch class_blocks ordered by order_index
+      const { data: blocksData } = await supabase
+        .from("class_blocks")
+        .select("*")
+        .eq("class_id", classId)
+        .order("order_index");
+
+      if (!blocksData) {
+        Alert.alert("Error", "Failed to load class blocks.");
+        return;
+      }
+
+      // For each block, fetch block_exercises with joined exercise data
+      const blocks: ClassBlock[] = [];
+      for (const block of blocksData) {
+        const { data: exercisesData } = await supabase
+          .from("block_exercises")
+          .select("*, exercise:exercises(*)")
+          .eq("block_id", block.id)
+          .order("order_index");
+
+        const exercises: BlockExercise[] = (exercisesData ?? []).map((be: any) => ({
+          id: be.id,
+          block_id: be.block_id,
+          exercise_id: be.exercise_id,
+          exercise: be.exercise
+            ? {
+                ...be.exercise,
+                is_custom: be.exercise.is_custom ?? false,
+                is_public: be.exercise.is_public ?? false,
+                creator_id: be.exercise.creator_id ?? null,
+              }
+            : undefined,
+          order_index: be.order_index,
+          duration: be.duration,
+          reps: be.reps,
+          side: be.side,
+          notes: be.notes ?? "",
+        }));
+
+        blocks.push({
+          id: block.id,
+          class_id: block.class_id,
+          name: block.name,
+          order_index: block.order_index,
+          exercises,
+        });
+      }
+
+      // Load into builder store
+      builderStore.loadClass({
+        title: classData.title,
+        description: classData.description ?? "",
+        method: classData.method,
+        classType: classData.class_type,
+        difficulty: classData.difficulty,
+        durationMinutes: classData.duration_minutes,
+        playlistId: classData.playlist_id ?? null,
+        blocks,
+      });
+
+      if (navigateTo === "teach") {
+        teachingStore.loadBlocks(blocks);
+        router.push("/(tabs)/teach");
+      } else {
+        router.push("/(tabs)/builder");
+      }
+    } catch (err) {
+      Alert.alert("Error", "Failed to load class.");
+    }
+  }
+
+  async function handleExerciseCreated(exercise: Exercise) {
+    if (isPremium && instructor) {
+      const { data } = await supabase
+        .from("exercises")
+        .insert({
+          name: exercise.name,
+          method: exercise.method,
+          category: exercise.category,
+          difficulty: exercise.difficulty,
+          muscle_groups: exercise.muscle_groups,
+          description: exercise.description,
+          cues: exercise.cues,
+          default_duration: exercise.default_duration,
+          objective: exercise.objective,
+          apparatus: exercise.apparatus,
+          start_position: exercise.start_position,
+          movement: exercise.movement,
+          pace: exercise.pace,
+          school: exercise.school,
+          creator_id: instructor.id,
+          is_custom: true,
+          is_public: false,
+        })
+        .select()
+        .single();
+      if (data) {
+        setCustomExercises((prev) => [...prev, data as Exercise]);
+      } else {
+        setCustomExercises((prev) => [...prev, { ...exercise, creator_id: instructor.id }]);
+      }
+    } else {
+      setCustomExercises((prev) => [...prev, exercise]);
+    }
+  }
+
   const isPremium = tier === "premium";
 
   const renderClassItem = ({ item }: { item: PilatesClass }) => (
-    <TouchableOpacity className="mb-3">
+    <View className="mb-3">
       <Card>
         <CardBody>
           <Text className="text-text-primary font-semibold text-base mb-1">
@@ -154,9 +289,25 @@ export default function PortfolioScreen() {
               {item.description}
             </Text>
           ) : null}
+          <View className="flex-row gap-2 mt-3 pt-2 border-t border-border">
+            <TouchableOpacity
+              onPress={() => handleLoadClass(item.id, "builder")}
+              className="flex-1 flex-row items-center justify-center gap-1.5 rounded-lg border border-violet-500 py-2"
+            >
+              <BookOpen size={14} color="#a78bfa" />
+              <Text className="text-sm font-medium text-violet-400">Builder</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleLoadClass(item.id, "teach")}
+              className="flex-1 flex-row items-center justify-center gap-1.5 rounded-lg bg-violet-600 py-2"
+            >
+              <Play size={14} color="#fff" />
+              <Text className="text-sm font-medium text-white">Teach</Text>
+            </TouchableOpacity>
+          </View>
         </CardBody>
       </Card>
-    </TouchableOpacity>
+    </View>
   );
 
   const renderExerciseItem = ({ item }: { item: Exercise }) => (
@@ -312,9 +463,16 @@ export default function PortfolioScreen() {
             <Text className="text-text-primary text-lg font-semibold mb-2">
               No Custom Exercises
             </Text>
-            <Text className="text-text-secondary text-center">
+            <Text className="text-text-secondary text-center mb-4">
               Create custom exercises in the Builder to see them here.
             </Text>
+            <TouchableOpacity
+              onPress={() => setShowCreateSheet(true)}
+              className="flex-row items-center gap-1.5 bg-violet-600 rounded-xl px-4 py-2.5"
+            >
+              <Plus size={16} color="#fff" />
+              <Text className="text-white font-medium text-sm">Create Exercise</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <FlatList
@@ -322,6 +480,15 @@ export default function PortfolioScreen() {
             renderItem={renderExerciseItem}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
+            ListHeaderComponent={
+              <TouchableOpacity
+                onPress={() => setShowCreateSheet(true)}
+                className="flex-row items-center justify-center gap-1.5 bg-violet-600 rounded-xl px-4 py-2.5 mb-4"
+              >
+                <Plus size={16} color="#fff" />
+                <Text className="text-white font-medium text-sm">Create Exercise</Text>
+              </TouchableOpacity>
+            }
           />
         )
       ) : purchased.length === 0 ? (
@@ -364,6 +531,22 @@ export default function PortfolioScreen() {
                       ${Number(item.price_paid).toFixed(2)} USDC
                     </Text>
                   </View>
+                  <View className="flex-row gap-2 mt-3 pt-2 border-t border-border">
+                    <TouchableOpacity
+                      onPress={() => handleLoadClass(item.class_id, "builder")}
+                      className="flex-1 flex-row items-center justify-center gap-1.5 rounded-lg border border-violet-500 py-2"
+                    >
+                      <BookOpen size={14} color="#a78bfa" />
+                      <Text className="text-sm font-medium text-violet-400">Builder</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleLoadClass(item.class_id, "teach")}
+                      className="flex-1 flex-row items-center justify-center gap-1.5 rounded-lg bg-violet-600 py-2"
+                    >
+                      <Play size={14} color="#fff" />
+                      <Text className="text-sm font-medium text-white">Teach</Text>
+                    </TouchableOpacity>
+                  </View>
                 </CardBody>
               </Card>
             </View>
@@ -372,6 +555,12 @@ export default function PortfolioScreen() {
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
         />
       )}
+      <CreateExerciseSheet
+        visible={showCreateSheet}
+        onClose={() => setShowCreateSheet(false)}
+        onCreated={handleExerciseCreated}
+        isPremium={isPremium}
+      />
     </SafeAreaView>
   );
 }

@@ -12,24 +12,36 @@ import {
   Lock,
   Sparkles,
   Dumbbell,
+  Play,
+  BookOpen,
+  Plus,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
+import { useClassBuilderStore } from "@/stores/classBuilder";
+import { useTeachingModeStore } from "@/stores/teachingMode";
 import { CONTRACTS } from "@/lib/xion-transactions";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { CreateExerciseModal } from "@/components/builder/CreateExerciseModal";
 import { formatDuration, formatUsdc } from "@/lib/utils";
-import type { PilatesClass, Exercise } from "@/types";
+import type { PilatesClass, Exercise, ClassBlock, BlockExercise } from "@/types";
 
 type PortfolioTab = "classes" | "exercises";
 
 export default function PortfolioPage() {
+  const router = useRouter();
   const { instructor, tier, oauthAccessToken, xionAddress } = useAuthStore();
+  const builderStore = useClassBuilderStore();
+  const teachingStore = useTeachingModeStore();
   const [classes, setClasses] = useState<PilatesClass[]>([]);
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isListing, setIsListing] = useState(false);
   const [activeTab, setActiveTab] = useState<PortfolioTab>("classes");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [loadingClassId, setLoadingClassId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!instructor) return;
@@ -175,6 +187,137 @@ export default function PortfolioPage() {
     }
   }
 
+  async function fetchClassBlocks(classId: string): Promise<ClassBlock[]> {
+    const { data: blocksData } = await supabase
+      .from("class_blocks")
+      .select("*")
+      .eq("class_id", classId)
+      .order("order_index");
+
+    if (!blocksData || blocksData.length === 0) return [];
+
+    const blocks: ClassBlock[] = [];
+    for (const block of blocksData) {
+      const { data: blockExercises } = await supabase
+        .from("block_exercises")
+        .select("*, exercise:exercises(*)")
+        .eq("block_id", block.id)
+        .order("order_index");
+
+      blocks.push({
+        id: block.id,
+        class_id: block.class_id,
+        name: block.name,
+        order_index: block.order_index,
+        exercises: (blockExercises ?? []).map((be: any) => ({
+          id: be.id,
+          block_id: be.block_id,
+          exercise_id: be.exercise_id,
+          exercise: be.exercise,
+          order_index: be.order_index,
+          duration: be.duration,
+          reps: be.reps,
+          side: be.side,
+          notes: be.notes ?? "",
+        })) as BlockExercise[],
+      });
+    }
+    return blocks;
+  }
+
+  async function handleLoadToBuilder(cls: PilatesClass) {
+    setLoadingClassId(cls.id);
+    try {
+      const blocks = await fetchClassBlocks(cls.id);
+      builderStore.loadClass({
+        title: cls.title,
+        description: cls.description,
+        method: cls.method,
+        classType: cls.class_type,
+        difficulty: cls.difficulty,
+        durationMinutes: cls.duration_minutes,
+        playlistId: cls.playlist_id,
+        blocks,
+      });
+      router.push("/builder");
+    } catch (err) {
+      console.error("Failed to load class into builder:", err);
+      alert("Failed to load class. Please try again.");
+    } finally {
+      setLoadingClassId(null);
+    }
+  }
+
+  async function handleTeach(cls: PilatesClass) {
+    setLoadingClassId(cls.id);
+    try {
+      const blocks = await fetchClassBlocks(cls.id);
+      if (blocks.length === 0 || blocks.every((b) => b.exercises.length === 0)) {
+        alert("This class has no exercises to teach.");
+        return;
+      }
+      teachingStore.loadBlocks(blocks);
+      router.push("/teach");
+    } catch (err) {
+      console.error("Failed to load class for teaching:", err);
+      alert("Failed to load class. Please try again.");
+    } finally {
+      setLoadingClassId(null);
+    }
+  }
+
+  async function handleExerciseCreated(exercise: Exercise) {
+    if (!instructor) return;
+    const { data, error } = await supabase
+      .from("exercises")
+      .insert({
+        name: exercise.name,
+        method: exercise.method,
+        category: exercise.category,
+        difficulty: exercise.difficulty,
+        muscle_groups: exercise.muscle_groups,
+        description: exercise.description,
+        cues: exercise.cues,
+        default_duration: exercise.default_duration,
+        image_url: exercise.image_url,
+        video_url: exercise.video_url,
+        objective: exercise.objective,
+        apparatus: exercise.apparatus,
+        start_position: exercise.start_position,
+        movement: exercise.movement,
+        pace: exercise.pace,
+        school: exercise.school,
+        creator_id: instructor.id,
+        is_custom: true,
+        is_public: false,
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setCustomExercises((prev) => [...prev, data as Exercise]);
+    }
+  }
+
+  async function setExercisePrice(exercise: Exercise) {
+    const input = prompt("Set price in USD (0 for free):");
+    if (input === null) return;
+    const price = parseFloat(input) || 0;
+    const { error } = await supabase
+      .from("exercises")
+      .update({ price, is_public: price > 0 ? true : exercise.is_public })
+      .eq("id", exercise.id);
+    if (!error) {
+      setCustomExercises((prev) =>
+        prev.map((e) =>
+          e.id === exercise.id
+            ? { ...e, price, is_public: price > 0 ? true : e.is_public }
+            : e,
+        ),
+      );
+    }
+  }
+
   if (!instructor) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
@@ -284,6 +427,30 @@ export default function PortfolioPage() {
                   <div className="flex flex-wrap gap-2">
                     <button
                       className="btn-ghost text-xs"
+                      onClick={() => handleLoadToBuilder(cls)}
+                      disabled={loadingClassId === cls.id}
+                    >
+                      {loadingClassId === cls.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <BookOpen size={14} />
+                      )}
+                      Open in Builder
+                    </button>
+                    <button
+                      className="btn-ghost text-xs"
+                      onClick={() => handleTeach(cls)}
+                      disabled={loadingClassId === cls.id}
+                    >
+                      {loadingClassId === cls.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Play size={14} />
+                      )}
+                      Teach
+                    </button>
+                    <button
+                      className="btn-ghost text-xs"
                       onClick={() => togglePublic(cls)}
                     >
                       {cls.is_public ? (
@@ -335,17 +502,27 @@ export default function PortfolioPage() {
         )
       ) : (
         /* ── Exercises Tab ── */
-        customExercises.length === 0 ? (
-          <div className="py-24 text-center">
-            <Dumbbell
-              size={48}
-              className="mx-auto mb-4 text-text-muted opacity-30"
-            />
-            <p className="text-text-muted">
-              No custom exercises yet. Create one in the Builder!
-            </p>
+        <>
+          <div className="mb-4">
+            <button
+              className="btn-primary text-sm"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <Plus size={16} />
+              Create Exercise
+            </button>
           </div>
-        ) : (
+          {customExercises.length === 0 ? (
+            <div className="py-24 text-center">
+              <Dumbbell
+                size={48}
+                className="mx-auto mb-4 text-text-muted opacity-30"
+              />
+              <p className="text-text-muted">
+                No custom exercises yet. Create one above!
+              </p>
+            </div>
+          ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {customExercises.map((exercise) => (
               <Card key={exercise.id}>
@@ -406,6 +583,17 @@ export default function PortfolioPage() {
                       )}
                       {exercise.is_public ? "Make Private" : "Make Public"}
                     </button>
+                    {tier === "premium" && (
+                      <button
+                        className="btn-ghost text-xs"
+                        onClick={() => setExercisePrice(exercise)}
+                      >
+                        <DollarSign size={14} />
+                        {(exercise as any).price != null
+                          ? `$${formatUsdc((exercise as any).price)}`
+                          : "Set Price"}
+                      </button>
+                    )}
                     <button
                       className="btn-ghost text-xs text-red-400"
                       onClick={() => handleDeleteExercise(exercise.id)}
@@ -417,7 +605,14 @@ export default function PortfolioPage() {
               </Card>
             ))}
           </div>
-        )
+          )}
+          <CreateExerciseModal
+            open={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            onCreated={handleExerciseCreated}
+            isPremium={tier === "premium"}
+          />
+        </>
       )}
     </div>
   );

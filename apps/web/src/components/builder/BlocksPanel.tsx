@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Plus, Trash2, GripVertical, X } from "lucide-react";
 import { useClassBuilderStore } from "@/stores/classBuilder";
 import { cn, formatDuration } from "@/lib/utils";
 
@@ -14,6 +14,8 @@ export function BlocksPanel() {
     removeBlock,
     renameBlock,
     selectExercise,
+    removeExerciseFromBlock,
+    resetBuilder,
   } = useClassBuilderStore();
 
   const [newBlockName, setNewBlockName] = useState("");
@@ -40,6 +42,19 @@ export function BlocksPanel() {
             <Plus size={16} />
           </button>
         </div>
+        {blocks.length > 0 && (
+          <button
+            className="mt-2 flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition-colors"
+            onClick={() => {
+              if (confirm("Clear all blocks? This cannot be undone.")) {
+                resetBuilder();
+              }
+            }}
+          >
+            <Trash2 size={12} />
+            Clear All
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-2">
@@ -104,7 +119,7 @@ export function BlocksPanel() {
                         <div
                           key={ex.id}
                           className={cn(
-                            "rounded px-2 py-1 text-xs transition-colors cursor-pointer",
+                            "group/ex flex items-center justify-between rounded px-2 py-1 text-xs transition-colors cursor-pointer",
                             ex.id ===
                               useClassBuilderStore.getState()
                                 .selectedExerciseId
@@ -116,7 +131,16 @@ export function BlocksPanel() {
                             selectExercise(ex.id);
                           }}
                         >
-                          {ex.exercise?.name ?? "Exercise"}
+                          <span className="truncate">{ex.exercise?.name ?? "Exercise"}</span>
+                          <button
+                            className="ml-1 flex-shrink-0 opacity-0 transition-opacity group-hover/ex:opacity-100 text-text-muted hover:text-red-400"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeExerciseFromBlock(block.id, ex.id);
+                            }}
+                          >
+                            <X size={14} />
+                          </button>
                         </div>
                       ))}
                     </div>

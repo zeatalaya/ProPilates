@@ -17,6 +17,7 @@ import {
   Clock,
   Search,
   Sparkles,
+  X,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import {
@@ -356,6 +357,28 @@ export default function BuilderScreen() {
             >
               <Plus size={20} color="white" />
             </TouchableOpacity>
+            {store.blocks.length > 0 && (
+              <TouchableOpacity
+                onPress={() =>
+                  Alert.alert(
+                    "Clear All Blocks",
+                    "This will remove all blocks and exercises. Are you sure?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Clear All",
+                        style: "destructive",
+                        onPress: () => store.resetBuilder(),
+                      },
+                    ],
+                  )
+                }
+                className="flex-row items-center gap-1 rounded-lg border border-red-500/30 px-2 py-2"
+              >
+                <Trash2 size={14} color="#ef4444" />
+                <Text className="text-xs text-red-400">Clear</Text>
+              </TouchableOpacity>
+            )}
           </View>
           {store.blocks.map((block) => (
             <TouchableOpacity
@@ -409,12 +432,22 @@ export default function BuilderScreen() {
                       }}
                       className="flex-row items-center justify-between py-1.5"
                     >
-                      <Text className="text-sm text-text-secondary">
+                      <Text className="flex-1 text-sm text-text-secondary">
                         {ex.exercise?.name ?? "Exercise"}
                       </Text>
-                      <Text className="text-xs text-text-muted">
-                        {formatDuration(ex.duration)}
-                      </Text>
+                      <View className="flex-row items-center gap-2">
+                        <Text className="text-xs text-text-muted">
+                          {formatDuration(ex.duration)}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() =>
+                            store.removeExerciseFromBlock(block.id, ex.id)
+                          }
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <X size={14} color="#ef4444" />
+                        </TouchableOpacity>
+                      </View>
                     </TouchableOpacity>
                   ))}
                 </View>
