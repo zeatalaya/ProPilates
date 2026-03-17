@@ -8,7 +8,6 @@ const ALLOWED_FROM = new Set([
   "profile",
   "templates",
   "onboarding",
-  "mobile",
 ]);
 
 export async function GET(request: NextRequest) {

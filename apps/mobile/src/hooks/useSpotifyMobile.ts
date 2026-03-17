@@ -1,52 +1,70 @@
-import { useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef } from "react";
+import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { useSpotifyStore } from "@propilates/shared";
 import { ENV } from "../lib/config";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const WEB_APP_URL = "https://pro-pilates.vercel.app";
-const SPOTIFY_DEEP_LINK = "propilates://spotify/callback";
+const discovery = {
+  authorizationEndpoint: "https://accounts.spotify.com/authorize",
+  tokenEndpoint: "https://accounts.spotify.com/api/token",
+};
+
+const SCOPES = [
+  "user-read-email",
+  "user-read-private",
+  "playlist-read-private",
+  "playlist-read-collaborative",
+  "user-read-playback-state",
+  "user-modify-playback-state",
+];
 
 export function useSpotifyMobile() {
   const store = useSpotifyStore();
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: "propilates" });
   const isRefreshingRef = useRef(false);
 
-  const login = useCallback(async () => {
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: ENV.SPOTIFY_CLIENT_ID,
+      scopes: SCOPES,
+      redirectUri,
+      usePKCE: true,
+      responseType: AuthSession.ResponseType.Code,
+    },
+    discovery,
+  );
+
+  useEffect(() => {
+    if (response?.type === "success" && response.params.code) {
+      exchangeCode(response.params.code);
+    }
+  }, [response]);
+
+  const exchangeCode = async (code: string) => {
     try {
-      // Open the web app's Spotify auth route with state=mobile
-      // The web server has the client secret and registered redirect URI.
-      // After Spotify auth, the web callback deep-links back with tokens.
-      const result = await WebBrowser.openAuthSessionAsync(
-        `${WEB_APP_URL}/api/auth/spotify?from=mobile`,
-        SPOTIFY_DEEP_LINK,
+      const tokenRes = await AuthSession.exchangeCodeAsync(
+        {
+          clientId: ENV.SPOTIFY_CLIENT_ID,
+          code,
+          redirectUri,
+          extraParams: { code_verifier: request?.codeVerifier ?? "" },
+        },
+        discovery,
       );
-
-      if (result.type !== "success" || !result.url) return;
-
-      const url = new URL(result.url);
-      const error = url.searchParams.get("error");
-      if (error) {
-        console.error("Spotify auth error:", error);
-        return;
-      }
-
-      const accessToken = url.searchParams.get("access_token");
-      const refreshToken = url.searchParams.get("refresh_token");
-      const expiresIn = url.searchParams.get("expires_in");
-
-      if (accessToken && refreshToken) {
+      if (tokenRes.accessToken && tokenRes.refreshToken) {
         store.setTokens(
-          accessToken,
-          refreshToken,
-          expiresIn ? Number(expiresIn) : undefined,
+          tokenRes.accessToken,
+          tokenRes.refreshToken,
+          tokenRes.expiresIn ?? undefined,
         );
         store.setReady(true);
       }
     } catch (err) {
-      console.error("Spotify login failed:", err);
+      console.error("Spotify token exchange failed:", err);
     }
-  }, [store]);
+  };
 
   const refreshToken = useCallback(async (): Promise<boolean> => {
     const currentRefreshToken = useSpotifyStore.getState().refreshToken;
@@ -54,11 +72,16 @@ export function useSpotifyMobile() {
 
     isRefreshingRef.current = true;
     try {
-      // Use the web app's refresh endpoint (has client secret)
-      const res = await fetch(`${WEB_APP_URL}/api/spotify/refresh`, {
+      const body = new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: currentRefreshToken,
+        client_id: ENV.SPOTIFY_CLIENT_ID,
+      });
+
+      const res = await fetch("https://accounts.spotify.com/api/token", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: currentRefreshToken }),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
       });
 
       if (!res.ok) return false;
@@ -114,6 +137,10 @@ export function useSpotifyMobile() {
     },
     [refreshToken],
   );
+
+  const login = useCallback(() => {
+    promptAsync();
+  }, [promptAsync]);
 
   const play = useCallback(
     async (uri?: string) => {
