@@ -1,15 +1,14 @@
-import { useEffect, useCallback, useRef } from "react";
-import * as AuthSession from "expo-auth-session";
+import { useCallback, useRef } from "react";
 import * as WebBrowser from "expo-web-browser";
+import * as Crypto from "expo-crypto";
 import { useSpotifyStore } from "@propilates/shared";
 import { ENV } from "../lib/config";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const discovery = {
-  authorizationEndpoint: "https://accounts.spotify.com/authorize",
-  tokenEndpoint: "https://accounts.spotify.com/api/token",
-};
+const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize";
+const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
+const REDIRECT_URI = "propilates://spotify/callback";
 
 const SCOPES = [
   "user-read-email",
@@ -18,53 +17,100 @@ const SCOPES = [
   "playlist-read-collaborative",
   "user-read-playback-state",
   "user-modify-playback-state",
-];
+].join(" ");
+
+// ── PKCE helpers ──
+
+function base64UrlEncode(bytes: Uint8Array): string {
+  let binary = "";
+  bytes.forEach((b) => (binary += String.fromCharCode(b)));
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+async function generatePKCE() {
+  const randomBytes = await Crypto.getRandomBytesAsync(32);
+  const verifier = base64UrlEncode(new Uint8Array(randomBytes));
+  const digest = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    verifier,
+    { encoding: Crypto.CryptoEncoding.BASE64 },
+  );
+  const challenge = digest
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+  return { verifier, challenge };
+}
+
+// ── Hook ──
 
 export function useSpotifyMobile() {
   const store = useSpotifyStore();
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: "propilates" });
   const isRefreshingRef = useRef(false);
 
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: ENV.SPOTIFY_CLIENT_ID,
-      scopes: SCOPES,
-      redirectUri,
-      usePKCE: true,
-      responseType: AuthSession.ResponseType.Code,
-    },
-    discovery,
-  );
-
-  useEffect(() => {
-    if (response?.type === "success" && response.params.code) {
-      exchangeCode(response.params.code);
-    }
-  }, [response]);
-
-  const exchangeCode = async (code: string) => {
+  const login = useCallback(async () => {
     try {
-      const tokenRes = await AuthSession.exchangeCodeAsync(
-        {
-          clientId: ENV.SPOTIFY_CLIENT_ID,
-          code,
-          redirectUri,
-          extraParams: { code_verifier: request?.codeVerifier ?? "" },
-        },
-        discovery,
+      const { verifier, challenge } = await generatePKCE();
+
+      const params = new URLSearchParams({
+        client_id: ENV.SPOTIFY_CLIENT_ID,
+        response_type: "code",
+        redirect_uri: REDIRECT_URI,
+        scope: SCOPES,
+        code_challenge_method: "S256",
+        code_challenge: challenge,
+      });
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        `${SPOTIFY_AUTH_URL}?${params}`,
+        REDIRECT_URI,
       );
-      if (tokenRes.accessToken && tokenRes.refreshToken) {
+
+      if (result.type !== "success" || !result.url) return;
+
+      const url = new URL(result.url);
+      const code = url.searchParams.get("code");
+      const error = url.searchParams.get("error");
+
+      if (error || !code) {
+        console.error("Spotify auth error:", error);
+        return;
+      }
+
+      // Exchange code for tokens using PKCE (no client secret needed)
+      const tokenRes = await fetch(SPOTIFY_TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          code,
+          redirect_uri: REDIRECT_URI,
+          client_id: ENV.SPOTIFY_CLIENT_ID,
+          code_verifier: verifier,
+        }).toString(),
+      });
+
+      if (!tokenRes.ok) {
+        console.error("Spotify token exchange failed:", tokenRes.status);
+        return;
+      }
+
+      const data = await tokenRes.json();
+      if (data.access_token && data.refresh_token) {
         store.setTokens(
-          tokenRes.accessToken,
-          tokenRes.refreshToken,
-          tokenRes.expiresIn ?? undefined,
+          data.access_token,
+          data.refresh_token,
+          data.expires_in ?? undefined,
         );
         store.setReady(true);
       }
     } catch (err) {
-      console.error("Spotify token exchange failed:", err);
+      console.error("Spotify login failed:", err);
     }
-  };
+  }, [store]);
 
   const refreshToken = useCallback(async (): Promise<boolean> => {
     const currentRefreshToken = useSpotifyStore.getState().refreshToken;
@@ -72,16 +118,14 @@ export function useSpotifyMobile() {
 
     isRefreshingRef.current = true;
     try {
-      const body = new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: currentRefreshToken,
-        client_id: ENV.SPOTIFY_CLIENT_ID,
-      });
-
-      const res = await fetch("https://accounts.spotify.com/api/token", {
+      const res = await fetch(SPOTIFY_TOKEN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: currentRefreshToken,
+          client_id: ENV.SPOTIFY_CLIENT_ID,
+        }).toString(),
       });
 
       if (!res.ok) return false;
@@ -137,10 +181,6 @@ export function useSpotifyMobile() {
     },
     [refreshToken],
   );
-
-  const login = useCallback(() => {
-    promptAsync();
-  }, [promptAsync]);
 
   const play = useCallback(
     async (uri?: string) => {
