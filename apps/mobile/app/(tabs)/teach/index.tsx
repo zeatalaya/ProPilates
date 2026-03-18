@@ -82,27 +82,16 @@ export default function TeachScreen() {
   const selectPlaylist = useCallback(async (playlist: SpotifyPlaylist) => {
     setShowPlaylists(false);
 
-    // Try Web API first (requires Spotify Premium + active device)
-    const devices = await spotify.getDevices();
-    if (devices.length > 0) {
-      const active = devices.find((d: any) => d.is_active);
-      if (!active) {
-        await spotify.transferPlayback(devices[0].id);
-      }
-      const ok = await spotify.play(undefined, playlist.uri);
-      if (ok) {
-        setTimeout(() => spotify.getCurrentTrack(), 1500);
-        return;
-      }
-    }
-
-    // Fallback: open the playlist directly in Spotify app
-    // This works for both Free and Premium users
+    // Always open in Spotify app — the Web API can't play audio itself,
+    // it can only remote-control an active Spotify device.
+    // Opening the playlist in Spotify starts playback and makes it the active device.
     const spotifyId = playlist.uri.replace("spotify:playlist:", "");
-    const opened = await Linking.openURL(`spotify:playlist:${spotifyId}`);
-    // Poll for track after user returns from Spotify
-    setTimeout(() => spotify.getCurrentTrack(), 3000);
-    setTimeout(() => spotify.getCurrentTrack(), 6000);
+    await Linking.openURL(`spotify:playlist:${spotifyId}`);
+
+    // Poll for current track after user returns from Spotify
+    setTimeout(() => spotify.getCurrentTrack(), 2000);
+    setTimeout(() => spotify.getCurrentTrack(), 4000);
+    setTimeout(() => spotify.getCurrentTrack(), 7000);
   }, [spotify]);
 
   // Poll current track when Spotify is playing
@@ -265,13 +254,13 @@ export default function TeachScreen() {
               className="flex-row items-center px-4 py-3"
               onPress={async () => {
                 if (spotify.isPlaying) {
+                  // Pause via Web API (works since Spotify app is now the active device)
                   spotify.pause();
                 } else if (spotify.currentTrack) {
+                  // Resume via Web API — Spotify app should still be active device
                   const ok = await spotify.play();
-                  if (!ok) {
-                    // Reopen Spotify app to resume
-                    Linking.openURL("spotify://");
-                  }
+                  if (!ok) Linking.openURL("spotify://");
+                  else setTimeout(() => spotify.getCurrentTrack(), 1000);
                 } else {
                   openPlaylistPicker();
                 }
