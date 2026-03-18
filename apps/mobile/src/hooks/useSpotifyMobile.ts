@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 import * as WebBrowser from "expo-web-browser";
 import * as Crypto from "expo-crypto";
+import { Linking } from "react-native";
 import { useSpotifyStore } from "@propilates/shared";
 import { ENV } from "../lib/config";
 
@@ -17,6 +18,7 @@ const SCOPES = [
   "playlist-read-collaborative",
   "user-read-playback-state",
   "user-modify-playback-state",
+  "user-read-currently-playing",
 ].join(" ");
 
 // ── PKCE helpers ──
@@ -50,6 +52,7 @@ async function generatePKCE() {
 export function useSpotifyMobile() {
   const store = useSpotifyStore();
   const isRefreshingRef = useRef(false);
+  const spotifyDeviceIdRef = useRef<string | null>(null);
 
   const login = useCallback(async () => {
     try {
@@ -80,7 +83,6 @@ export function useSpotifyMobile() {
         return;
       }
 
-      // Exchange code for tokens using PKCE (no client secret needed)
       const tokenRes = await fetch(SPOTIFY_TOKEN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -182,74 +184,120 @@ export function useSpotifyMobile() {
     [refreshToken],
   );
 
+  // Find the Spotify app device on this phone (type = "Smartphone")
+  const findSpotifyDevice = useCallback(async (): Promise<string | null> => {
+    try {
+      const res = await spotifyFetch(
+        "https://api.spotify.com/v1/me/player/devices",
+      );
+      if (!res || !res.ok) return null;
+      const data = await res.json();
+      const devices = data.devices ?? [];
+
+      // Prefer an active smartphone, then any smartphone, then any device
+      const active = devices.find((d: any) => d.is_active && d.type === "Smartphone");
+      if (active) return active.id;
+
+      const smartphone = devices.find((d: any) => d.type === "Smartphone");
+      if (smartphone) return smartphone.id;
+
+      const anyActive = devices.find((d: any) => d.is_active);
+      if (anyActive) return anyActive.id;
+
+      return devices[0]?.id ?? null;
+    } catch {
+      return null;
+    }
+  }, [spotifyFetch]);
+
+  // Ensure Spotify app is running and is the active device.
+  // Opens Spotify via deep link if no device is found.
+  const ensureSpotifyDevice = useCallback(async (): Promise<string | null> => {
+    // Check cached device first
+    if (spotifyDeviceIdRef.current) {
+      const res = await spotifyFetch(
+        "https://api.spotify.com/v1/me/player/devices",
+      );
+      if (res?.ok) {
+        const data = await res.json();
+        const still = (data.devices ?? []).find(
+          (d: any) => d.id === spotifyDeviceIdRef.current,
+        );
+        if (still) return spotifyDeviceIdRef.current;
+      }
+    }
+
+    // Try to find an existing device
+    let deviceId = await findSpotifyDevice();
+    if (deviceId) {
+      spotifyDeviceIdRef.current = deviceId;
+      return deviceId;
+    }
+
+    // No device found — open Spotify app briefly to wake it up
+    try {
+      await Linking.openURL("spotify://");
+    } catch {
+      // Spotify app not installed
+      return null;
+    }
+
+    // Wait for Spotify to register as a device, poll a few times
+    for (let i = 0; i < 5; i++) {
+      await new Promise((r) => setTimeout(r, 1500));
+      deviceId = await findSpotifyDevice();
+      if (deviceId) {
+        spotifyDeviceIdRef.current = deviceId;
+        return deviceId;
+      }
+    }
+
+    return null;
+  }, [spotifyFetch, findSpotifyDevice]);
+
   const play = useCallback(
     async (uri?: string, contextUri?: string): Promise<boolean> => {
       if (!useSpotifyStore.getState().accessToken) return false;
+
+      const deviceId = await ensureSpotifyDevice();
+      if (!deviceId) return false;
+
       let body: string | undefined;
       if (contextUri) {
         body = JSON.stringify({ context_uri: contextUri });
       } else if (uri) {
         body = JSON.stringify({ uris: [uri] });
       }
-      const res = await spotifyFetch(
-        "https://api.spotify.com/v1/me/player/play",
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body,
-        },
-      );
+
+      // Target the specific device via query parameter
+      const url = `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`;
+      const res = await spotifyFetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+
       if (res?.ok) {
         store.setPlaying(true);
         return true;
       }
+
+      // If targeting device failed, try opening playlist in Spotify as last resort
+      if (contextUri) {
+        const playlistId = contextUri.replace("spotify:playlist:", "");
+        try {
+          await Linking.openURL(`spotify:playlist:${playlistId}`);
+          store.setPlaying(true);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+
       return false;
     },
-    [spotifyFetch, store],
+    [spotifyFetch, store, ensureSpotifyDevice],
   );
-
-  const getPlaylists = useCallback(async () => {
-    if (!useSpotifyStore.getState().accessToken) return [];
-    try {
-      const res = await spotifyFetch(
-        "https://api.spotify.com/v1/me/playlists?limit=50",
-      );
-      if (!res || !res.ok) return [];
-      const data = await res.json();
-      return (data.items ?? []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        uri: p.uri,
-        image: p.images?.[0]?.url ?? null,
-        trackCount: typeof p.tracks === "object" ? (p.tracks?.total ?? 0) : 0,
-        owner: p.owner?.display_name ?? "",
-      }));
-    } catch {
-      return [];
-    }
-  }, [spotifyFetch]);
-
-  const getDevices = useCallback(async () => {
-    if (!useSpotifyStore.getState().accessToken) return [];
-    try {
-      const res = await spotifyFetch(
-        "https://api.spotify.com/v1/me/player/devices",
-      );
-      if (!res || !res.ok) return [];
-      const data = await res.json();
-      return data.devices ?? [];
-    } catch {
-      return [];
-    }
-  }, [spotifyFetch]);
-
-  const transferPlayback = useCallback(async (deviceId: string) => {
-    await spotifyFetch("https://api.spotify.com/v1/me/player", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ device_ids: [deviceId], play: false }),
-    });
-  }, [spotifyFetch]);
 
   const pause = useCallback(async () => {
     if (!useSpotifyStore.getState().accessToken) return;
@@ -299,6 +347,27 @@ export function useSpotifyMobile() {
     }
   }, [spotifyFetch, store]);
 
+  const getPlaylists = useCallback(async () => {
+    if (!useSpotifyStore.getState().accessToken) return [];
+    try {
+      const res = await spotifyFetch(
+        "https://api.spotify.com/v1/me/playlists?limit=50",
+      );
+      if (!res || !res.ok) return [];
+      const data = await res.json();
+      return (data.items ?? []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        uri: p.uri,
+        image: p.images?.[0]?.url ?? null,
+        trackCount: typeof p.tracks === "object" ? (p.tracks?.total ?? 0) : 0,
+        owner: p.owner?.display_name ?? "",
+      }));
+    } catch {
+      return [];
+    }
+  }, [spotifyFetch]);
+
   return {
     login,
     play,
@@ -306,8 +375,7 @@ export function useSpotifyMobile() {
     skip,
     getCurrentTrack,
     getPlaylists,
-    getDevices,
-    transferPlayback,
+    ensureSpotifyDevice,
     refreshToken,
     isReady: store.isReady,
     isPlaying: store.isPlaying,

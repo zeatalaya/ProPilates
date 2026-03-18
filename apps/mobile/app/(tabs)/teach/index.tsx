@@ -7,7 +7,7 @@ import {
   Modal,
   Image,
   ActivityIndicator,
-  Linking,
+
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Platform } from "react-native";
@@ -81,17 +81,11 @@ export default function TeachScreen() {
 
   const selectPlaylist = useCallback(async (playlist: SpotifyPlaylist) => {
     setShowPlaylists(false);
-
-    // Always open in Spotify app — the Web API can't play audio itself,
-    // it can only remote-control an active Spotify device.
-    // Opening the playlist in Spotify starts playback and makes it the active device.
-    const spotifyId = playlist.uri.replace("spotify:playlist:", "");
-    await Linking.openURL(`spotify:playlist:${spotifyId}`);
-
-    // Poll for current track after user returns from Spotify
+    // play() handles finding the Spotify device, targeting it,
+    // and falling back to deep link if needed
+    await spotify.play(undefined, playlist.uri);
     setTimeout(() => spotify.getCurrentTrack(), 2000);
     setTimeout(() => spotify.getCurrentTrack(), 4000);
-    setTimeout(() => spotify.getCurrentTrack(), 7000);
   }, [spotify]);
 
   // Poll current track when Spotify is playing
@@ -254,13 +248,10 @@ export default function TeachScreen() {
               className="flex-row items-center px-4 py-3"
               onPress={async () => {
                 if (spotify.isPlaying) {
-                  // Pause via Web API (works since Spotify app is now the active device)
                   spotify.pause();
                 } else if (spotify.currentTrack) {
-                  // Resume via Web API — Spotify app should still be active device
-                  const ok = await spotify.play();
-                  if (!ok) Linking.openURL("spotify://");
-                  else setTimeout(() => spotify.getCurrentTrack(), 1000);
+                  await spotify.play();
+                  setTimeout(() => spotify.getCurrentTrack(), 1000);
                 } else {
                   openPlaylistPicker();
                 }
