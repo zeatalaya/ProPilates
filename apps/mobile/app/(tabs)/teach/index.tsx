@@ -81,11 +81,13 @@ export default function TeachScreen() {
 
   const selectPlaylist = useCallback(async (playlist: SpotifyPlaylist) => {
     setShowPlaylists(false);
-    // play() handles finding the Spotify device, targeting it,
-    // and falling back to deep link if needed
-    await spotify.play(undefined, playlist.uri);
-    setTimeout(() => spotify.getCurrentTrack(), 2000);
-    setTimeout(() => spotify.getCurrentTrack(), 4000);
+    // Open the playlist directly in Spotify app — the only reliable way
+    // to start playback on the same device without the native SDK
+    await spotify.playInSpotify(playlist.uri);
+    // Poll for track info after user returns
+    setTimeout(() => spotify.getCurrentTrack(), 3000);
+    setTimeout(() => spotify.getCurrentTrack(), 6000);
+    setTimeout(() => spotify.getCurrentTrack(), 10000);
   }, [spotify]);
 
   // Poll current track when Spotify is playing
@@ -246,12 +248,10 @@ export default function TeachScreen() {
             {/* Now Playing / Pick Playlist */}
             <TouchableOpacity
               className="flex-row items-center px-4 py-3"
-              onPress={async () => {
-                if (spotify.isPlaying) {
-                  spotify.pause();
-                } else if (spotify.currentTrack) {
-                  await spotify.play();
-                  setTimeout(() => spotify.getCurrentTrack(), 1000);
+              onPress={() => {
+                if (spotify.currentTrack) {
+                  // Tap track name to open Spotify (for full controls)
+                  spotify.playInSpotify("spotify://");
                 } else {
                   openPlaylistPicker();
                 }
@@ -263,36 +263,26 @@ export default function TeachScreen() {
                   ? `${spotify.currentTrack.name} — ${spotify.currentTrack.artist}`
                   : "Tap to pick a playlist"}
               </Text>
-              {spotify.isPlaying ? (
-                <Pause size={16} color="#34d399" />
-              ) : (
-                <Play size={16} color="#34d399" />
-              )}
             </TouchableOpacity>
 
-            {/* Playback controls when playing */}
-            {spotify.currentTrack && (
-              <View className="flex-row items-center justify-center gap-6 px-4 pb-3">
-                <TouchableOpacity onPress={() => spotify.play()}>
-                  <SkipBack size={18} color="#a0a0b8" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => spotify.isPlaying ? spotify.pause() : spotify.play()}
-                >
-                  {spotify.isPlaying ? (
-                    <Pause size={22} color="#34d399" />
-                  ) : (
-                    <Play size={22} color="#34d399" />
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity onPress={spotify.skip}>
-                  <SkipForward size={18} color="#a0a0b8" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={openPlaylistPicker}>
-                  <ListMusic size={18} color="#a0a0b8" />
-                </TouchableOpacity>
-              </View>
-            )}
+            {/* Playback controls (Web API — requires Premium) */}
+            <View className="flex-row items-center justify-center gap-6 px-4 pb-3">
+              <TouchableOpacity
+                onPress={() => spotify.isPlaying ? spotify.pause() : spotify.resume()}
+              >
+                {spotify.isPlaying ? (
+                  <Pause size={22} color="#34d399" />
+                ) : (
+                  <Play size={22} color="#34d399" />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={spotify.skip}>
+                <SkipForward size={18} color="#a0a0b8" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={openPlaylistPicker}>
+                <ListMusic size={18} color="#a0a0b8" />
+              </TouchableOpacity>
+            </View>
           </View>
         ) : (
           <TouchableOpacity

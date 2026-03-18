@@ -52,7 +52,6 @@ async function generatePKCE() {
 export function useSpotifyMobile() {
   const store = useSpotifyStore();
   const isRefreshingRef = useRef(false);
-  const spotifyDeviceIdRef = useRef<string | null>(null);
 
   const login = useCallback(async () => {
     try {
@@ -184,121 +183,23 @@ export function useSpotifyMobile() {
     [refreshToken],
   );
 
-  // Find the Spotify app device on this phone (type = "Smartphone")
-  const findSpotifyDevice = useCallback(async (): Promise<string | null> => {
-    try {
-      const res = await spotifyFetch(
-        "https://api.spotify.com/v1/me/player/devices",
-      );
-      if (!res || !res.ok) return null;
-      const data = await res.json();
-      const devices = data.devices ?? [];
-
-      // Prefer an active smartphone, then any smartphone, then any device
-      const active = devices.find((d: any) => d.is_active && d.type === "Smartphone");
-      if (active) return active.id;
-
-      const smartphone = devices.find((d: any) => d.type === "Smartphone");
-      if (smartphone) return smartphone.id;
-
-      const anyActive = devices.find((d: any) => d.is_active);
-      if (anyActive) return anyActive.id;
-
-      return devices[0]?.id ?? null;
-    } catch {
-      return null;
-    }
-  }, [spotifyFetch]);
-
-  // Ensure Spotify app is running and is the active device.
-  // Opens Spotify via deep link if no device is found.
-  const ensureSpotifyDevice = useCallback(async (): Promise<string | null> => {
-    // Check cached device first
-    if (spotifyDeviceIdRef.current) {
-      const res = await spotifyFetch(
-        "https://api.spotify.com/v1/me/player/devices",
-      );
-      if (res?.ok) {
-        const data = await res.json();
-        const still = (data.devices ?? []).find(
-          (d: any) => d.id === spotifyDeviceIdRef.current,
-        );
-        if (still) return spotifyDeviceIdRef.current;
-      }
-    }
-
-    // Try to find an existing device
-    let deviceId = await findSpotifyDevice();
-    if (deviceId) {
-      spotifyDeviceIdRef.current = deviceId;
-      return deviceId;
-    }
-
-    // No device found — open Spotify app briefly to wake it up
-    try {
-      await Linking.openURL("spotify://");
-    } catch {
-      // Spotify app not installed
-      return null;
-    }
-
-    // Wait for Spotify to register as a device, poll a few times
-    for (let i = 0; i < 5; i++) {
-      await new Promise((r) => setTimeout(r, 1500));
-      deviceId = await findSpotifyDevice();
-      if (deviceId) {
-        spotifyDeviceIdRef.current = deviceId;
-        return deviceId;
-      }
-    }
-
-    return null;
-  }, [spotifyFetch, findSpotifyDevice]);
-
-  const play = useCallback(
-    async (uri?: string, contextUri?: string): Promise<boolean> => {
-      if (!useSpotifyStore.getState().accessToken) return false;
-
-      const deviceId = await ensureSpotifyDevice();
-      if (!deviceId) return false;
-
-      let body: string | undefined;
-      if (contextUri) {
-        body = JSON.stringify({ context_uri: contextUri });
-      } else if (uri) {
-        body = JSON.stringify({ uris: [uri] });
-      }
-
-      // Target the specific device via query parameter
-      const url = `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`;
-      const res = await spotifyFetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body,
-      });
-
-      if (res?.ok) {
+  // Open a playlist/track in the Spotify app for playback.
+  // This is the only reliable way to start playback on the same device
+  // without the native App Remote SDK.
+  const playInSpotify = useCallback(
+    async (spotifyUri: string) => {
+      try {
+        await Linking.openURL(spotifyUri);
         store.setPlaying(true);
         return true;
+      } catch {
+        return false;
       }
-
-      // If targeting device failed, try opening playlist in Spotify as last resort
-      if (contextUri) {
-        const playlistId = contextUri.replace("spotify:playlist:", "");
-        try {
-          await Linking.openURL(`spotify:playlist:${playlistId}`);
-          store.setPlaying(true);
-          return true;
-        } catch {
-          return false;
-        }
-      }
-
-      return false;
     },
-    [spotifyFetch, store, ensureSpotifyDevice],
+    [store],
   );
 
+  // Try Web API pause (works if Spotify is active device + Premium)
   const pause = useCallback(async () => {
     if (!useSpotifyStore.getState().accessToken) return;
     const res = await spotifyFetch(
@@ -310,16 +211,26 @@ export function useSpotifyMobile() {
     }
   }, [spotifyFetch, store]);
 
+  // Try Web API skip (works if Spotify is active device + Premium)
   const skip = useCallback(async () => {
     if (!useSpotifyStore.getState().accessToken) return;
-    const res = await spotifyFetch(
+    await spotifyFetch(
       "https://api.spotify.com/v1/me/player/next",
       { method: "POST" },
     );
-    if (!res?.ok) {
-      console.error("Spotify skip failed:", res?.status);
-    }
   }, [spotifyFetch]);
+
+  // Try Web API resume (works if Spotify is active device + Premium)
+  const resume = useCallback(async () => {
+    if (!useSpotifyStore.getState().accessToken) return;
+    const res = await spotifyFetch(
+      "https://api.spotify.com/v1/me/player/play",
+      { method: "PUT" },
+    );
+    if (res?.ok) {
+      store.setPlaying(true);
+    }
+  }, [spotifyFetch, store]);
 
   const getCurrentTrack = useCallback(async () => {
     if (!useSpotifyStore.getState().accessToken) return null;
@@ -370,12 +281,12 @@ export function useSpotifyMobile() {
 
   return {
     login,
-    play,
+    playInSpotify,
     pause,
+    resume,
     skip,
     getCurrentTrack,
     getPlaylists,
-    ensureSpotifyDevice,
     refreshToken,
     isReady: store.isReady,
     isPlaying: store.isPlaying,
