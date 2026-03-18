@@ -13,6 +13,7 @@ import {
 } from "lucide-react-native";
 import { useAuthStore, useSpotifyStore } from "@propilates/shared";
 import { truncateAddress } from "@propilates/shared";
+import { useSpotifyMobile } from "../../../src/hooks/useSpotifyMobile";
 import { useUsdcBalance } from "../../../src/hooks/useBalance";
 import { BalanceDisplay } from "../../../src/components/ui/BalanceDisplay";
 import { Card, CardBody } from "../../../src/components/ui/Card";
@@ -22,6 +23,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { xionAddress, instructor, isConnected } = useAuthStore();
   const { accessToken: spotifyAccessToken } = useSpotifyStore();
+  const spotify = useSpotifyMobile();
   const { balance, isLoading: balanceLoading } = useUsdcBalance(xionAddress);
   const [copied, setCopied] = React.useState(false);
 
@@ -146,13 +148,22 @@ export default function ProfileScreen() {
             <Text className="text-text-secondary text-sm">Verified</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-4">
+          <TouchableOpacity
+            className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-4"
+            onPress={() => {
+              if (spotifyAccessToken) {
+                useSpotifyStore.getState().reset();
+              } else {
+                spotify.login();
+              }
+            }}
+          >
             <Music size={20} color="#34d399" />
             <Text className="text-text-primary font-medium ml-3 flex-1">
               Spotify
             </Text>
-            <Text className="text-text-secondary text-sm">
-              {spotifyAccessToken ? "Connected" : "Not connected"}
+            <Text className="text-violet-400 text-sm font-medium">
+              {spotifyAccessToken ? "Disconnect" : "Connect"}
             </Text>
           </TouchableOpacity>
 

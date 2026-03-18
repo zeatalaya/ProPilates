@@ -12,6 +12,7 @@ import {
 } from "lucide-react-native";
 import { useAuthStore, useSpotifyStore } from "@propilates/shared";
 import { useOAuth3Mobile } from "../../../src/hooks/useOAuth3Mobile";
+import { useSpotifyMobile } from "../../../src/hooks/useSpotifyMobile";
 import { Card, CardBody } from "../../../src/components/ui/Card";
 
 export default function SettingsScreen() {
@@ -20,6 +21,7 @@ export default function SettingsScreen() {
   const { logout, login, isAuthenticating } = useOAuth3Mobile();
   const spotifyReady = useSpotifyStore((s) => s.isReady);
   const spotifyReset = useSpotifyStore((s) => s.reset);
+  const spotify = useSpotifyMobile();
 
   const handleLogout = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -44,11 +46,16 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleSpotifyToggle = () => {
+  const handleSpotifyToggle = async () => {
     if (spotifyReady) {
       spotifyReset();
+    } else {
+      try {
+        await spotify.login();
+      } catch {
+        Alert.alert("Spotify Error", "Could not connect to Spotify. Please try again.");
+      }
     }
-    // If not ready, trigger connect flow from useSpotifyMobile hook
   };
 
   return (

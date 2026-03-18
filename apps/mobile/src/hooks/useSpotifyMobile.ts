@@ -183,9 +183,14 @@ export function useSpotifyMobile() {
   );
 
   const play = useCallback(
-    async (uri?: string) => {
+    async (uri?: string, contextUri?: string) => {
       if (!useSpotifyStore.getState().accessToken) return;
-      const body = uri ? JSON.stringify({ uris: [uri] }) : undefined;
+      let body: string | undefined;
+      if (contextUri) {
+        body = JSON.stringify({ context_uri: contextUri });
+      } else if (uri) {
+        body = JSON.stringify({ uris: [uri] });
+      }
       const res = await spotifyFetch(
         "https://api.spotify.com/v1/me/player/play",
         {
@@ -200,6 +205,27 @@ export function useSpotifyMobile() {
     },
     [spotifyFetch, store],
   );
+
+  const getPlaylists = useCallback(async () => {
+    if (!useSpotifyStore.getState().accessToken) return [];
+    try {
+      const res = await spotifyFetch(
+        "https://api.spotify.com/v1/me/playlists?limit=50",
+      );
+      if (!res || !res.ok) return [];
+      const data = await res.json();
+      return (data.items ?? []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        uri: p.uri,
+        image: p.images?.[0]?.url ?? null,
+        trackCount: p.tracks?.total ?? 0,
+        owner: p.owner?.display_name ?? "",
+      }));
+    } catch {
+      return [];
+    }
+  }, [spotifyFetch]);
 
   const pause = useCallback(async () => {
     if (!useSpotifyStore.getState().accessToken) return;
@@ -255,6 +281,7 @@ export function useSpotifyMobile() {
     pause,
     skip,
     getCurrentTrack,
+    getPlaylists,
     refreshToken,
     isReady: store.isReady,
     isPlaying: store.isPlaying,

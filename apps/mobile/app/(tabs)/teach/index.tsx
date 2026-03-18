@@ -1,9 +1,12 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
+  Modal,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Platform } from "react-native";
@@ -16,12 +19,23 @@ import {
   ChevronDown,
   ChevronUp,
   Music,
+  X,
+  ListMusic,
 } from "lucide-react-native";
 import { useTeachingModeStore, useSpotifyStore } from "@propilates/shared";
 import { formatDuration } from "@propilates/shared";
 import { useSpotifyMobile } from "../../../src/hooks/useSpotifyMobile";
 import { TimerRing } from "../../../src/components/ui/TimerRing";
 import { Badge } from "../../../src/components/ui/Badge";
+
+interface SpotifyPlaylist {
+  id: string;
+  name: string;
+  uri: string;
+  image: string | null;
+  trackCount: number;
+  owner: string;
+}
 
 export default function TeachScreen() {
   const {
@@ -50,7 +64,38 @@ export default function TeachScreen() {
   }, []);
   const spotify = useSpotifyMobile();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [showUpNext, setShowUpNext] = React.useState(false);
+  const trackPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [showUpNext, setShowUpNext] = useState(false);
+  const [showPlaylists, setShowPlaylists] = useState(false);
+  const [playlists, setPlaylists] = useState<SpotifyPlaylist[]>([]);
+  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
+
+  const openPlaylistPicker = useCallback(async () => {
+    setShowPlaylists(true);
+    setLoadingPlaylists(true);
+    const result = await spotify.getPlaylists();
+    setPlaylists(result);
+    setLoadingPlaylists(false);
+  }, [spotify]);
+
+  const selectPlaylist = useCallback(async (playlist: SpotifyPlaylist) => {
+    setShowPlaylists(false);
+    await spotify.play(undefined, playlist.uri);
+    // Poll for the track after a short delay
+    setTimeout(() => spotify.getCurrentTrack(), 1500);
+  }, [spotify]);
+
+  // Poll current track when Spotify is playing
+  useEffect(() => {
+    if (spotify.isReady && spotify.isPlaying) {
+      trackPollRef.current = setInterval(() => {
+        spotify.getCurrentTrack();
+      }, 5000);
+    }
+    return () => {
+      if (trackPollRef.current) clearInterval(trackPollRef.current);
+    };
+  }, [spotify.isReady, spotify.isPlaying, spotify.getCurrentTrack]);
 
   // Timer tick
   useEffect(() => {
@@ -194,20 +239,49 @@ export default function TeachScreen() {
 
         {/* Spotify Mini */}
         {spotify.isReady ? (
-          <TouchableOpacity
-            className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-3"
-            onPress={() => spotify.isPlaying ? spotify.pause() : spotify.play()}
-          >
-            <Music size={18} color="#34d399" />
-            <Text className="text-text-primary text-sm ml-2 flex-1" numberOfLines={1}>
-              {spotify.currentTrack?.name ?? "Spotify Ready"}
-            </Text>
-            {spotify.isPlaying ? (
-              <Pause size={16} color="#34d399" />
-            ) : (
-              <Play size={16} color="#34d399" />
+          <View className="bg-bg-card border border-border rounded-xl overflow-hidden">
+            {/* Now Playing / Pick Playlist */}
+            <TouchableOpacity
+              className="flex-row items-center px-4 py-3"
+              onPress={() => spotify.isPlaying ? spotify.pause() : openPlaylistPicker()}
+            >
+              <Music size={18} color="#34d399" />
+              <Text className="text-text-primary text-sm ml-2 flex-1" numberOfLines={1}>
+                {spotify.currentTrack
+                  ? `${spotify.currentTrack.name} — ${spotify.currentTrack.artist}`
+                  : "Tap to pick a playlist"}
+              </Text>
+              {spotify.isPlaying ? (
+                <Pause size={16} color="#34d399" />
+              ) : (
+                <Play size={16} color="#34d399" />
+              )}
+            </TouchableOpacity>
+
+            {/* Playback controls when playing */}
+            {spotify.currentTrack && (
+              <View className="flex-row items-center justify-center gap-6 px-4 pb-3">
+                <TouchableOpacity onPress={() => spotify.play()}>
+                  <SkipBack size={18} color="#a0a0b8" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => spotify.isPlaying ? spotify.pause() : spotify.play()}
+                >
+                  {spotify.isPlaying ? (
+                    <Pause size={22} color="#34d399" />
+                  ) : (
+                    <Play size={22} color="#34d399" />
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity onPress={spotify.skip}>
+                  <SkipForward size={18} color="#a0a0b8" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={openPlaylistPicker}>
+                  <ListMusic size={18} color="#a0a0b8" />
+                </TouchableOpacity>
+              </View>
             )}
-          </TouchableOpacity>
+          </View>
         ) : (
           <TouchableOpacity
             className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-3"
@@ -215,7 +289,7 @@ export default function TeachScreen() {
           >
             <Music size={18} color="#34d399" />
             <Text className="text-text-secondary text-sm ml-2 flex-1">
-              {spotify.canLogin ? "Connect Spotify" : "Set Spotify Client ID in .env"}
+              {spotify.canLogin ? "Connect Spotify" : "Spotify not configured"}
             </Text>
           </TouchableOpacity>
         )}
@@ -246,6 +320,65 @@ export default function TeachScreen() {
           />
         </View>
       )}
+      {/* Playlist Picker Modal */}
+      <Modal
+        visible={showPlaylists}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPlaylists(false)}
+      >
+        <SafeAreaView className="flex-1 bg-bg">
+          <View className="flex-row items-center justify-between px-6 py-4 border-b border-border">
+            <Text className="text-text-primary font-semibold text-lg">
+              Pick a Playlist
+            </Text>
+            <TouchableOpacity onPress={() => setShowPlaylists(false)}>
+              <X size={24} color="#a0a0b8" />
+            </TouchableOpacity>
+          </View>
+          {loadingPlaylists ? (
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator size="large" color="#c9a96e" />
+            </View>
+          ) : (
+            <FlatList
+              data={playlists}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8 }}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  className="flex-row items-center py-3 border-b border-border"
+                  onPress={() => selectPlaylist(item)}
+                >
+                  {item.image ? (
+                    <Image
+                      source={{ uri: item.image }}
+                      className="w-12 h-12 rounded-lg mr-3"
+                    />
+                  ) : (
+                    <View className="w-12 h-12 rounded-lg bg-violet-500/20 items-center justify-center mr-3">
+                      <Music size={20} color="#c9a96e" />
+                    </View>
+                  )}
+                  <View className="flex-1">
+                    <Text className="text-text-primary font-medium" numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                    <Text className="text-text-secondary text-sm">
+                      {item.trackCount} tracks · {item.owner}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <View className="items-center py-12">
+                  <Text className="text-text-secondary">No playlists found</Text>
+                </View>
+              }
+            />
+          )}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
