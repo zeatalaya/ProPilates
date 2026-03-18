@@ -183,8 +183,8 @@ export function useSpotifyMobile() {
   );
 
   const play = useCallback(
-    async (uri?: string, contextUri?: string) => {
-      if (!useSpotifyStore.getState().accessToken) return;
+    async (uri?: string, contextUri?: string): Promise<boolean> => {
+      if (!useSpotifyStore.getState().accessToken) return false;
       let body: string | undefined;
       if (contextUri) {
         body = JSON.stringify({ context_uri: contextUri });
@@ -201,7 +201,9 @@ export function useSpotifyMobile() {
       );
       if (res?.ok) {
         store.setPlaying(true);
+        return true;
       }
+      return false;
     },
     [spotifyFetch, store],
   );

@@ -7,7 +7,6 @@ import {
   Modal,
   Image,
   ActivityIndicator,
-  Alert,
   Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -80,38 +79,31 @@ export default function TeachScreen() {
     setLoadingPlaylists(false);
   }, [spotify]);
 
-  const ensureDevice = useCallback(async (): Promise<boolean> => {
+  const selectPlaylist = useCallback(async (playlist: SpotifyPlaylist) => {
+    setShowPlaylists(false);
+
+    // Try Web API first (requires Spotify Premium + active device)
     const devices = await spotify.getDevices();
     if (devices.length > 0) {
-      // If no active device, transfer to the first one
       const active = devices.find((d: any) => d.is_active);
       if (!active) {
         await spotify.transferPlayback(devices[0].id);
       }
-      return true;
+      const ok = await spotify.play(undefined, playlist.uri);
+      if (ok) {
+        setTimeout(() => spotify.getCurrentTrack(), 1500);
+        return;
+      }
     }
-    // No devices — prompt user to open Spotify
-    Alert.alert(
-      "Open Spotify",
-      "Please open the Spotify app first so music can play through it, then come back and try again.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Open Spotify",
-          onPress: () => Linking.openURL("spotify://"),
-        },
-      ],
-    );
-    return false;
-  }, [spotify]);
 
-  const selectPlaylist = useCallback(async (playlist: SpotifyPlaylist) => {
-    setShowPlaylists(false);
-    const hasDevice = await ensureDevice();
-    if (!hasDevice) return;
-    await spotify.play(undefined, playlist.uri);
-    setTimeout(() => spotify.getCurrentTrack(), 1500);
-  }, [spotify, ensureDevice]);
+    // Fallback: open the playlist directly in Spotify app
+    // This works for both Free and Premium users
+    const spotifyId = playlist.uri.replace("spotify:playlist:", "");
+    const opened = await Linking.openURL(`spotify:playlist:${spotifyId}`);
+    // Poll for track after user returns from Spotify
+    setTimeout(() => spotify.getCurrentTrack(), 3000);
+    setTimeout(() => spotify.getCurrentTrack(), 6000);
+  }, [spotify]);
 
   // Poll current track when Spotify is playing
   useEffect(() => {
@@ -275,8 +267,11 @@ export default function TeachScreen() {
                 if (spotify.isPlaying) {
                   spotify.pause();
                 } else if (spotify.currentTrack) {
-                  const hasDevice = await ensureDevice();
-                  if (hasDevice) spotify.play();
+                  const ok = await spotify.play();
+                  if (!ok) {
+                    // Reopen Spotify app to resume
+                    Linking.openURL("spotify://");
+                  }
                 } else {
                   openPlaylistPicker();
                 }
