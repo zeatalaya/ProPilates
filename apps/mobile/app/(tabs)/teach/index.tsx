@@ -7,6 +7,8 @@ import {
   Modal,
   Image,
   ActivityIndicator,
+  Alert,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Platform } from "react-native";
@@ -78,12 +80,38 @@ export default function TeachScreen() {
     setLoadingPlaylists(false);
   }, [spotify]);
 
+  const ensureDevice = useCallback(async (): Promise<boolean> => {
+    const devices = await spotify.getDevices();
+    if (devices.length > 0) {
+      // If no active device, transfer to the first one
+      const active = devices.find((d: any) => d.is_active);
+      if (!active) {
+        await spotify.transferPlayback(devices[0].id);
+      }
+      return true;
+    }
+    // No devices — prompt user to open Spotify
+    Alert.alert(
+      "Open Spotify",
+      "Please open the Spotify app first so music can play through it, then come back and try again.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Open Spotify",
+          onPress: () => Linking.openURL("spotify://"),
+        },
+      ],
+    );
+    return false;
+  }, [spotify]);
+
   const selectPlaylist = useCallback(async (playlist: SpotifyPlaylist) => {
     setShowPlaylists(false);
+    const hasDevice = await ensureDevice();
+    if (!hasDevice) return;
     await spotify.play(undefined, playlist.uri);
-    // Poll for the track after a short delay
     setTimeout(() => spotify.getCurrentTrack(), 1500);
-  }, [spotify]);
+  }, [spotify, ensureDevice]);
 
   // Poll current track when Spotify is playing
   useEffect(() => {
@@ -243,7 +271,16 @@ export default function TeachScreen() {
             {/* Now Playing / Pick Playlist */}
             <TouchableOpacity
               className="flex-row items-center px-4 py-3"
-              onPress={() => spotify.isPlaying ? spotify.pause() : openPlaylistPicker()}
+              onPress={async () => {
+                if (spotify.isPlaying) {
+                  spotify.pause();
+                } else if (spotify.currentTrack) {
+                  const hasDevice = await ensureDevice();
+                  if (hasDevice) spotify.play();
+                } else {
+                  openPlaylistPicker();
+                }
+              }}
             >
               <Music size={18} color="#34d399" />
               <Text className="text-text-primary text-sm ml-2 flex-1" numberOfLines={1}>
@@ -365,7 +402,7 @@ export default function TeachScreen() {
                       {item.name}
                     </Text>
                     <Text className="text-text-secondary text-sm">
-                      {item.trackCount} tracks · {item.owner}
+                      {item.trackCount > 0 ? `${item.trackCount} tracks · ` : ""}{item.owner}
                     </Text>
                   </View>
                 </TouchableOpacity>

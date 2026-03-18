@@ -219,12 +219,34 @@ export function useSpotifyMobile() {
         name: p.name,
         uri: p.uri,
         image: p.images?.[0]?.url ?? null,
-        trackCount: p.tracks?.total ?? 0,
+        trackCount: typeof p.tracks === "object" ? (p.tracks?.total ?? 0) : 0,
         owner: p.owner?.display_name ?? "",
       }));
     } catch {
       return [];
     }
+  }, [spotifyFetch]);
+
+  const getDevices = useCallback(async () => {
+    if (!useSpotifyStore.getState().accessToken) return [];
+    try {
+      const res = await spotifyFetch(
+        "https://api.spotify.com/v1/me/player/devices",
+      );
+      if (!res || !res.ok) return [];
+      const data = await res.json();
+      return data.devices ?? [];
+    } catch {
+      return [];
+    }
+  }, [spotifyFetch]);
+
+  const transferPlayback = useCallback(async (deviceId: string) => {
+    await spotifyFetch("https://api.spotify.com/v1/me/player", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ device_ids: [deviceId], play: false }),
+    });
   }, [spotifyFetch]);
 
   const pause = useCallback(async () => {
@@ -282,6 +304,8 @@ export function useSpotifyMobile() {
     skip,
     getCurrentTrack,
     getPlaylists,
+    getDevices,
+    transferPlayback,
     refreshToken,
     isReady: store.isReady,
     isPlaying: store.isPlaying,
