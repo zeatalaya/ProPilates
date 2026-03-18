@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   Briefcase,
   Plus,
@@ -63,58 +64,63 @@ export default function PortfolioScreen() {
   const [loading, setLoading] = useState(true);
   const [showCreateSheet, setShowCreateSheet] = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!instructor) {
       setLoading(false);
       return;
     }
-    async function load() {
-      const [classesRes, exercisesRes] = await Promise.all([
-        supabase
-          .from("classes")
-          .select("*")
-          .eq("instructor_id", instructor!.id)
-          .order("updated_at", { ascending: false }),
-        supabase
-          .from("exercises")
-          .select("*")
-          .eq("is_custom", true)
-          .eq("creator_id", instructor!.id)
-          .order("name"),
-      ]);
-      if (classesRes.data) setClasses(classesRes.data as PilatesClass[]);
-      if (exercisesRes.data) setCustomExercises(exercisesRes.data as Exercise[]);
+    setLoading(true);
+    const [classesRes, exercisesRes] = await Promise.all([
+      supabase
+        .from("classes")
+        .select("*")
+        .eq("instructor_id", instructor.id)
+        .order("updated_at", { ascending: false }),
+      supabase
+        .from("exercises")
+        .select("*")
+        .eq("is_custom", true)
+        .eq("creator_id", instructor.id)
+        .order("name"),
+    ]);
+    if (classesRes.data) setClasses(classesRes.data as PilatesClass[]);
+    if (exercisesRes.data) setCustomExercises(exercisesRes.data as Exercise[]);
 
-      // Load purchased classes
-      if (xionAddress) {
-        const { data: purchases } = await supabase
-          .from("portfolio_access")
-          .select("*, class:classes(title, method, difficulty, duration_minutes, instructor:instructors(name))")
-          .eq("buyer_address", xionAddress)
-          .order("purchased_at", { ascending: false });
+    // Load purchased classes
+    if (xionAddress) {
+      const { data: purchases } = await supabase
+        .from("portfolio_access")
+        .select("*, class:classes(title, method, difficulty, duration_minutes, instructor:instructors(name))")
+        .eq("buyer_address", xionAddress)
+        .order("purchased_at", { ascending: false });
 
-        if (purchases) {
-          setPurchased(
-            purchases.map((p: any) => ({
-              id: p.id,
-              class_id: p.class_id,
-              token_id: p.token_id,
-              price_paid: p.price_paid,
-              purchased_at: p.purchased_at,
-              title: p.class?.title || "Unknown Class",
-              method: p.class?.method || "mat",
-              difficulty: p.class?.difficulty || "intermediate",
-              duration_minutes: p.class?.duration_minutes || 0,
-              instructor_name: p.class?.instructor?.name || "Unknown",
-            })),
-          );
-        }
+      if (purchases) {
+        setPurchased(
+          purchases.map((p: any) => ({
+            id: p.id,
+            class_id: p.class_id,
+            token_id: p.token_id,
+            price_paid: p.price_paid,
+            purchased_at: p.purchased_at,
+            title: p.class?.title || "Unknown Class",
+            method: p.class?.method || "mat",
+            difficulty: p.class?.difficulty || "intermediate",
+            duration_minutes: p.class?.duration_minutes || 0,
+            instructor_name: p.class?.instructor?.name || "Unknown",
+          })),
+        );
       }
-
-      setLoading(false);
     }
-    load();
+
+    setLoading(false);
   }, [instructor, xionAddress]);
+
+  // Reload data every time this tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData]),
+  );
 
   async function toggleExercisePublic(exercise: Exercise) {
     const { error } = await supabase
