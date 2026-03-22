@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import { useThemeColors } from "../../lib/theme";
 import { cn } from "../../lib/cn";
 
 interface CardProps {
@@ -8,12 +9,15 @@ interface CardProps {
 }
 
 export function Card({ children, className }: CardProps) {
+  const colors = useThemeColors();
   return (
     <View
-      className={cn(
-        "rounded-2xl border border-border bg-bg-card overflow-hidden",
-        className,
-      )}
+      style={{
+        backgroundColor: colors.bgCard,
+        borderRadius: 16,
+        overflow: "hidden",
+      }}
+      className={className}
     >
       {children}
     </View>
@@ -22,12 +26,16 @@ export function Card({ children, className }: CardProps) {
 
 export function CardHeader({ children, className }: CardProps) {
   return (
-    <View className={cn("border-b border-border px-4 py-3", className)}>
+    <View className={cn("px-4 py-3", className)}>
       {children}
     </View>
   );
 }
 
 export function CardBody({ children, className }: CardProps) {
-  return <View className={cn("px-4 py-4", className)}>{children}</View>;
+  return (
+    <View style={{ padding: 16 }} className={className}>
+      {children}
+    </View>
+  );
 }

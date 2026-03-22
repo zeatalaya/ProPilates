@@ -245,74 +245,86 @@ export default function BuilderScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg">
       {/* Class Header */}
-      <View className="border-b border-border px-4 py-3">
+      <View style={{ borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: 16, paddingVertical: 12 }}>
         <TextInput
-          className="mb-2 text-xl font-bold text-text-primary"
+          style={{ fontSize: 20, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 }}
           placeholder="Class Title..."
           placeholderTextColor={colors.textMuted}
           value={store.title}
           onChangeText={store.setTitle}
         />
-        <View className="flex-row items-center gap-3">
-          <View className="flex-row gap-2">
-            {MOBILE_METHODS.map((m) => (
-              <TouchableOpacity
-                key={m.value}
-                onPress={() => store.setMethod(m.value)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5",
-                  store.method === m.value
-                    ? "bg-violet-600 border-violet-600"
-                    : "bg-bg-card border-border",
-                )}
-              >
-                <Text
-                  className={cn(
-                    "text-xs font-medium",
-                    store.method === m.value
-                      ? "text-white"
-                      : "text-text-primary",
-                  )}
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {MOBILE_METHODS.map((m) => {
+              const active = store.method === m.value;
+              return (
+                <TouchableOpacity
+                  key={m.value}
+                  onPress={() => store.setMethod(m.value)}
+                  style={{
+                    borderRadius: 20,
+                    paddingHorizontal: 14,
+                    paddingVertical: 7,
+                    backgroundColor: active ? colors.accent : '#F2F2F7',
+                  }}
                 >
-                  {m.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: '600',
+                      color: active ? '#fff' : '#1A1A2E',
+                    }}
+                  >
+                    {m.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-          <View className="flex-row items-center gap-1 ml-auto">
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
             <Clock size={14} color={colors.textSecondary} />
-            <Text className="text-sm text-text-secondary">
+            <Text style={{ fontSize: 13, color: colors.textSecondary }}>
               {formatDuration(store.totalDuration())}
             </Text>
           </View>
         </View>
-        <View className="mt-2 flex-row gap-2">
+        <View style={{ marginTop: 8, flexDirection: 'row', gap: 8 }}>
           <TouchableOpacity
             onPress={handleSave}
             disabled={tier !== "premium"}
-            className={cn(
-              "flex-1 rounded-lg py-2",
-              tier === "premium" ? "bg-violet-600" : "bg-bg-elevated",
-            )}
+            style={{
+              flex: 1,
+              borderRadius: 10,
+              paddingVertical: 10,
+              backgroundColor: tier === "premium" ? colors.accent : colors.bgElevated,
+            }}
           >
             <Text
-              className={cn(
-                "text-center text-sm font-semibold",
-                tier === "premium" ? "text-white" : "text-text-muted",
-              )}
+              style={{
+                textAlign: 'center',
+                fontSize: 14,
+                fontWeight: '600',
+                color: tier === "premium" ? '#fff' : colors.textMuted,
+              }}
             >
               {tier === "premium" ? "Save" : "Premium to Save"}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             disabled={store.blocks.length === 0}
-            className="flex-1 rounded-lg border border-violet-500 py-2"
+            style={{
+              flex: 1,
+              borderRadius: 10,
+              paddingVertical: 10,
+              borderWidth: 1,
+              borderColor: colors.accent,
+            }}
             onPress={() => {
               loadBlocks(store.blocks);
               router.push("/(tabs)/teach");
             }}
           >
-            <Text className="text-center text-sm font-semibold text-violet-400">
+            <Text style={{ textAlign: 'center', fontSize: 14, fontWeight: '600', color: colors.accent }}>
               Teach
             </Text>
           </TouchableOpacity>
@@ -320,26 +332,34 @@ export default function BuilderScreen() {
       </View>
 
       {/* Segment Control */}
-      <View className="flex-row border-b border-border">
-        {(["blocks", "details", "exercises"] as Segment[]).map((s) => (
-          <TouchableOpacity
-            key={s}
-            onPress={() => setSegment(s)}
-            className={cn(
-              "flex-1 py-3",
-              segment === s && "border-b-2 border-violet-500",
-            )}
-          >
-            <Text
-              className={cn(
-                "text-center text-sm font-semibold capitalize",
-                segment === s ? "text-violet-400" : "text-text-muted",
-              )}
+      <View style={{ flexDirection: 'row', backgroundColor: '#F2F2F7', borderRadius: 12, padding: 4, marginHorizontal: 16, marginVertical: 8 }}>
+        {(["blocks", "details", "exercises"] as Segment[]).map((s) => {
+          const active = segment === s;
+          return (
+            <TouchableOpacity
+              key={s}
+              onPress={() => setSegment(s)}
+              style={{
+                flex: 1,
+                borderRadius: 10,
+                paddingVertical: 10,
+                alignItems: 'center',
+                backgroundColor: active ? colors.accent : 'transparent',
+              }}
             >
-              {s}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  textTransform: 'capitalize',
+                  color: active ? '#fff' : '#1A1A2E',
+                }}
+              >
+                {s}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Content */}
@@ -595,11 +615,11 @@ export default function BuilderScreen() {
 
       {segment === "exercises" && (
         <View className="flex-1 pt-4">
-          <View className="px-4 mb-3 flex-row items-center gap-2">
-            <View className="flex-1 flex-row items-center rounded-lg border border-border bg-bg-elevated px-3">
+          <View style={{ paddingHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: 12, backgroundColor: '#F2F2F7', paddingHorizontal: 12 }}>
               <Search size={16} color={colors.textMuted} />
               <TextInput
-                className="flex-1 py-2 pl-2 text-text-primary"
+                style={{ flex: 1, paddingVertical: 10, paddingLeft: 8, fontSize: 15, color: colors.textPrimary }}
                 placeholder="Search exercises..."
                 placeholderTextColor={colors.textMuted}
                 value={store.browserSearch}
@@ -608,7 +628,7 @@ export default function BuilderScreen() {
             </View>
             <TouchableOpacity
               onPress={() => setShowCreateSheet(true)}
-              className="rounded-lg bg-violet-600 px-3 py-2.5"
+              style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' }}
             >
               <Plus size={18} color="white" />
             </TouchableOpacity>
@@ -619,49 +639,31 @@ export default function BuilderScreen() {
             className="mb-3 px-4"
             contentContainerStyle={{ gap: 8 }}
           >
-            <TouchableOpacity
-              onPress={() => store.setBrowserMethod("all")}
-              className={cn(
-                "rounded-full border px-4 py-2",
-                store.browserMethod === "all"
-                  ? "bg-violet-600 border-violet-600"
-                  : "bg-bg-card border-border",
-              )}
-            >
-              <Text
-                className={cn(
-                  "text-sm font-medium",
-                  store.browserMethod === "all"
-                    ? "text-white"
-                    : "text-text-primary",
-                )}
-              >
-                All
-              </Text>
-            </TouchableOpacity>
-            {MOBILE_METHODS.map((m) => (
-              <TouchableOpacity
-                key={m.value}
-                onPress={() => store.setBrowserMethod(m.value)}
-                className={cn(
-                  "rounded-full border px-4 py-2",
-                  store.browserMethod === m.value
-                    ? "bg-violet-600 border-violet-600"
-                    : "bg-bg-card border-border",
-                )}
-              >
-                <Text
-                  className={cn(
-                    "text-sm font-medium",
-                    store.browserMethod === m.value
-                      ? "text-white"
-                      : "text-text-primary",
-                  )}
+            {[{ value: "all", label: "All" }, ...MOBILE_METHODS].map((m) => {
+              const active = store.browserMethod === m.value;
+              return (
+                <TouchableOpacity
+                  key={m.value}
+                  onPress={() => store.setBrowserMethod(m.value)}
+                  style={{
+                    borderRadius: 20,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    backgroundColor: active ? colors.accent : '#F2F2F7',
+                  }}
                 >
-                  {m.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "600",
+                      color: active ? "#fff" : "#1A1A2E",
+                    }}
+                  >
+                    {m.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
           <Text className="px-4 mb-2 text-xs text-text-muted">
             {filteredExercises.length} exercises

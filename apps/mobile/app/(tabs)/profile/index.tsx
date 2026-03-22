@@ -79,7 +79,7 @@ export default function ProfileScreen() {
                 className="flex-row items-center mt-2"
                 onPress={handleCopyAddress}
               >
-                <View className="flex-row items-center bg-bg-card border border-border rounded-full px-3 py-1.5">
+                <View className="flex-row items-center bg-bg-card rounded-full px-3 py-1.5">
                   <View className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
                   <Text className="text-text-secondary text-sm font-mono mr-2">
                     {truncateAddress(xionAddress)}
@@ -101,7 +101,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Certifications */}
-        <Card className="mb-4">
+        <Card className="mb-5">
           <CardBody>
             <View className="flex-row items-center justify-between mb-3">
               <Text className="text-text-primary font-semibold">
@@ -122,7 +122,7 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Methods */}
-        <Card className="mb-4">
+        <Card className="mb-5">
           <CardBody>
             <Text className="text-text-primary font-semibold mb-3">
               Teaching Methods
@@ -138,9 +138,9 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Quick Actions */}
-        <View className="gap-3 mb-8">
+        <View className="gap-3 mb-10">
           <TouchableOpacity
-            className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-4"
+            className="flex-row items-center bg-bg-card rounded-2xl px-4 py-4"
             onPress={() => router.push("/(tabs)/profile/verify")}
           >
             <Shield size={20} color={colors.accent} />
@@ -151,7 +151,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-4"
+            className="flex-row items-center bg-bg-card rounded-2xl px-4 py-4"
             onPress={() => {
               if (spotifyAccessToken) {
                 useSpotifyStore.getState().reset();
@@ -170,7 +170,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-4"
+            className="flex-row items-center bg-bg-card rounded-2xl px-4 py-4"
             onPress={() => router.push("/(tabs)/profile/settings")}
           >
             <Settings size={20} color={colors.textSecondary} />

@@ -2,9 +2,9 @@ import { useColorScheme } from "react-native";
 
 export const lightColors = {
   bg: "#FAFAFC",
-  bgCard: "#FFFFFF",
-  bgElevated: "#F3F3F8",
-  border: "#E4E4EB",
+  bgCard: "#F2F2F7",
+  bgElevated: "#E8E8ED",
+  border: "#E0E0E5",
   borderHover: "#C8C8D2",
   textPrimary: "#1A1A2E",
   textSecondary: "#646478",

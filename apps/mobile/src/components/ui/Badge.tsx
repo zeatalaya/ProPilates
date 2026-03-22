@@ -1,43 +1,50 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { cn } from "../../lib/cn";
 
 type Variant = "violet" | "emerald" | "blue" | "gray" | "red" | "amber";
 
-const variantStyles: Record<Variant, string> = {
-  violet: "bg-violet-500/20 border-violet-500/30",
-  emerald: "bg-emerald-500/20 border-emerald-500/30",
-  blue: "bg-blue-500/20 border-blue-500/30",
-  gray: "bg-gray-500/20 border-gray-500/30",
-  red: "bg-red-500/20 border-red-500/30",
-  amber: "bg-amber-500/20 border-amber-500/30",
+const variantBgColors: Record<Variant, string> = {
+  violet: "#8B5CF620",
+  emerald: "#10B98120",
+  blue: "#3B82F620",
+  gray: "#6B728020",
+  red: "#EF444420",
+  amber: "#F5920020",
 };
 
-const textStyles: Record<Variant, string> = {
-  violet: "text-violet-400",
-  emerald: "text-emerald-400",
-  blue: "text-blue-400",
-  gray: "text-gray-400",
-  red: "text-red-400",
-  amber: "text-amber-400",
+const variantTextColors: Record<Variant, string> = {
+  violet: "#7C3AED",
+  emerald: "#059669",
+  blue: "#2563EB",
+  gray: "#6B7280",
+  red: "#DC2626",
+  amber: "#D97706",
 };
 
 interface BadgeProps {
   variant?: Variant;
   children: React.ReactNode;
-  className?: string;
 }
 
-export function Badge({ variant = "violet", children, className }: BadgeProps) {
+export function Badge({ variant = "violet", children }: BadgeProps) {
   return (
     <View
-      className={cn(
-        "flex-row items-center rounded-full border px-2 py-0.5",
-        variantStyles[variant],
-        className,
-      )}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        borderRadius: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        backgroundColor: variantBgColors[variant],
+      }}
     >
-      <Text className={cn("text-xs font-medium capitalize", textStyles[variant])}>
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: "600",
+          color: variantTextColors[variant],
+        }}
+      >
         {children}
       </Text>
     </View>

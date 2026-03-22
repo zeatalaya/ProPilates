@@ -63,7 +63,7 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg">
       {/* Header */}
-      <View className="flex-row items-center px-6 py-3 border-b border-border">
+      <View className="flex-row items-center px-6 py-3">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
           <ArrowLeft size={24} color={colors.textSecondary} />
         </TouchableOpacity>
@@ -74,15 +74,15 @@ export default function SettingsScreen() {
 
       <ScrollView className="flex-1 px-6">
         {/* Account */}
-        <View className="mt-6 mb-2">
+        <View className="mt-8 mb-2">
           <Text className="text-text-secondary text-xs font-medium uppercase tracking-wider mb-3">
             Account
           </Text>
         </View>
 
-        <Card className="mb-6">
+        <Card className="mb-8">
           <TouchableOpacity
-            className="flex-row items-center px-4 py-4 border-b border-border"
+            className="flex-row items-center px-4 py-4"
             onPress={handleConnectAccount}
             disabled={!!xionAddress || isAuthenticating}
           >
@@ -97,6 +97,8 @@ export default function SettingsScreen() {
             </View>
             {!xionAddress && <ChevronRight size={18} color={colors.textMuted} />}
           </TouchableOpacity>
+
+          <View className="mx-4 h-px bg-border/30" />
 
           <TouchableOpacity
             className="flex-row items-center px-4 py-4"
@@ -122,7 +124,7 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
-        <Card className="mb-6">
+        <Card className="mb-8">
           <TouchableOpacity className="flex-row items-center px-4 py-4">
             <Info size={20} color={colors.textSecondary} />
             <Text className="text-text-primary font-medium ml-3 flex-1">
@@ -134,7 +136,7 @@ export default function SettingsScreen() {
 
         {/* Sign Out */}
         <TouchableOpacity
-          className="flex-row items-center justify-center bg-red-500/10 border border-red-500/30 rounded-xl py-4 mb-8"
+          className="flex-row items-center justify-center bg-red-500/10 rounded-2xl py-4 mb-10"
           onPress={handleLogout}
         >
           <LogOut size={18} color={colors.error} />
