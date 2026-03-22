@@ -24,6 +24,7 @@ import type {
 import { supabase } from "../../../src/lib/supabase";
 import { TemplateCard } from "../../../src/components/templates/TemplateCard";
 import { TemplateDetailModal } from "../../../src/components/templates/TemplateDetailModal";
+import { useThemeColors } from "../../../src/lib/theme";
 
 const METHOD_FILTERS: { value: PilatesMethod | "all"; label: string }[] = [
   { value: "all", label: "All" },
@@ -43,6 +44,7 @@ const DIFFICULTY_FILTERS: { value: Difficulty | "all"; label: string }[] = [
 
 export default function TemplatesScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const loadClass = useClassBuilderStore((s) => s.loadClass);
   const [templates, setTemplates] = useState<PilatesClass[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -230,12 +232,12 @@ export default function TemplatesScreen() {
       {/* Template list */}
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#c9a96e" />
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       ) : filtered.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
-            <BookOpen size={36} color="#c9a96e" />
+            <BookOpen size={36} color={colors.accent} />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">
             {templates.length === 0

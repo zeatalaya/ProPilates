@@ -12,9 +12,11 @@ import { ShieldCheck, ArrowRight, LogIn } from "lucide-react-native";
 import { useAuthStore } from "@propilates/shared";
 import { useOAuth3Mobile } from "../../src/hooks/useOAuth3Mobile";
 import { supabase } from "../../src/lib/supabase";
+import { useThemeColors } from "../../src/lib/theme";
 
 export default function AuthScreen() {
   const { setInstructor, setLoading, setTier } = useAuthStore();
+  const colors = useThemeColors();
   const {
     isAuthenticated,
     isInitialized,
@@ -83,7 +85,7 @@ export default function AuthScreen() {
     return (
       <SafeAreaView className="flex-1 bg-bg">
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#c9a96e" />
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       </SafeAreaView>
     );
@@ -94,21 +96,20 @@ export default function AuthScreen() {
       <View className="flex-1 items-center justify-center px-8">
         {/* Logo — gold "P" with PILATES subtitle matching web SVG icon */}
         <View className="mb-2 items-center">
-          <View className="mb-1 h-1 w-10 rounded-full bg-violet-500" />
+          <View className="mb-1 h-1 w-10 rounded-full" style={{ backgroundColor: colors.accent }} />
           <View className="h-20 w-20 items-center justify-center rounded-2xl">
             <Text
-              className="text-white"
-              style={{ fontSize: 42, fontWeight: "300", fontFamily: "Georgia" }}
+              style={{ fontSize: 42, fontWeight: "300", fontFamily: "Georgia", color: colors.accent }}
             >
               P
             </Text>
           </View>
           <Text
-            className="text-violet-400"
             style={{
               fontSize: 8,
               fontWeight: "300",
               letterSpacing: 4,
+              color: colors.accent,
             }}
           >
             PILATES
@@ -118,7 +119,7 @@ export default function AuthScreen() {
         <Text className="mb-1 text-3xl font-bold text-text-primary">
           ProPilates
         </Text>
-        <Text className="mb-2 text-lg text-violet-400">
+        <Text className="mb-2 text-lg" style={{ color: colors.accent }}>
           Your Pilates Studio, Elevated
         </Text>
         <Text className="mb-10 text-center text-text-secondary">
@@ -128,7 +129,7 @@ export default function AuthScreen() {
 
         {/* Badge */}
         <View className="mb-8 flex-row items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-2">
-          <ShieldCheck size={14} color="#c9a96e" />
+          <ShieldCheck size={14} color={colors.accent} />
           <Text className="text-sm text-violet-400">
             Professional Pilates Platform
           </Text>
@@ -158,14 +159,14 @@ export default function AuthScreen() {
         >
           {isAuthenticating ? (
             <>
-              <ActivityIndicator size="small" color="#c9a96e" />
+              <ActivityIndicator size="small" color={colors.accent} />
               <Text className="text-lg font-semibold text-text-primary">
                 Connecting...
               </Text>
             </>
           ) : (
             <>
-              <LogIn size={18} color="#c9a96e" />
+              <LogIn size={18} color={colors.accent} />
               <Text className="text-lg font-semibold text-text-primary">
                 Log In
               </Text>

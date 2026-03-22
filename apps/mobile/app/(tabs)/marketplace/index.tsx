@@ -14,6 +14,7 @@ import { Card, CardBody } from "../../../src/components/ui/Card";
 import { Badge } from "../../../src/components/ui/Badge";
 import { MOBILE_METHODS } from "@propilates/shared";
 import { supabase } from "../../../src/lib/supabase";
+import { useThemeColors } from "../../../src/lib/theme";
 
 interface MarketplaceListing {
   id: string;
@@ -29,6 +30,7 @@ interface MarketplaceListing {
 
 export default function MarketplaceScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const [search, setSearch] = useState("");
   const [filterMethod, setFilterMethod] = useState<string | null>(null);
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
@@ -130,11 +132,11 @@ export default function MarketplaceScreen() {
 
         {/* Search */}
         <View className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-3 mb-3">
-          <Search size={18} color="#55556a" />
+          <Search size={18} color={colors.textMuted} />
           <TextInput
             className="flex-1 text-text-primary text-base ml-3"
             placeholder="Search classes..."
-            placeholderTextColor="#55556a"
+            placeholderTextColor={colors.textMuted}
             value={search}
             onChangeText={setSearch}
           />
@@ -172,12 +174,12 @@ export default function MarketplaceScreen() {
       {/* Listings */}
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#c9a96e" />
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       ) : filtered.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
-            <ShoppingBag size={36} color="#c9a96e" />
+            <ShoppingBag size={36} color={colors.accent} />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">
             No Listings Found

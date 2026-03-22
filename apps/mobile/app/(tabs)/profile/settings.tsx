@@ -14,9 +14,11 @@ import { useAuthStore, useSpotifyStore } from "@propilates/shared";
 import { useOAuth3Mobile } from "../../../src/hooks/useOAuth3Mobile";
 import { useSpotifyMobile } from "../../../src/hooks/useSpotifyMobile";
 import { Card, CardBody } from "../../../src/components/ui/Card";
+import { useThemeColors } from "../../../src/lib/theme";
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { xionAddress } = useAuthStore();
   const { logout, login, isAuthenticating } = useOAuth3Mobile();
   const spotifyReady = useSpotifyStore((s) => s.isReady);
@@ -63,7 +65,7 @@ export default function SettingsScreen() {
       {/* Header */}
       <View className="flex-row items-center px-6 py-3 border-b border-border">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ArrowLeft size={24} color="#a0a0b8" />
+          <ArrowLeft size={24} color={colors.textSecondary} />
         </TouchableOpacity>
         <Text className="text-text-primary font-semibold text-lg flex-1">
           Settings
@@ -84,7 +86,7 @@ export default function SettingsScreen() {
             onPress={handleConnectAccount}
             disabled={!!xionAddress || isAuthenticating}
           >
-            <User size={20} color="#c9a96e" />
+            <User size={20} color={colors.accent} />
             <View className="flex-1 ml-3">
               <Text className="text-text-primary font-medium">
                 XION Account
@@ -93,14 +95,14 @@ export default function SettingsScreen() {
                 {xionAddress ? "Connected" : isAuthenticating ? "Connecting..." : "Not connected"}
               </Text>
             </View>
-            {!xionAddress && <ChevronRight size={18} color="#55556a" />}
+            {!xionAddress && <ChevronRight size={18} color={colors.textMuted} />}
           </TouchableOpacity>
 
           <TouchableOpacity
             className="flex-row items-center px-4 py-4"
             onPress={handleSpotifyToggle}
           >
-            <Music size={20} color="#34d399" />
+            <Music size={20} color={colors.success} />
             <View className="flex-1 ml-3">
               <Text className="text-text-primary font-medium">Spotify</Text>
               <Text className="text-text-secondary text-sm">
@@ -122,7 +124,7 @@ export default function SettingsScreen() {
 
         <Card className="mb-6">
           <TouchableOpacity className="flex-row items-center px-4 py-4">
-            <Info size={20} color="#a0a0b8" />
+            <Info size={20} color={colors.textSecondary} />
             <Text className="text-text-primary font-medium ml-3 flex-1">
               About
             </Text>
@@ -135,7 +137,7 @@ export default function SettingsScreen() {
           className="flex-row items-center justify-center bg-red-500/10 border border-red-500/30 rounded-xl py-4 mb-8"
           onPress={handleLogout}
         >
-          <LogOut size={18} color="#ef4444" />
+          <LogOut size={18} color={colors.error} />
           <Text className="text-red-400 font-semibold ml-2">Sign Out</Text>
         </TouchableOpacity>
       </ScrollView>

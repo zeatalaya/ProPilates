@@ -4,6 +4,7 @@ import { Clock, Layers, Dumbbell, Eye, Play } from "lucide-react-native";
 import { Card, CardBody } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import type { PilatesClass } from "@propilates/shared";
+import { useThemeColors } from "../../lib/theme";
 
 const METHOD_BADGE: Record<string, "violet" | "blue" | "emerald"> = {
   mat: "violet",
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function TemplateCard({ template, onPreview, onUse }: Props) {
+  const colors = useThemeColors();
   const blockCount = template.blocks?.length ?? 0;
   const exerciseCount =
     template.blocks?.reduce(
@@ -55,19 +57,19 @@ export function TemplateCard({ template, onPreview, onUse }: Props) {
         {/* Stats row */}
         <View className="flex-row items-center gap-4 mb-3">
           <View className="flex-row items-center gap-1">
-            <Clock size={14} color="#55556a" />
+            <Clock size={14} color={colors.textMuted} />
             <Text className="text-xs text-text-secondary">
               {template.duration_minutes}min
             </Text>
           </View>
           <View className="flex-row items-center gap-1">
-            <Layers size={14} color="#55556a" />
+            <Layers size={14} color={colors.textMuted} />
             <Text className="text-xs text-text-secondary">
               {blockCount} blocks
             </Text>
           </View>
           <View className="flex-row items-center gap-1">
-            <Dumbbell size={14} color="#55556a" />
+            <Dumbbell size={14} color={colors.textMuted} />
             <Text className="text-xs text-text-secondary">
               {exerciseCount} exercises
             </Text>
@@ -87,7 +89,7 @@ export function TemplateCard({ template, onPreview, onUse }: Props) {
             className="flex-1 flex-row items-center justify-center gap-1.5 rounded-xl border border-border bg-bg-card py-3"
             onPress={() => onPreview(template)}
           >
-            <Eye size={14} color="#8888a0" />
+            <Eye size={14} color={colors.textSecondary} />
             <Text className="text-sm font-medium text-text-secondary">
               Preview
             </Text>

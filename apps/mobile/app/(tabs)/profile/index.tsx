@@ -18,9 +18,11 @@ import { useUsdcBalance } from "../../../src/hooks/useBalance";
 import { BalanceDisplay } from "../../../src/components/ui/BalanceDisplay";
 import { Card, CardBody } from "../../../src/components/ui/Card";
 import { Badge } from "../../../src/components/ui/Badge";
+import { useThemeColors } from "../../../src/lib/theme";
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { xionAddress, instructor, isConnected } = useAuthStore();
   const { accessToken: spotifyAccessToken } = useSpotifyStore();
   const spotify = useSpotifyMobile();
@@ -40,7 +42,7 @@ export default function ProfileScreen() {
       <SafeAreaView className="flex-1 bg-bg">
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
-            <User size={36} color="#c9a96e" />
+            <User size={36} color={colors.accent} />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">
             Not Connected
@@ -65,7 +67,7 @@ export default function ProfileScreen() {
           {/* Avatar + Info */}
           <View className="items-center mb-6">
             <View className="w-24 h-24 rounded-full bg-violet-500/20 items-center justify-center mb-4">
-              <User size={40} color="#c9a96e" />
+              <User size={40} color={colors.accent} />
             </View>
             <Text className="text-xl font-bold text-text-primary">
               {instructor?.name || "Instructor"}
@@ -83,9 +85,9 @@ export default function ProfileScreen() {
                     {truncateAddress(xionAddress)}
                   </Text>
                   {copied ? (
-                    <CheckCircle size={14} color="#34d399" />
+                    <CheckCircle size={14} color={colors.success} />
                   ) : (
-                    <Copy size={14} color="#55556a" />
+                    <Copy size={14} color={colors.textMuted} />
                   )}
                 </View>
               </TouchableOpacity>
@@ -141,7 +143,7 @@ export default function ProfileScreen() {
             className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-4"
             onPress={() => router.push("/(tabs)/profile/verify")}
           >
-            <Shield size={20} color="#c9a96e" />
+            <Shield size={20} color={colors.accent} />
             <Text className="text-text-primary font-medium ml-3 flex-1">
               Verify Credentials
             </Text>
@@ -158,7 +160,7 @@ export default function ProfileScreen() {
               }
             }}
           >
-            <Music size={20} color="#34d399" />
+            <Music size={20} color={colors.success} />
             <Text className="text-text-primary font-medium ml-3 flex-1">
               Spotify
             </Text>
@@ -171,7 +173,7 @@ export default function ProfileScreen() {
             className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-4"
             onPress={() => router.push("/(tabs)/profile/settings")}
           >
-            <Settings size={20} color="#a0a0b8" />
+            <Settings size={20} color={colors.textSecondary} />
             <Text className="text-text-primary font-medium ml-3 flex-1">
               Settings
             </Text>

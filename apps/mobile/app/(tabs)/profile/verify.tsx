@@ -7,6 +7,7 @@ import { Card, CardBody } from "../../../src/components/ui/Card";
 import { Badge } from "../../../src/components/ui/Badge";
 import { useAuthStore, type VerificationProvider } from "@propilates/shared";
 import { supabase } from "../../../src/lib/supabase";
+import { useThemeColors } from "../../../src/lib/theme";
 
 interface VerifiableCred {
   id: string;
@@ -46,6 +47,7 @@ const BASE_CREDS: Omit<VerifiableCred, "verified" | "verifiedAt">[] = [
 
 export default function VerifyScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { instructor } = useAuthStore();
   const [creds, setCreds] = useState<VerifiableCred[]>(
     BASE_CREDS.map((c) => ({ ...c, verified: false })),
@@ -99,7 +101,7 @@ export default function VerifyScreen() {
       {/* Header */}
       <View className="flex-row items-center px-6 py-3 border-b border-border">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ArrowLeft size={24} color="#a0a0b8" />
+          <ArrowLeft size={24} color={colors.textSecondary} />
         </TouchableOpacity>
         <Text className="text-text-primary font-semibold text-lg flex-1">
           Verify Credentials
@@ -109,7 +111,7 @@ export default function VerifyScreen() {
       <ScrollView className="flex-1 px-6">
         <View className="mt-6 mb-4">
           <View className="flex-row items-center mb-2">
-            <Shield size={24} color="#c9a96e" />
+            <Shield size={24} color={colors.accent} />
             <Text className="text-xl font-bold text-text-primary ml-2">
               Credential Verification
             </Text>
@@ -131,7 +133,7 @@ export default function VerifyScreen() {
                         {cred.name}
                       </Text>
                       {cred.verified && (
-                        <CheckCircle size={16} color="#34d399" style={{ marginLeft: 8 }} />
+                        <CheckCircle size={16} color={colors.success} style={{ marginLeft: 8 }} />
                       )}
                     </View>
                     <Text className="text-text-secondary text-sm mb-2">
@@ -169,7 +171,7 @@ export default function VerifyScreen() {
 
         <View className="bg-bg-card border border-border rounded-xl p-4 mb-8">
           <View className="flex-row items-center mb-2">
-            <ExternalLink size={16} color="#55556a" />
+            <ExternalLink size={16} color={colors.textMuted} />
             <Text className="text-text-secondary text-sm font-medium ml-2">
               Powered by Reclaim Protocol
             </Text>

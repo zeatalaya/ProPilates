@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { formatDuration } from "@propilates/shared";
+import { useThemeColors } from "../../lib/theme";
 
 interface TimerRingProps {
   progress: number;
@@ -16,6 +17,7 @@ export function TimerRing({
   duration,
   size = 200,
 }: TimerRingProps) {
+  const colors = useThemeColors();
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -29,7 +31,7 @@ export function TimerRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#2a2a3a"
+          stroke={colors.ringBg}
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -37,7 +39,7 @@ export function TimerRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#c9a96e"
+          stroke={colors.accent}
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={`${circumference}`}

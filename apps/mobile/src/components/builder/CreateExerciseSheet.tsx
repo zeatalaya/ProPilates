@@ -17,6 +17,7 @@ import type {
   ExercisePace,
   PilatesSchool,
 } from "@propilates/shared";
+import { useThemeColors } from "../../lib/theme";
 
 interface Props {
   visible: boolean;
@@ -46,6 +47,7 @@ const SCHOOLS: PilatesSchool[] = [
 ];
 
 export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: Props) {
+  const colors = useThemeColors();
   const [name, setName] = useState("");
   const [method, setMethod] = useState<PilatesMethod>("mat");
   const [category, setCategory] = useState<ExerciseCategory>("strength");
@@ -121,7 +123,7 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
         {/* Header */}
         <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
           <TouchableOpacity onPress={onClose}>
-            <X size={24} color="#a0a0b8" />
+            <X size={24} color={colors.textSecondary} />
           </TouchableOpacity>
           <Text className="text-lg font-bold text-text-primary">
             Create Exercise
@@ -151,7 +153,7 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
           <TextInput
             className="mb-4 rounded-lg border border-border bg-bg-elevated px-3 py-2.5 text-text-primary"
             placeholder="e.g. Single Leg Bridge"
-            placeholderTextColor="#55556a"
+            placeholderTextColor={colors.textMuted}
             value={name}
             onChangeText={setName}
           />
@@ -225,7 +227,7 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
           <TextInput
             className="mb-4 rounded-lg border border-border bg-bg-elevated px-3 py-2.5 text-text-primary"
             placeholder="Brief description..."
-            placeholderTextColor="#55556a"
+            placeholderTextColor={colors.textMuted}
             multiline
             numberOfLines={3}
             value={description}
@@ -248,7 +250,7 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
               <TextInput
                 className="flex-1 rounded-lg border border-border bg-bg-elevated px-3 py-2 text-text-primary"
                 placeholder={`Cue ${i + 1}`}
-                placeholderTextColor="#55556a"
+                placeholderTextColor={colors.textMuted}
                 value={cue}
                 onChangeText={(v) => {
                   const next = [...cues];
@@ -258,13 +260,13 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
               />
               {cues.length > 1 && (
                 <TouchableOpacity onPress={() => setCues(cues.filter((_, j) => j !== i))}>
-                  <Minus size={18} color="#ef4444" />
+                  <Minus size={18} color={colors.error} />
                 </TouchableOpacity>
               )}
             </View>
           ))}
           <TouchableOpacity onPress={() => setCues([...cues, ""])} className="mb-4 flex-row items-center gap-1">
-            <Plus size={14} color="#c9a96e" />
+            <Plus size={14} color={colors.accent} />
             <Text className="text-xs text-violet-400">Add cue</Text>
           </TouchableOpacity>
 
@@ -273,7 +275,7 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
           <TextInput
             className="mb-4 rounded-lg border border-border bg-bg-elevated px-3 py-2.5 text-text-primary"
             placeholder="Learning goal..."
-            placeholderTextColor="#55556a"
+            placeholderTextColor={colors.textMuted}
             value={objective}
             onChangeText={setObjective}
           />
@@ -283,7 +285,7 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
           <TextInput
             className="mb-4 rounded-lg border border-border bg-bg-elevated px-3 py-2.5 text-text-primary"
             placeholder="e.g. Supine, knees bent..."
-            placeholderTextColor="#55556a"
+            placeholderTextColor={colors.textMuted}
             value={startPosition}
             onChangeText={setStartPosition}
           />
@@ -296,7 +298,7 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
               <TextInput
                 className="flex-1 rounded-lg border border-border bg-bg-elevated px-3 py-2 text-text-primary"
                 placeholder={`Step ${i + 1}`}
-                placeholderTextColor="#55556a"
+                placeholderTextColor={colors.textMuted}
                 value={step}
                 onChangeText={(v) => {
                   const next = [...movement];
@@ -306,13 +308,13 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
               />
               {movement.length > 1 && (
                 <TouchableOpacity onPress={() => setMovement(movement.filter((_, j) => j !== i))}>
-                  <Minus size={18} color="#ef4444" />
+                  <Minus size={18} color={colors.error} />
                 </TouchableOpacity>
               )}
             </View>
           ))}
           <TouchableOpacity onPress={() => setMovement([...movement, ""])} className="mb-4 flex-row items-center gap-1">
-            <Plus size={14} color="#c9a96e" />
+            <Plus size={14} color={colors.accent} />
             <Text className="text-xs text-violet-400">Add step</Text>
           </TouchableOpacity>
 
@@ -365,7 +367,7 @@ export function CreateExerciseSheet({ visible, onClose, onCreated, isPremium }: 
           <TextInput
             className="mb-6 rounded-lg border border-border bg-bg-elevated px-3 py-2.5 text-text-primary"
             placeholder="e.g. Reformer with box"
-            placeholderTextColor="#55556a"
+            placeholderTextColor={colors.textMuted}
             value={apparatus}
             onChangeText={setApparatus}
           />

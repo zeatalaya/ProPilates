@@ -36,6 +36,7 @@ import { Card, CardBody } from "../../../src/components/ui/Card";
 import { Badge } from "../../../src/components/ui/Badge";
 import { CreateExerciseSheet } from "../../../src/components/builder/CreateExerciseSheet";
 import { supabase } from "../../../src/lib/supabase";
+import { useThemeColors } from "../../../src/lib/theme";
 
 type Tab = "classes" | "exercises" | "purchased";
 
@@ -54,6 +55,7 @@ interface PurchasedClass {
 
 export default function PortfolioScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { instructor, tier, xionAddress } = useAuthStore();
   const builderStore = useClassBuilderStore();
   const teachingStore = useTeachingModeStore();
@@ -321,7 +323,7 @@ export default function PortfolioScreen() {
       <Card>
         <CardBody>
           <View className="flex-row items-center gap-2 mb-1">
-            <Sparkles size={14} color="#d4a44e" />
+            <Sparkles size={14} color={colors.accent} />
             <Text className="text-text-primary font-semibold text-base flex-1">
               {item.name}
             </Text>
@@ -356,9 +358,9 @@ export default function PortfolioScreen() {
               className="flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5"
             >
               {item.is_public ? (
-                <Lock size={14} color="#a0a0b8" />
+                <Lock size={14} color={colors.textSecondary} />
               ) : (
-                <Globe size={14} color="#a0a0b8" />
+                <Globe size={14} color={colors.textSecondary} />
               )}
               <Text className="text-xs text-text-secondary">
                 {item.is_public ? "Make Private" : "Make Public"}
@@ -368,7 +370,7 @@ export default function PortfolioScreen() {
               onPress={() => handleDeleteExercise(item.id)}
               className="flex-row items-center gap-1 rounded-lg border border-red-500/30 px-3 py-1.5"
             >
-              <Trash2 size={14} color="#ef4444" />
+              <Trash2 size={14} color={colors.error} />
               <Text className="text-xs text-red-400">Delete</Text>
             </TouchableOpacity>
           </View>
@@ -425,12 +427,12 @@ export default function PortfolioScreen() {
       {/* Content */}
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#c9a96e" />
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       ) : !isPremium && activeTab !== "purchased" ? (
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
-            <Layers size={36} color="#c9a96e" />
+            <Layers size={36} color={colors.accent} />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">
             Premium Required
@@ -443,7 +445,7 @@ export default function PortfolioScreen() {
         classes.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6">
             <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
-              <Layers size={36} color="#c9a96e" />
+              <Layers size={36} color={colors.accent} />
             </View>
             <Text className="text-text-primary text-lg font-semibold mb-2">
               No Classes Yet
@@ -464,7 +466,7 @@ export default function PortfolioScreen() {
         customExercises.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6">
             <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
-              <Dumbbell size={36} color="#c9a96e" />
+              <Dumbbell size={36} color={colors.accent} />
             </View>
             <Text className="text-text-primary text-lg font-semibold mb-2">
               No Custom Exercises
@@ -500,7 +502,7 @@ export default function PortfolioScreen() {
       ) : purchased.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
-            <ShoppingBag size={36} color="#c9a96e" />
+            <ShoppingBag size={36} color={colors.accent} />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">
             No Purchases Yet

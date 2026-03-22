@@ -11,18 +11,20 @@ global.crypto = QuickCrypto as any;
 
 import "../global.css";
 import React from "react";
+import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Providers } from "../src/providers";
 
 export default function RootLayout() {
+  const scheme = useColorScheme();
   return (
     <Providers>
-      <StatusBar style="light" />
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#0a0a0f" },
+          contentStyle: { backgroundColor: scheme === "dark" ? "#0a0a0f" : "#FAFAFC" },
           animation: "fade",
         }}
       >

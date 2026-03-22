@@ -34,6 +34,7 @@ import { DurationPicker } from "../../../src/components/ui/DurationPicker";
 import { CreateExerciseSheet } from "../../../src/components/builder/CreateExerciseSheet";
 import { supabase } from "../../../src/lib/supabase";
 import { cn } from "../../../src/lib/cn";
+import { useThemeColors } from "../../../src/lib/theme";
 
 type Segment = "blocks" | "details" | "exercises";
 
@@ -48,6 +49,7 @@ export default function BuilderScreen() {
   const [newBlockName, setNewBlockName] = useState("");
   const [showCreateSheet, setShowCreateSheet] = useState(false);
   const isPremium = tier === "premium";
+  const colors = useThemeColors();
 
   useEffect(() => {
     async function loadExercises() {
@@ -247,7 +249,7 @@ export default function BuilderScreen() {
         <TextInput
           className="mb-2 text-xl font-bold text-text-primary"
           placeholder="Class Title..."
-          placeholderTextColor="#55556a"
+          placeholderTextColor={colors.textMuted}
           value={store.title}
           onChangeText={store.setTitle}
         />
@@ -258,10 +260,10 @@ export default function BuilderScreen() {
                 key={m.value}
                 onPress={() => store.setMethod(m.value)}
                 className={cn(
-                  "rounded-lg px-2 py-1",
+                  "rounded-full border px-3 py-1.5",
                   store.method === m.value
-                    ? "bg-violet-600"
-                    : "bg-bg-elevated",
+                    ? "bg-violet-600 border-violet-600"
+                    : "bg-bg-card border-border",
                 )}
               >
                 <Text
@@ -269,7 +271,7 @@ export default function BuilderScreen() {
                     "text-xs font-medium",
                     store.method === m.value
                       ? "text-white"
-                      : "text-text-secondary",
+                      : "text-text-primary",
                   )}
                 >
                   {m.label}
@@ -278,7 +280,7 @@ export default function BuilderScreen() {
             ))}
           </View>
           <View className="flex-row items-center gap-1 ml-auto">
-            <Clock size={14} color="#8888a0" />
+            <Clock size={14} color={colors.textSecondary} />
             <Text className="text-sm text-text-secondary">
               {formatDuration(store.totalDuration())}
             </Text>
@@ -347,7 +349,7 @@ export default function BuilderScreen() {
             <TextInput
               className="flex-1 rounded-lg border border-border bg-bg-elevated px-3 py-2 text-text-primary"
               placeholder="Block name..."
-              placeholderTextColor="#55556a"
+              placeholderTextColor={colors.textMuted}
               value={newBlockName}
               onChangeText={setNewBlockName}
             />
@@ -375,7 +377,7 @@ export default function BuilderScreen() {
                 }
                 className="flex-row items-center gap-1 rounded-lg border border-red-500/30 px-2 py-2"
               >
-                <Trash2 size={14} color="#ef4444" />
+                <Trash2 size={14} color={colors.error} />
                 <Text className="text-xs text-red-400">Clear</Text>
               </TouchableOpacity>
             )}
@@ -412,12 +414,12 @@ export default function BuilderScreen() {
                   <TouchableOpacity
                     onPress={() => store.removeBlock(block.id)}
                   >
-                    <Trash2 size={16} color="#55556a" />
+                    <Trash2 size={16} color={colors.textMuted} />
                   </TouchableOpacity>
                   {expandedBlock === block.id ? (
-                    <ChevronUp size={16} color="#8888a0" />
+                    <ChevronUp size={16} color={colors.textSecondary} />
                   ) : (
-                    <ChevronDown size={16} color="#8888a0" />
+                    <ChevronDown size={16} color={colors.textSecondary} />
                   )}
                 </View>
               </View>
@@ -445,7 +447,7 @@ export default function BuilderScreen() {
                           }
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                          <X size={14} color="#ef4444" />
+                          <X size={14} color={colors.error} />
                         </TouchableOpacity>
                       </View>
                     </TouchableOpacity>
@@ -515,7 +517,7 @@ export default function BuilderScreen() {
                   className="rounded-lg border border-border bg-bg-elevated px-3 py-2 text-text-primary"
                   keyboardType="number-pad"
                   placeholder="Optional"
-                  placeholderTextColor="#55556a"
+                  placeholderTextColor={colors.textMuted}
                   value={selectedExercise.reps?.toString() ?? ""}
                   onChangeText={(v) =>
                     store.updateBlockExercise(
@@ -571,7 +573,7 @@ export default function BuilderScreen() {
                   multiline
                   numberOfLines={3}
                   placeholder="Personal teaching notes..."
-                  placeholderTextColor="#55556a"
+                  placeholderTextColor={colors.textMuted}
                   value={selectedExercise.notes}
                   onChangeText={(v) =>
                     store.updateBlockExercise(
@@ -595,11 +597,11 @@ export default function BuilderScreen() {
         <View className="flex-1 pt-4">
           <View className="px-4 mb-3 flex-row items-center gap-2">
             <View className="flex-1 flex-row items-center rounded-lg border border-border bg-bg-elevated px-3">
-              <Search size={16} color="#55556a" />
+              <Search size={16} color={colors.textMuted} />
               <TextInput
                 className="flex-1 py-2 pl-2 text-text-primary"
                 placeholder="Search exercises..."
-                placeholderTextColor="#55556a"
+                placeholderTextColor={colors.textMuted}
                 value={store.browserSearch}
                 onChangeText={store.setBrowserSearch}
               />
@@ -620,18 +622,18 @@ export default function BuilderScreen() {
             <TouchableOpacity
               onPress={() => store.setBrowserMethod("all")}
               className={cn(
-                "rounded-lg px-3 py-1.5",
+                "rounded-full border px-4 py-2",
                 store.browserMethod === "all"
-                  ? "bg-violet-600"
-                  : "bg-bg-elevated border border-border",
+                  ? "bg-violet-600 border-violet-600"
+                  : "bg-bg-card border-border",
               )}
             >
               <Text
                 className={cn(
-                  "text-xs font-medium",
+                  "text-sm font-medium",
                   store.browserMethod === "all"
                     ? "text-white"
-                    : "text-text-secondary",
+                    : "text-text-primary",
                 )}
               >
                 All
@@ -642,18 +644,18 @@ export default function BuilderScreen() {
                 key={m.value}
                 onPress={() => store.setBrowserMethod(m.value)}
                 className={cn(
-                  "rounded-lg px-3 py-1.5",
+                  "rounded-full border px-4 py-2",
                   store.browserMethod === m.value
-                    ? "bg-violet-600"
-                    : "bg-bg-elevated border border-border",
+                    ? "bg-violet-600 border-violet-600"
+                    : "bg-bg-card border-border",
                 )}
               >
                 <Text
                   className={cn(
-                    "text-xs font-medium",
+                    "text-sm font-medium",
                     store.browserMethod === m.value
                       ? "text-white"
-                      : "text-text-secondary",
+                      : "text-text-primary",
                   )}
                 >
                   {m.label}
@@ -679,7 +681,7 @@ export default function BuilderScreen() {
                       {item.name}
                     </Text>
                     {item.is_custom && (
-                      <Sparkles size={12} color="#d4a44e" />
+                      <Sparkles size={12} color={colors.accent} />
                     )}
                   </View>
                   <View className="mt-1 flex-row items-center gap-2">
@@ -694,7 +696,7 @@ export default function BuilderScreen() {
                     )}
                   </View>
                 </View>
-                <Plus size={20} color="#c9a96e" />
+                <Plus size={20} color={colors.accent} />
               </TouchableOpacity>
             )}
           />

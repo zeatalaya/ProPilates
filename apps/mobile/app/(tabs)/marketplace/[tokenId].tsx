@@ -7,6 +7,7 @@ import { Badge } from "../../../src/components/ui/Badge";
 import { Card, CardBody } from "../../../src/components/ui/Card";
 import { useAuthStore } from "@propilates/shared";
 import { supabase } from "../../../src/lib/supabase";
+import { useThemeColors } from "../../../src/lib/theme";
 
 interface ClassListing {
   id: string;
@@ -25,6 +26,7 @@ interface ClassListing {
 export default function ListingDetailScreen() {
   const { tokenId } = useLocalSearchParams<{ tokenId: string }>();
   const router = useRouter();
+  const colors = useThemeColors();
   const { instructor, xionAddress } = useAuthStore();
   const [listing, setListing] = useState<ClassListing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,7 +103,7 @@ export default function ListingDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#c9a96e" />
+        <ActivityIndicator size="large" color={colors.accent} />
       </SafeAreaView>
     );
   }
@@ -111,7 +113,7 @@ export default function ListingDetailScreen() {
       <SafeAreaView className="flex-1 bg-bg">
         <View className="flex-row items-center px-6 py-3 border-b border-border">
           <TouchableOpacity onPress={() => router.back()} className="mr-3">
-            <ArrowLeft size={24} color="#a0a0b8" />
+            <ArrowLeft size={24} color={colors.textSecondary} />
           </TouchableOpacity>
           <Text className="text-text-primary font-semibold text-lg flex-1">
             Class Details
@@ -129,7 +131,7 @@ export default function ListingDetailScreen() {
       {/* Header */}
       <View className="flex-row items-center px-6 py-3 border-b border-border">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ArrowLeft size={24} color="#a0a0b8" />
+          <ArrowLeft size={24} color={colors.textSecondary} />
         </TouchableOpacity>
         <Text className="text-text-primary font-semibold text-lg flex-1">
           Class Details
@@ -166,7 +168,7 @@ export default function ListingDetailScreen() {
         <View className="flex-row gap-3 mb-4">
           <Card className="flex-1">
             <CardBody className="items-center">
-              <Layers size={20} color="#c9a96e" />
+              <Layers size={20} color={colors.accent} />
               <Text className="text-text-primary font-semibold mt-1">
                 {listing.exercise_count}
               </Text>
@@ -175,7 +177,7 @@ export default function ListingDetailScreen() {
           </Card>
           <Card className="flex-1">
             <CardBody className="items-center">
-              <Clock size={20} color="#c9a96e" />
+              <Clock size={20} color={colors.accent} />
               <Text className="text-text-primary font-semibold mt-1">
                 {listing.duration_minutes}m
               </Text>
@@ -189,7 +191,7 @@ export default function ListingDetailScreen() {
           <CardBody>
             <View className="flex-row items-center">
               <View className="w-10 h-10 rounded-full bg-violet-500/20 items-center justify-center mr-3">
-                <User size={20} color="#c9a96e" />
+                <User size={20} color={colors.accent} />
               </View>
               <View>
                 <Text className="text-text-primary font-medium">

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Minus, Plus } from "lucide-react-native";
 import { formatDuration, DURATION_PRESETS } from "@propilates/shared";
 import { cn } from "../../lib/cn";
+import { useThemeColors } from "../../lib/theme";
 
 interface DurationPickerProps {
   value: number;
@@ -10,6 +11,7 @@ interface DurationPickerProps {
 }
 
 export function DurationPicker({ value, onChange }: DurationPickerProps) {
+  const colors = useThemeColors();
   const step = 5;
   const min = 5;
   const max = 300;
@@ -47,7 +49,7 @@ export function DurationPicker({ value, onChange }: DurationPickerProps) {
           onPress={() => onChange(Math.max(min, value - step))}
           className="rounded-lg border border-border bg-bg-elevated p-2"
         >
-          <Minus size={18} color="#8888a0" />
+          <Minus size={18} color={colors.textSecondary} />
         </TouchableOpacity>
         <Text className="min-w-[60px] text-center text-xl font-bold text-text-primary">
           {formatDuration(value)}
@@ -56,7 +58,7 @@ export function DurationPicker({ value, onChange }: DurationPickerProps) {
           onPress={() => onChange(Math.min(max, value + step))}
           className="rounded-lg border border-border bg-bg-elevated p-2"
         >
-          <Plus size={18} color="#8888a0" />
+          <Plus size={18} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
     </View>

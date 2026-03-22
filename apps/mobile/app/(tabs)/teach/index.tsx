@@ -23,11 +23,13 @@ import {
   X,
   ListMusic,
 } from "lucide-react-native";
-import { useTeachingModeStore, useSpotifyStore } from "@propilates/shared";
+import { useTeachingModeStore, useSpotifyStore, useAuthStore } from "@propilates/shared";
 import { formatDuration } from "@propilates/shared";
 import { useSpotifyMobile } from "../../../src/hooks/useSpotifyMobile";
 import { TimerRing } from "../../../src/components/ui/TimerRing";
 import { Badge } from "../../../src/components/ui/Badge";
+import { useThemeColors } from "../../../src/lib/theme";
+import { supabase } from "../../../src/lib/supabase";
 
 interface SpotifyPlaylist {
   id: string;
@@ -56,6 +58,17 @@ export default function TeachScreen() {
     currentExercise: getCurrentExercise,
     progress: getProgress,
   } = useTeachingModeStore();
+
+  const colors = useThemeColors();
+  const { instructor } = useAuthStore();
+
+  const handleEndSession = useCallback(() => {
+    // Increment classes_taught counter if user has taught at least one exercise
+    if (instructor && elapsed > 0) {
+      supabase.rpc("increment_classes_taught", { p_instructor_id: instructor.id }).then(() => {});
+    }
+    reset();
+  }, [instructor, elapsed, reset]);
 
   // Keep screen awake during teaching (native only, web Wake Lock may fail)
   useEffect(() => {
@@ -126,7 +139,7 @@ export default function TeachScreen() {
       <SafeAreaView className="flex-1 bg-bg">
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/20 items-center justify-center mb-6">
-            <Play size={36} color="#c9a96e" />
+            <Play size={36} color={colors.accent} />
           </View>
           <Text className="text-2xl font-bold text-text-primary mb-2 text-center">
             No Active Session
@@ -144,7 +157,7 @@ export default function TeachScreen() {
     <SafeAreaView className="flex-1 bg-bg">
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-3">
-        <TouchableOpacity onPress={reset}>
+        <TouchableOpacity onPress={handleEndSession}>
           <Text className="text-red-400 font-medium">End Session</Text>
         </TouchableOpacity>
         <Text className="text-text-secondary text-sm">
@@ -156,9 +169,9 @@ export default function TeachScreen() {
         >
           <Text className="text-violet-400 text-sm mr-1">Up Next</Text>
           {showUpNext ? (
-            <ChevronUp size={16} color="#c9a96e" />
+            <ChevronUp size={16} color={colors.accent} />
           ) : (
-            <ChevronDown size={16} color="#c9a96e" />
+            <ChevronDown size={16} color={colors.accent} />
           )}
         </TouchableOpacity>
       </View>
@@ -219,7 +232,7 @@ export default function TeachScreen() {
             className="w-14 h-14 rounded-full bg-bg-card border border-border items-center justify-center"
             onPress={skipPrev}
           >
-            <SkipBack size={22} color="#a0a0b8" />
+            <SkipBack size={22} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -238,7 +251,7 @@ export default function TeachScreen() {
             className="w-14 h-14 rounded-full bg-bg-card border border-border items-center justify-center"
             onPress={skipNext}
           >
-            <SkipForward size={22} color="#a0a0b8" />
+            <SkipForward size={22} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -257,7 +270,7 @@ export default function TeachScreen() {
                 }
               }}
             >
-              <Music size={18} color="#34d399" />
+              <Music size={18} color={colors.success} />
               <Text className="text-text-primary text-sm ml-2 flex-1" numberOfLines={1}>
                 {spotify.currentTrack
                   ? `${spotify.currentTrack.name} — ${spotify.currentTrack.artist}`
@@ -271,16 +284,16 @@ export default function TeachScreen() {
                 onPress={() => spotify.isPlaying ? spotify.pause() : spotify.resume()}
               >
                 {spotify.isPlaying ? (
-                  <Pause size={22} color="#34d399" />
+                  <Pause size={22} color={colors.success} />
                 ) : (
-                  <Play size={22} color="#34d399" />
+                  <Play size={22} color={colors.success} />
                 )}
               </TouchableOpacity>
               <TouchableOpacity onPress={spotify.skip}>
-                <SkipForward size={18} color="#a0a0b8" />
+                <SkipForward size={18} color={colors.textSecondary} />
               </TouchableOpacity>
               <TouchableOpacity onPress={openPlaylistPicker}>
-                <ListMusic size={18} color="#a0a0b8" />
+                <ListMusic size={18} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -289,7 +302,7 @@ export default function TeachScreen() {
             className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-3"
             onPress={spotify.canLogin ? spotify.login : undefined}
           >
-            <Music size={18} color="#34d399" />
+            <Music size={18} color={colors.success} />
             <Text className="text-text-secondary text-sm ml-2 flex-1">
               {spotify.canLogin ? "Connect Spotify" : "Spotify not configured"}
             </Text>
@@ -335,12 +348,12 @@ export default function TeachScreen() {
               Pick a Playlist
             </Text>
             <TouchableOpacity onPress={() => setShowPlaylists(false)}>
-              <X size={24} color="#a0a0b8" />
+              <X size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
           {loadingPlaylists ? (
             <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" color="#c9a96e" />
+              <ActivityIndicator size="large" color={colors.accent} />
             </View>
           ) : (
             <FlatList
@@ -359,7 +372,7 @@ export default function TeachScreen() {
                     />
                   ) : (
                     <View className="w-12 h-12 rounded-lg bg-violet-500/20 items-center justify-center mr-3">
-                      <Music size={20} color="#c9a96e" />
+                      <Music size={20} color={colors.accent} />
                     </View>
                   )}
                   <View className="flex-1">

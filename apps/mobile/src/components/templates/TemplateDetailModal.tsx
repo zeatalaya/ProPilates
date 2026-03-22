@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { X, Clock, Layers, Dumbbell, Play } from "lucide-react-native";
 import { Badge } from "../ui/Badge";
 import type { PilatesClass } from "@propilates/shared";
+import { useThemeColors } from "../../lib/theme";
 
 const DIFFICULTY_BADGE: Record<string, "emerald" | "amber" | "violet"> = {
   beginner: "emerald",
@@ -36,6 +37,7 @@ export function TemplateDetailModal({
   onClose,
   onUse,
 }: Props) {
+  const colors = useThemeColors();
   const exerciseCount =
     template.blocks?.reduce(
       (sum, b) => sum + (b.exercises?.length ?? 0),
@@ -74,26 +76,26 @@ export function TemplateDetailModal({
             className="rounded-lg p-2"
             onPress={onClose}
           >
-            <X size={20} color="#55556a" />
+            <X size={20} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
 
         {/* Stats bar */}
         <View className="flex-row items-center gap-6 border-b border-border px-5 py-3">
           <View className="flex-row items-center gap-1.5">
-            <Clock size={14} color="#8888a0" />
+            <Clock size={14} color={colors.textSecondary} />
             <Text className="text-sm text-text-secondary">
               {template.duration_minutes} min
             </Text>
           </View>
           <View className="flex-row items-center gap-1.5">
-            <Layers size={14} color="#8888a0" />
+            <Layers size={14} color={colors.textSecondary} />
             <Text className="text-sm text-text-secondary">
               {template.blocks?.length ?? 0} blocks
             </Text>
           </View>
           <View className="flex-row items-center gap-1.5">
-            <Dumbbell size={14} color="#8888a0" />
+            <Dumbbell size={14} color={colors.textSecondary} />
             <Text className="text-sm text-text-secondary">
               {exerciseCount} exercises
             </Text>
