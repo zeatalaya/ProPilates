@@ -15,6 +15,7 @@ import { Badge } from "../../../src/components/ui/Badge";
 import { MOBILE_METHODS } from "@propilates/shared";
 import { supabase } from "../../../src/lib/supabase";
 import { useThemeColors } from "../../../src/lib/theme";
+import { fonts } from "../../../src/lib/fonts";
 
 interface MarketplaceListing {
   id: string;
@@ -123,18 +124,18 @@ export default function MarketplaceScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-bg">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Header */}
       <View className="px-6 pt-4 pb-3">
-        <Text className="text-2xl font-bold text-text-primary mb-4">
+        <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: colors.textPrimary, marginBottom: 16 }}>
           Marketplace
         </Text>
 
         {/* Search */}
-        <View className="flex-row items-center bg-bg-card border border-border rounded-xl px-4 py-3 mb-3">
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgCard, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 12 }}>
           <Search size={18} color={colors.textMuted} />
           <TextInput
-            className="flex-1 text-text-primary text-base ml-3"
+            style={{ flex: 1, color: colors.textPrimary, fontSize: 16, marginLeft: 12 }}
             placeholder="Search classes..."
             placeholderTextColor={colors.textMuted}
             value={search}
@@ -148,26 +149,31 @@ export default function MarketplaceScreen() {
           showsHorizontalScrollIndicator={false}
           data={filterOptions}
           keyExtractor={(item) => item.value ?? "all"}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              className={`mr-2 px-4 py-2 rounded-full border ${
-                filterMethod === item.value
-                  ? "border-violet-500 bg-violet-500/10"
-                  : "border-border bg-bg-card"
-              }`}
-              onPress={() => setFilterMethod(item.value)}
-            >
-              <Text
-                className={`text-sm font-medium ${
-                  filterMethod === item.value
-                    ? "text-violet-400"
-                    : "text-text-secondary"
-                }`}
+          renderItem={({ item }) => {
+            const active = filterMethod === item.value;
+            return (
+              <TouchableOpacity
+                style={{
+                  marginRight: 8,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor: active ? colors.accent : colors.bgCard,
+                }}
+                onPress={() => setFilterMethod(item.value)}
               >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          )}
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: active ? '#fff' : colors.textSecondary,
+                  }}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
         />
       </View>
 
@@ -178,7 +184,7 @@ export default function MarketplaceScreen() {
         </View>
       ) : filtered.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
+          <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accent + '18', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
             <ShoppingBag size={36} color={colors.accent} />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">

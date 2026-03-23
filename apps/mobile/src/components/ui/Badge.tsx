@@ -4,21 +4,21 @@ import { View, Text } from "react-native";
 type Variant = "violet" | "emerald" | "blue" | "gray" | "red" | "amber";
 
 const variantBgColors: Record<Variant, string> = {
-  violet: "#8B5CF620",
-  emerald: "#10B98120",
-  blue: "#3B82F620",
-  gray: "#6B728020",
-  red: "#EF444420",
-  amber: "#F5920020",
+  violet: "#8A7E7220",
+  emerald: "#7D9B7620",
+  blue: "#7B8FA220",
+  gray: "#9E979020",
+  red: "#C67B6B20",
+  amber: "#B5996E20",
 };
 
 const variantTextColors: Record<Variant, string> = {
-  violet: "#7C3AED",
-  emerald: "#059669",
-  blue: "#2563EB",
-  gray: "#6B7280",
-  red: "#DC2626",
-  amber: "#D97706",
+  violet: "#6E6358",
+  emerald: "#5A7A53",
+  blue: "#5C7088",
+  gray: "#7A7268",
+  red: "#A8584A",
+  amber: "#96773A",
 };
 
 interface BadgeProps {

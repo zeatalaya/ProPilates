@@ -22,6 +22,7 @@ import {
 import { useAuthStore } from "@propilates/shared";
 import { supabase } from "../../../src/lib/supabase";
 import { useThemeColors } from "../../../src/lib/theme";
+import { fonts } from "../../../src/lib/fonts";
 
 interface Stats {
   savedCount: number;
@@ -36,7 +37,7 @@ const highlights = [
     id: "1",
     title: "Welcome to ProPilates",
     subtitle: "Build, teach, and share your Pilates classes with the world.",
-    color: "#c9a96e",
+    color: "#8A7E72",
   },
   {
     id: "2",
@@ -135,7 +136,7 @@ export default function HomeScreen() {
   // Not connected state
   if (!instructor) {
     return (
-      <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
         <View className="flex-1 items-center justify-center px-8">
           <View
             className="w-20 h-20 rounded-full items-center justify-center mb-6"
@@ -143,7 +144,7 @@ export default function HomeScreen() {
           >
             <Home size={36} color={colors.accent} />
           </View>
-          <Text className="text-text-primary text-xl font-bold mb-2 text-center">
+          <Text style={{ fontFamily: fonts.bold, fontSize: 22, color: colors.textPrimary, marginBottom: 8, textAlign: 'center' }}>
             Welcome to ProPilates
           </Text>
           <Text className="text-text-secondary text-center mb-6 leading-5">
@@ -196,11 +197,11 @@ export default function HomeScreen() {
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       <ScrollView className="flex-1 px-6">
         {/* Welcome */}
         <View className="pt-6 pb-4">
-          <Text className="text-2xl font-bold text-text-primary tracking-tight">
+          <Text style={{ fontFamily: fonts.bold, fontSize: 26, color: colors.textPrimary, letterSpacing: -0.5 }}>
             {greeting}, {instructor.name?.split(" ")[0] || "there"}
           </Text>
           <Text className="text-text-secondary mt-1">
@@ -253,7 +254,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/builder")}
             activeOpacity={0.8}
-            className="bg-violet-600 rounded-2xl flex-1 py-4 items-center"
+            style={{ backgroundColor: colors.accent, borderRadius: 16, flex: 1, paddingVertical: 16, alignItems: "center" }}
           >
             <Sparkles size={20} color="#fff" />
             <Text className="text-white font-semibold text-sm mt-1.5">
@@ -263,7 +264,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/marketplace")}
             activeOpacity={0.8}
-            className="bg-bg-card border border-border rounded-2xl flex-1 py-4 items-center"
+            style={{ backgroundColor: colors.bgCard, borderRadius: 16, flex: 1, paddingVertical: 16, alignItems: "center", borderWidth: 1, borderColor: colors.border }}
           >
             <ShoppingBag size={20} color={colors.textPrimary} />
             <Text className="text-text-primary font-semibold text-sm mt-1.5">
@@ -273,7 +274,7 @@ export default function HomeScreen() {
         </View>
 
         {/* News & Highlights */}
-        <Text className="text-lg font-semibold text-text-primary mb-3">
+        <Text style={{ fontFamily: fonts.semiBold, fontSize: 18, color: colors.textPrimary, marginBottom: 12 }}>
           News & Highlights
         </Text>
         <FlatList

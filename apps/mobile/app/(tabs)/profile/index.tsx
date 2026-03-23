@@ -19,6 +19,7 @@ import { BalanceDisplay } from "../../../src/components/ui/BalanceDisplay";
 import { Card, CardBody } from "../../../src/components/ui/Card";
 import { Badge } from "../../../src/components/ui/Badge";
 import { useThemeColors } from "../../../src/lib/theme";
+import { fonts } from "../../../src/lib/fonts";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function ProfileScreen() {
 
   if (!isConnected) {
     return (
-      <SafeAreaView className="flex-1 bg-bg">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
             <User size={36} color={colors.accent} />
@@ -56,11 +57,11 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       <ScrollView className="flex-1 px-6">
         {/* Header */}
         <View className="pt-4 pb-6">
-          <Text className="text-2xl font-bold text-text-primary mb-6">
+          <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: colors.textPrimary, marginBottom: 24 }}>
             Profile
           </Text>
 
@@ -69,7 +70,7 @@ export default function ProfileScreen() {
             <View className="w-24 h-24 rounded-full bg-violet-500/20 items-center justify-center mb-4">
               <User size={40} color={colors.accent} />
             </View>
-            <Text className="text-xl font-bold text-text-primary">
+            <Text style={{ fontFamily: fonts.bold, fontSize: 20, color: colors.textPrimary }}>
               {instructor?.name || "Instructor"}
             </Text>
 

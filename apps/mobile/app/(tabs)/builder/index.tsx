@@ -19,6 +19,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react-native";
+import { SafeAreaView as SAV } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
   useClassBuilderStore,
@@ -35,6 +36,7 @@ import { CreateExerciseSheet } from "../../../src/components/builder/CreateExerc
 import { supabase } from "../../../src/lib/supabase";
 import { cn } from "../../../src/lib/cn";
 import { useThemeColors } from "../../../src/lib/theme";
+import { fonts } from "../../../src/lib/fonts";
 
 type Segment = "blocks" | "details" | "exercises";
 
@@ -243,11 +245,11 @@ export default function BuilderScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bg">
+    <SAV style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Class Header */}
       <View style={{ borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: 16, paddingVertical: 12 }}>
         <TextInput
-          style={{ fontSize: 20, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 }}
+          style={{ fontFamily: fonts.bold, fontSize: 20, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 }}
           placeholder="Class Title..."
           placeholderTextColor={colors.textMuted}
           value={store.title}
@@ -265,14 +267,14 @@ export default function BuilderScreen() {
                     borderRadius: 20,
                     paddingHorizontal: 14,
                     paddingVertical: 7,
-                    backgroundColor: active ? colors.accent : '#F2F2F7',
+                    backgroundColor: active ? colors.accent : colors.bgCard,
                   }}
                 >
                   <Text
                     style={{
                       fontSize: 13,
                       fontWeight: '600',
-                      color: active ? '#fff' : '#1A1A2E',
+                      color: active ? '#fff' : colors.textPrimary,
                     }}
                   >
                     {m.label}
@@ -332,7 +334,7 @@ export default function BuilderScreen() {
       </View>
 
       {/* Segment Control */}
-      <View style={{ flexDirection: 'row', backgroundColor: '#F2F2F7', borderRadius: 12, padding: 4, marginHorizontal: 16, marginVertical: 8 }}>
+      <View style={{ flexDirection: 'row', backgroundColor: colors.bgCard, borderRadius: 12, padding: 4, marginHorizontal: 16, marginVertical: 8 }}>
         {(["blocks", "details", "exercises"] as Segment[]).map((s) => {
           const active = segment === s;
           return (
@@ -352,7 +354,7 @@ export default function BuilderScreen() {
                   fontSize: 14,
                   fontWeight: '600',
                   textTransform: 'capitalize',
-                  color: active ? '#fff' : '#1A1A2E',
+                  color: active ? '#fff' : colors.textPrimary,
                 }}
               >
                 {s}
@@ -375,7 +377,7 @@ export default function BuilderScreen() {
             />
             <TouchableOpacity
               onPress={handleAddBlock}
-              className="rounded-lg bg-violet-600 p-2"
+              style={{ borderRadius: 8, backgroundColor: colors.accent, padding: 8 }}
             >
               <Plus size={20} color="white" />
             </TouchableOpacity>
@@ -616,7 +618,7 @@ export default function BuilderScreen() {
       {segment === "exercises" && (
         <View className="flex-1 pt-4">
           <View style={{ paddingHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: 12, backgroundColor: '#F2F2F7', paddingHorizontal: 12 }}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: 12, backgroundColor: colors.bgCard, paddingHorizontal: 12 }}>
               <Search size={16} color={colors.textMuted} />
               <TextInput
                 style={{ flex: 1, paddingVertical: 10, paddingLeft: 8, fontSize: 15, color: colors.textPrimary }}
@@ -649,7 +651,7 @@ export default function BuilderScreen() {
                     borderRadius: 20,
                     paddingHorizontal: 16,
                     paddingVertical: 8,
-                    backgroundColor: active ? colors.accent : '#F2F2F7',
+                    backgroundColor: active ? colors.accent : colors.bgCard,
                   }}
                 >
                   <Text
@@ -710,6 +712,6 @@ export default function BuilderScreen() {
         onCreated={handleExerciseCreated}
         isPremium={isPremium}
       />
-    </SafeAreaView>
+    </SAV>
   );
 }

@@ -25,6 +25,7 @@ import { supabase } from "../../../src/lib/supabase";
 import { TemplateCard } from "../../../src/components/templates/TemplateCard";
 import { TemplateDetailModal } from "../../../src/components/templates/TemplateDetailModal";
 import { useThemeColors } from "../../../src/lib/theme";
+import { fonts } from "../../../src/lib/fonts";
 
 const METHOD_FILTERS: { value: PilatesMethod | "all"; label: string }[] = [
   { value: "all", label: "All" },
@@ -142,10 +143,10 @@ export default function TemplatesScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Header */}
       <View className="px-6 pt-4 pb-3">
-        <Text className="text-2xl font-bold text-text-primary mb-1">
+        <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: colors.textPrimary, marginBottom: 4 }}>
           Class Templates
         </Text>
         <Text className="text-sm text-text-secondary mb-4">
@@ -158,27 +159,32 @@ export default function TemplatesScreen() {
           showsHorizontalScrollIndicator={false}
           data={METHOD_FILTERS}
           keyExtractor={(item) => item.value}
-          className="mb-2"
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              className={`mr-2 px-4 py-2 rounded-full border ${
-                methodFilter === item.value
-                  ? "border-violet-500 bg-violet-500/10"
-                  : "border-border bg-bg-card"
-              }`}
-              onPress={() => setMethodFilter(item.value)}
-            >
-              <Text
-                className={`text-sm font-medium ${
-                  methodFilter === item.value
-                    ? "text-violet-400"
-                    : "text-text-secondary"
-                }`}
+          style={{ marginBottom: 8 }}
+          renderItem={({ item }) => {
+            const active = methodFilter === item.value;
+            return (
+              <TouchableOpacity
+                style={{
+                  marginRight: 8,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor: active ? colors.accent : colors.bgCard,
+                }}
+                onPress={() => setMethodFilter(item.value)}
               >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          )}
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: active ? '#fff' : colors.textSecondary,
+                  }}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
         />
 
         {/* Difficulty filters */}
@@ -188,38 +194,30 @@ export default function TemplatesScreen() {
           data={DIFFICULTY_FILTERS}
           keyExtractor={(item) => item.value}
           renderItem={({ item }) => {
+            const active = difficultyFilter === item.value;
             const activeColor =
-              item.value === "beginner"
-                ? "border-emerald-500 bg-emerald-500/10"
-                : item.value === "intermediate"
-                  ? "border-amber-500 bg-amber-500/10"
-                  : item.value === "advanced"
-                    ? "border-violet-500 bg-violet-500/10"
-                    : "border-violet-500 bg-violet-500/10";
-            const activeText =
-              item.value === "beginner"
-                ? "text-emerald-400"
-                : item.value === "intermediate"
-                  ? "text-amber-400"
-                  : item.value === "advanced"
-                    ? "text-violet-400"
-                    : "text-violet-400";
-
+              item.value === "beginner" ? colors.success
+              : item.value === "intermediate" ? "#f59e0b"
+              : colors.accent;
             return (
               <TouchableOpacity
-                className={`mr-2 px-4 py-2 rounded-full border ${
-                  difficultyFilter === item.value
-                    ? activeColor
-                    : "border-border bg-bg-card"
-                }`}
+                style={{
+                  marginRight: 8,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor: active ? activeColor + '18' : colors.bgCard,
+                  borderWidth: active ? 1 : 0,
+                  borderColor: active ? activeColor : 'transparent',
+                }}
                 onPress={() => setDifficultyFilter(item.value)}
               >
                 <Text
-                  className={`text-sm font-medium ${
-                    difficultyFilter === item.value
-                      ? activeText
-                      : "text-text-secondary"
-                  }`}
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: active ? activeColor : colors.textSecondary,
+                  }}
                 >
                   {item.label}
                 </Text>
@@ -236,7 +234,7 @@ export default function TemplatesScreen() {
         </View>
       ) : filtered.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
+          <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accent + '18', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
             <BookOpen size={36} color={colors.accent} />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">

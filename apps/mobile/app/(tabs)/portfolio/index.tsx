@@ -37,6 +37,7 @@ import { Badge } from "../../../src/components/ui/Badge";
 import { CreateExerciseSheet } from "../../../src/components/builder/CreateExerciseSheet";
 import { supabase } from "../../../src/lib/supabase";
 import { useThemeColors } from "../../../src/lib/theme";
+import { fonts } from "../../../src/lib/fonts";
 
 type Tab = "classes" | "exercises" | "purchased";
 
@@ -300,14 +301,14 @@ export default function PortfolioScreen() {
           <View className="flex-row gap-2 mt-3 pt-2 border-t border-border">
             <TouchableOpacity
               onPress={() => handleLoadClass(item.id, "builder")}
-              className="flex-1 flex-row items-center justify-center gap-1.5 rounded-lg border border-violet-500 py-2"
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 8, borderWidth: 1, borderColor: colors.accent, paddingVertical: 8 }}
             >
-              <BookOpen size={14} color="#a78bfa" />
-              <Text className="text-sm font-medium text-violet-400">Builder</Text>
+              <BookOpen size={14} color={colors.accent} />
+              <Text style={{ fontSize: 14, fontWeight: '500', color: colors.accent }}>Builder</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleLoadClass(item.id, "teach")}
-              className="flex-1 flex-row items-center justify-center gap-1.5 rounded-lg bg-violet-600 py-2"
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 8, backgroundColor: colors.accent, paddingVertical: 8 }}
             >
               <Play size={14} color="#fff" />
               <Text className="text-sm font-medium text-white">Teach</Text>
@@ -380,47 +381,56 @@ export default function PortfolioScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-bg">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Header */}
       <View className="px-6 pt-4 pb-3">
         <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-2xl font-bold text-text-primary">
+          <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: colors.textPrimary }}>
             Portfolio
           </Text>
           <TouchableOpacity
-            className="flex-row items-center bg-violet-600 rounded-xl px-4 py-2"
+            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.accent, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8 }}
             onPress={() => router.push("/(tabs)/builder")}
           >
             <Plus size={16} color="#fff" />
-            <Text className="text-white font-medium ml-1 text-sm">
+            <Text style={{ color: '#fff', fontWeight: '500', marginLeft: 4, fontSize: 14 }}>
               New Class
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Tabs */}
-        <View className="flex-row bg-bg-card border border-border rounded-xl p-1">
-          {(["classes", "exercises", "purchased"] as Tab[]).map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              className={`flex-1 py-2.5 rounded-lg items-center ${
-                activeTab === tab ? "bg-violet-600" : ""
-              }`}
-              onPress={() => setActiveTab(tab)}
-            >
-              <Text
-                className={`font-medium text-xs ${
-                  activeTab === tab ? "text-white" : "text-text-secondary"
-                }`}
+        <View style={{ flexDirection: 'row', backgroundColor: colors.bgCard, borderRadius: 12, padding: 4 }}>
+          {(["classes", "exercises", "purchased"] as Tab[]).map((tab) => {
+            const active = activeTab === tab;
+            return (
+              <TouchableOpacity
+                key={tab}
+                style={{
+                  flex: 1,
+                  paddingVertical: 10,
+                  borderRadius: 10,
+                  alignItems: 'center',
+                  backgroundColor: active ? colors.accent : 'transparent',
+                }}
+                onPress={() => setActiveTab(tab)}
               >
-                {tab === "classes"
-                  ? `Classes${classes.length > 0 ? ` (${classes.length})` : ""}`
-                  : tab === "exercises"
-                    ? `Exercises${customExercises.length > 0 ? ` (${customExercises.length})` : ""}`
-                    : `Purchased${purchased.length > 0 ? ` (${purchased.length})` : ""}`}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={{
+                    fontWeight: '600',
+                    fontSize: 12,
+                    color: active ? '#fff' : colors.textSecondary,
+                  }}
+                >
+                  {tab === "classes"
+                    ? `Classes${classes.length > 0 ? ` (${classes.length})` : ""}`
+                    : tab === "exercises"
+                      ? `Exercises${customExercises.length > 0 ? ` (${customExercises.length})` : ""}`
+                      : `Purchased${purchased.length > 0 ? ` (${purchased.length})` : ""}`}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
@@ -431,7 +441,7 @@ export default function PortfolioScreen() {
         </View>
       ) : !isPremium && activeTab !== "purchased" ? (
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
+          <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accent + '18', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
             <Layers size={36} color={colors.accent} />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">
@@ -444,7 +454,7 @@ export default function PortfolioScreen() {
       ) : activeTab === "classes" ? (
         classes.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6">
-            <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
+            <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accent + '18', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
               <Layers size={36} color={colors.accent} />
             </View>
             <Text className="text-text-primary text-lg font-semibold mb-2">
@@ -465,7 +475,7 @@ export default function PortfolioScreen() {
       ) : activeTab === "exercises" ? (
         customExercises.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6">
-            <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
+            <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accent + '18', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
               <Dumbbell size={36} color={colors.accent} />
             </View>
             <Text className="text-text-primary text-lg font-semibold mb-2">
@@ -476,7 +486,7 @@ export default function PortfolioScreen() {
             </Text>
             <TouchableOpacity
               onPress={() => setShowCreateSheet(true)}
-              className="flex-row items-center gap-1.5 bg-violet-600 rounded-xl px-4 py-2.5"
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.accent, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 }}
             >
               <Plus size={16} color="#fff" />
               <Text className="text-white font-medium text-sm">Create Exercise</Text>
@@ -491,7 +501,7 @@ export default function PortfolioScreen() {
             ListHeaderComponent={
               <TouchableOpacity
                 onPress={() => setShowCreateSheet(true)}
-                className="flex-row items-center justify-center gap-1.5 bg-violet-600 rounded-xl px-4 py-2.5 mb-4"
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: colors.accent, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 16 }}
               >
                 <Plus size={16} color="#fff" />
                 <Text className="text-white font-medium text-sm">Create Exercise</Text>
@@ -501,7 +511,7 @@ export default function PortfolioScreen() {
         )
       ) : purchased.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full bg-violet-500/10 items-center justify-center mb-4">
+          <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accent + '18', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
             <ShoppingBag size={36} color={colors.accent} />
           </View>
           <Text className="text-text-primary text-lg font-semibold mb-2">
@@ -542,14 +552,14 @@ export default function PortfolioScreen() {
                   <View className="flex-row gap-2 mt-3 pt-2 border-t border-border">
                     <TouchableOpacity
                       onPress={() => handleLoadClass(item.class_id, "builder")}
-                      className="flex-1 flex-row items-center justify-center gap-1.5 rounded-lg border border-violet-500 py-2"
+                      style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 8, borderWidth: 1, borderColor: colors.accent, paddingVertical: 8 }}
                     >
-                      <BookOpen size={14} color="#a78bfa" />
-                      <Text className="text-sm font-medium text-violet-400">Builder</Text>
+                      <BookOpen size={14} color={colors.accent} />
+                      <Text style={{ fontSize: 14, fontWeight: '500', color: colors.accent }}>Builder</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleLoadClass(item.class_id, "teach")}
-                      className="flex-1 flex-row items-center justify-center gap-1.5 rounded-lg bg-violet-600 py-2"
+                      style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 8, backgroundColor: colors.accent, paddingVertical: 8 }}
                     >
                       <Play size={14} color="#fff" />
                       <Text className="text-sm font-medium text-white">Teach</Text>

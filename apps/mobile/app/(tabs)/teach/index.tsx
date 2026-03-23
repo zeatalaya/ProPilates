@@ -136,7 +136,7 @@ export default function TeachScreen() {
 
   if (blocks.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-bg">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-20 h-20 rounded-full bg-violet-500/20 items-center justify-center mb-6">
             <Play size={36} color={colors.accent} />
@@ -154,7 +154,7 @@ export default function TeachScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-3">
         <TouchableOpacity onPress={handleEndSession}>
@@ -342,7 +342,7 @@ export default function TeachScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowPlaylists(false)}
       >
-        <SafeAreaView className="flex-1 bg-bg">
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
           <View className="flex-row items-center justify-between px-6 py-4 border-b border-border">
             <Text className="text-text-primary font-semibold text-lg">
               Pick a Playlist

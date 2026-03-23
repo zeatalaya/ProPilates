@@ -102,7 +102,7 @@ export default function ListingDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }} edges={["top"]}>
         <ActivityIndicator size="large" color={colors.accent} />
       </SafeAreaView>
     );
@@ -110,7 +110,7 @@ export default function ListingDetailScreen() {
 
   if (!listing) {
     return (
-      <SafeAreaView className="flex-1 bg-bg">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
         <View className="flex-row items-center px-6 py-3 border-b border-border">
           <TouchableOpacity onPress={() => router.back()} className="mr-3">
             <ArrowLeft size={24} color={colors.textSecondary} />
@@ -127,7 +127,7 @@ export default function ListingDetailScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Header */}
       <View className="flex-row items-center px-6 py-3 border-b border-border">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
@@ -190,7 +190,7 @@ export default function ListingDetailScreen() {
         <Card className="mb-4">
           <CardBody>
             <View className="flex-row items-center">
-              <View className="w-10 h-10 rounded-full bg-violet-500/20 items-center justify-center mr-3">
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent + '33', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                 <User size={20} color={colors.accent} />
               </View>
               <View>
