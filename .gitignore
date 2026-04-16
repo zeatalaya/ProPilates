@@ -10,8 +10,9 @@ node_modules/
 
 # expo
 .expo/
-ios/
-android/
+/ios/
+/android/
+!apps/ios/
 *.jks
 *.p8
 *.p12
@@ -43,3 +44,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# iOS native (generated/build artifacts)
+apps/ios/.build/
+apps/ios/ProPilates.xcodeproj/
+apps/ios/.swiftpm/
