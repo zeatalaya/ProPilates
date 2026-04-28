@@ -14,9 +14,15 @@ struct RootView: View {
                     MainTabView()
                 } else {
                     MainTabView()
+                        #if os(iOS)
+                        .fullScreenCover(isPresented: .constant(auth.instructor == nil || auth.instructor?.onboardingComplete == false)) {
+                            OnboardingScreen()
+                        }
+                        #else
                         .sheet(isPresented: .constant(auth.instructor == nil || auth.instructor?.onboardingComplete == false)) {
                             OnboardingScreen()
                         }
+                        #endif
                 }
             } else {
                 AuthScreen()

@@ -67,8 +67,10 @@ struct OnboardingScreen: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundStyle(Color.ppTextMuted)
+                    Button("Log Out") {
+                        auth.logout()
+                    }
+                    .foregroundStyle(Color.ppTextMuted)
                 }
             }
         }
