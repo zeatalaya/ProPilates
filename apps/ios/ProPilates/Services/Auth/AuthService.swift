@@ -29,6 +29,10 @@ final class AuthService {
     private let keychain: KeychainManager
     private let supabase: SupabaseService
 
+    /// Retain the web auth session so it isn't deallocated mid-flow
+    private var currentWebAuthSession: ASWebAuthenticationSession?
+    private let contextProvider = PresentationContextProvider()
+
     private static let sessionKey = "propilates_oauth3_session"
 
     // MARK: - Init
@@ -53,7 +57,6 @@ final class AuthService {
         else { return }
 
         if stored.isExpired {
-            // Attempt a silent refresh if we have a refresh token
             if let refresh = stored.refreshToken {
                 do {
                     let tokens = try await oauth3.refreshToken(refresh)
@@ -68,7 +71,6 @@ final class AuthService {
                     await fetchInstructorProfile(xionAddress: refreshed.xionAddress)
                     return
                 } catch {
-                    // Refresh failed — clear stale session
                     logout()
                     return
                 }
@@ -86,9 +88,13 @@ final class AuthService {
 
     @MainActor
     func login() async throws {
+        guard !isAuthenticating else { return }
         isAuthenticating = true
         error = nil
-        defer { isAuthenticating = false }
+        defer {
+            isAuthenticating = false
+            currentWebAuthSession = nil
+        }
 
         // 1. PKCE
         let pkce = oauth3.generatePKCE()
@@ -103,16 +109,19 @@ final class AuthService {
             throw AuthError.invalidAuthorizeURL
         }
 
-        // 4. Present ASWebAuthenticationSession
-        let contextProvider = PresentationContextProvider()
+        print("[AuthService] Opening OAuth URL: \(authorizeURL)")
 
-        let callbackURL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
+        // 4. Present ASWebAuthenticationSession
+        let callbackURL: URL = try await withCheckedThrowingContinuation { continuation in
             let webAuthSession = ASWebAuthenticationSession(
                 url: authorizeURL,
                 callbackURLScheme: "propilates"
-            ) { url, error in
-                if let error {
-                    continuation.resume(throwing: error)
+            ) { url, sessionError in
+                if let sessionError = sessionError as? ASWebAuthenticationSessionError,
+                   sessionError.code == .canceledLogin {
+                    continuation.resume(throwing: AuthError.cancelled)
+                } else if let sessionError {
+                    continuation.resume(throwing: sessionError)
                 } else if let url {
                     continuation.resume(returning: url)
                 } else {
@@ -121,9 +130,17 @@ final class AuthService {
             }
 
             webAuthSession.presentationContextProvider = contextProvider
-            webAuthSession.prefersEphemeralWebBrowserSession = false
-            webAuthSession.start()
+            webAuthSession.prefersEphemeralWebBrowserSession = true
+
+            // Retain the session so it isn't deallocated
+            self.currentWebAuthSession = webAuthSession
+
+            if !webAuthSession.start() {
+                continuation.resume(throwing: AuthError.sessionStartFailed)
+            }
         }
+
+        print("[AuthService] Callback URL: \(callbackURL)")
 
         // 5. Parse code and state from callback URL
         guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
@@ -133,8 +150,9 @@ final class AuthService {
             throw AuthError.missingCodeOrState
         }
 
-        // 6. Verify state
-        guard returnedState == "mobile:\(state)" else {
+        // 6. Verify state (web callback strips the "mobile:" prefix)
+        guard returnedState == state else {
+            print("[AuthService] State mismatch: expected '\(state)', got '\(returnedState)'")
             throw AuthError.stateMismatch
         }
 
@@ -174,21 +192,10 @@ final class AuthService {
 
     // MARK: - Deep Link
 
-    /// Handles an incoming OAuth callback URL (for universal link / deep link flows).
     func handleCallback(url: URL) async {
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let code = components.queryItems?.first(where: { $0.name == "code" })?.value
-        else { return }
-
-        // Note: In deep-link flow we don't have state verification since the
-        // ASWebAuthenticationSession flow handles that inline. This is a fallback
-        // for universal links where state was already verified server-side.
-        do {
-            // We need a verifier — but in deep-link flow the verifier would need to
-            // be stored. For now this is a placeholder; the primary flow uses
-            // ASWebAuthenticationSession above.
-            _ = code
-        }
+        // ASWebAuthenticationSession handles the callback inline.
+        // This is only needed if using universal links as a fallback.
+        print("[AuthService] handleCallback: \(url)")
     }
 
     // MARK: - Fetch instructor profile
@@ -198,7 +205,6 @@ final class AuthService {
             if let found = try await supabase.fetchInstructor(xionAddress: xionAddress) {
                 instructor = found
 
-                // Check subscription
                 if let sub = try await supabase.fetchSubscription(instructorId: found.id) {
                     tier = sub.tier
                 } else {
@@ -233,6 +239,8 @@ enum AuthError: LocalizedError {
     case noCallbackURL
     case missingCodeOrState
     case stateMismatch
+    case cancelled
+    case sessionStartFailed
 
     var errorDescription: String? {
         switch self {
@@ -240,6 +248,8 @@ enum AuthError: LocalizedError {
         case .noCallbackURL:       return "No callback URL received from authentication."
         case .missingCodeOrState:  return "Authorization code or state missing from callback."
         case .stateMismatch:       return "OAuth state mismatch — possible CSRF attack."
+        case .cancelled:           return nil  // User cancelled — no alert needed
+        case .sessionStartFailed:  return "Failed to start authentication session."
         }
     }
 }

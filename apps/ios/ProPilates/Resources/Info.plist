@@ -2,10 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>API_BASE_URL</key>
+	<string>https://pro-pilates.vercel.app</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>ProPilates</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -15,8 +21,73 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.1.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.propilates.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>propilates</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>103</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>MARKETPLACE_CONTRACT</key>
+	<string>xion1wrzzfaflek5xk2rxw45vz692vnszkfsnpzcru8rcfujwqw0m5c2q3u2sku</string>
+	<key>NSCameraUsageDescription</key>
+	<string>ProPilates uses the camera to scan payment cards.</string>
+	<key>OAUTH3_CLIENT_ID</key>
+	<string>W04z4drnVQCIlieA</string>
+	<key>OAUTH3_SERVER</key>
+	<string>https://oauth2.testnet.burnt.com</string>
+	<key>OAUTH_REDIRECT_URL</key>
+	<string>https://pro-pilates.vercel.app/api/auth/oauth3/callback</string>
+	<key>SPOTIFY_CLIENT_ID</key>
+	<string>b3ab1ac165144645a27433d9b4599e90</string>
+	<key>STRIPE_MERCHANT_ID</key>
+	<string>merchant.com.propilates.app</string>
+	<key>STRIPE_PUBLISHABLE_KEY</key>
+	<string>pk_test_REPLACE_WITH_YOUR_KEY</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyZ3RxbXJ5cGF1cWlzYXl5cWZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MDI4MTIsImV4cCI6MjA4ODM3ODgxMn0.tDEykPrV12LMnhd2VlkezZk56WZrGHx4VT_Y84vINFo</string>
+	<key>SUPABASE_URL</key>
+	<string>https://krgtqmrypauqisayyqfu.supabase.co</string>
+	<key>TREASURY_CONTRACT</key>
+	<string>xion13ls6nwtr265rw3920auznvatw86g7ppjgvjww4zyhchdkrgp95mqlt8dzp</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>CormorantGaramond-Regular.ttf</string>
+		<string>CormorantGaramond-Medium.ttf</string>
+		<string>CormorantGaramond-SemiBold.ttf</string>
+		<string>CormorantGaramond-Bold.ttf</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>ppBackground</string>
+	</dict>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>XION_REST</key>
+	<string>https://api.xion-testnet-2.burnt.com</string>
+	<key>XION_RPC</key>
+	<string>https://rpc.xion-testnet-2.burnt.com:443</string>
 </dict>
 </plist>

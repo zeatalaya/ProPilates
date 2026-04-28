@@ -48,4 +48,5 @@ struct MainTabView: View {
         .environment(AuthService(config: .load(), supabase: SupabaseService(config: .load())))
         .environment(SupabaseService(config: .load()))
         .environment(XionService(config: .load()))
+        .environment(PaymentService(config: .load()))
 }

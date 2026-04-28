@@ -24,12 +24,13 @@ targets:
       - ProPilates/Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.propilates.ios
+        PRODUCT_BUNDLE_IDENTIFIER: com.propilates.app
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         INFOPLIST_FILE: ProPilates/Resources/Info.plist
         GENERATE_INFOPLIST_FILE: false
         CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 85A34A7PB2
         SWIFT_VERSION: "5.9"
     dependencies:
       - package: Supabase
@@ -37,8 +38,9 @@ targets:
         product: StripePaymentSheet
     entitlements:
       path: ProPilates/Resources/ProPilates.entitlements
-    info:
-      path: ProPilates/Resources/Info.plist
+      properties:
+        com.apple.developer.in-app-payments:
+          - merchant.com.propilates.app
 
   ProPilatesTests:
     type: bundle.unit-test

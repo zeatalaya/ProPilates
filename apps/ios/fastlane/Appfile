@@ -1,4 +1,3 @@
-app_identifier("com.propilates.ios")
-# apple_id("your@email.com")        # Your Apple Developer email
-# team_id("XXXXXXXXXX")             # Your Apple Developer Team ID
-# itc_team_id("XXXXXXXXXX")         # Your App Store Connect Team ID
+app_identifier("com.propilates.app")
+apple_id("barrel@burnt.com")
+team_id("85A34A7PB2")

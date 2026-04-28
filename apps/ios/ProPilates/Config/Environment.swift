@@ -46,7 +46,7 @@ struct AppConfig {
             stripePublishableKey: info["STRIPE_PUBLISHABLE_KEY"] as? String
                 ?? "pk_test_REPLACE_WITH_YOUR_KEY",
             stripeMerchantID: info["STRIPE_MERCHANT_ID"] as? String
-                ?? "merchant.com.propilates.ios",
+                ?? "merchant.com.propilates.app",
             apiBaseURL: info["API_BASE_URL"] as? String
                 ?? "https://pro-pilates.vercel.app"
         )

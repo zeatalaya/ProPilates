@@ -30,14 +30,7 @@ struct AuthScreen: View {
                     title: "Get Started",
                     isLoading: auth.isAuthenticating
                 ) {
-                    Task {
-                        do {
-                            try await auth.login()
-                        } catch {
-                            alertMessage = error.localizedDescription
-                            showAlert = true
-                        }
-                    }
+                    Task { await performLogin() }
                 }
                 .padding(.horizontal, Theme.spacingLG)
 
@@ -48,14 +41,7 @@ struct AuthScreen: View {
                         .foregroundStyle(Color.ppTextSecondary)
 
                     Button {
-                        Task {
-                            do {
-                                try await auth.login()
-                            } catch {
-                                alertMessage = error.localizedDescription
-                                showAlert = true
-                            }
-                        }
+                        Task { await performLogin() }
                     } label: {
                         Text("Log In")
                             .font(.system(size: 14, weight: .semibold))
@@ -76,6 +62,22 @@ struct AuthScreen: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(alertMessage)
+        }
+    }
+
+    private func performLogin() async {
+        do {
+            try await auth.login()
+        } catch is CancellationError {
+            // Task cancelled
+        } catch let authError as AuthError where authError.errorDescription == nil {
+            // User cancelled (AuthError.cancelled returns nil description)
+        } catch {
+            let desc = error.localizedDescription
+            if !desc.isEmpty {
+                alertMessage = desc
+                showAlert = true
+            }
         }
     }
 }

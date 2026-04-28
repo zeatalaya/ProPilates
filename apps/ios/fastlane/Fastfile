@@ -4,10 +4,12 @@ platform :ios do
 
   desc "Build and upload to TestFlight"
   lane :beta do
-    # Increment build number automatically
-    increment_build_number(
-      xcodeproj: "ProPilates.xcodeproj"
-    )
+    # Increment build number safely via PlistBuddy
+    plist_path = File.expand_path("ProPilates/Resources/Info.plist")
+    current = `/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "#{plist_path}"`.strip.to_i
+    new_build = current + 1
+    `/usr/libexec/PlistBuddy -c "Set :CFBundleVersion #{new_build}" "#{plist_path}"`
+    UI.message("Build number: #{new_build}")
 
     # Build the app
     build_app(
@@ -16,7 +18,8 @@ platform :ios do
       export_method: "app-store",
       clean: true,
       output_directory: "./build",
-      output_name: "ProPilates.ipa"
+      output_name: "ProPilates.ipa",
+      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=85A34A7PB2"
     )
 
     # Upload to TestFlight
@@ -33,7 +36,8 @@ platform :ios do
       export_method: "app-store",
       clean: true,
       output_directory: "./build",
-      output_name: "ProPilates.ipa"
+      output_name: "ProPilates.ipa",
+      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=85A34A7PB2"
     )
   end
 
