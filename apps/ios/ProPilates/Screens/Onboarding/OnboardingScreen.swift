@@ -21,8 +21,21 @@ struct OnboardingScreen: View {
 
     // Step 2: Music
     @State private var musicStyle = ""
+    @State private var selectedMusicStyles: Set<String> = []
 
     private let steps = ["Personal", "Practice", "Music", "Confirm"]
+
+    private let musicStyleOptions = [
+        "Ambient", "Classical", "Lo-fi", "Jazz", "Electronic",
+        "Pop", "R&B", "Acoustic", "World", "Instrumental", "None"
+    ]
+
+    private let locationOptions = [
+        "New York, US", "Los Angeles, US", "Miami, US", "Chicago, US",
+        "London, UK", "Paris, France", "Berlin, Germany", "Sydney, Australia",
+        "Toronto, Canada", "Mexico City, Mexico", "Barcelona, Spain",
+        "Tokyo, Japan", "Dubai, UAE", "Sao Paulo, Brazil", "Amsterdam, Netherlands"
+    ]
 
     var body: some View {
         NavigationStack {
@@ -102,8 +115,66 @@ struct OnboardingScreen: View {
                 .foregroundStyle(Color.ppTextPrimary)
 
             formField(label: "Name", text: $name, placeholder: "Your full name")
-            formField(label: "Bio", text: $bio, placeholder: "Tell us about your practice", isMultiline: true)
-            formField(label: "Location", text: $location, placeholder: "City, Country")
+
+            // Bio with fixed TextEditor
+            VStack(alignment: .leading, spacing: Theme.spacingSM) {
+                Text("Bio")
+                    .bodyFont(size: 13)
+                    .foregroundStyle(Color.ppTextMuted)
+
+                ZStack(alignment: .topLeading) {
+                    if bio.isEmpty {
+                        Text("Tell us about your practice")
+                            .bodyFont(size: 14)
+                            .foregroundStyle(Color.ppTextMuted)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 12)
+                    }
+
+                    TextEditor(text: $bio)
+                        .bodyFont(size: 14)
+                        .foregroundStyle(Color.ppTextPrimary)
+                        .scrollContentBackground(.hidden)
+                        .frame(minHeight: 80)
+                        .padding(4)
+                }
+                .background(Color.ppBackgroundCard)
+                .cornerRadius(Theme.radiusSM)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.radiusSM)
+                        .stroke(Color.ppBorder, lineWidth: 1)
+                )
+            }
+
+            // Location picker
+            VStack(alignment: .leading, spacing: Theme.spacingSM) {
+                Text("Location")
+                    .bodyFont(size: 13)
+                    .foregroundStyle(Color.ppTextMuted)
+
+                Menu {
+                    ForEach(locationOptions, id: \.self) { loc in
+                        Button(loc) { location = loc }
+                    }
+                } label: {
+                    HStack {
+                        Text(location.isEmpty ? "Select your location" : location)
+                            .bodyFont(size: 14)
+                            .foregroundStyle(location.isEmpty ? Color.ppTextMuted : Color.ppTextPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.ppTextMuted)
+                    }
+                    .padding(12)
+                    .background(Color.ppBackgroundCard)
+                    .cornerRadius(Theme.radiusSM)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.radiusSM)
+                            .stroke(Color.ppBorder, lineWidth: 1)
+                    )
+                }
+            }
 
             VStack(alignment: .leading, spacing: Theme.spacingSM) {
                 Text("Languages")
@@ -179,7 +250,22 @@ struct OnboardingScreen: View {
                 .bodyFont(size: 14)
                 .foregroundStyle(Color.ppTextSecondary)
 
-            formField(label: "Music Style", text: $musicStyle, placeholder: "e.g., Ambient, Classical, Lo-fi")
+            FlowLayout(spacing: 8) {
+                ForEach(musicStyleOptions, id: \.self) { style in
+                    togglePill(
+                        title: style,
+                        isSelected: selectedMusicStyles.contains(style),
+                        action: {
+                            if selectedMusicStyles.contains(style) {
+                                selectedMusicStyles.remove(style)
+                            } else {
+                                selectedMusicStyles.insert(style)
+                            }
+                            musicStyle = selectedMusicStyles.sorted().joined(separator: ", ")
+                        }
+                    )
+                }
+            }
         }
     }
 
@@ -192,7 +278,7 @@ struct OnboardingScreen: View {
                 .foregroundStyle(Color.ppTextPrimary)
 
             if let error = errorMessage {
-                HStack(spacing: Theme.spacingSM) {
+                HStack(alignment: .top, spacing: Theme.spacingSM) {
                     Image(systemName: "exclamationmark.triangle")
                         .foregroundStyle(Color.ppError)
                     Text(error)
@@ -200,6 +286,7 @@ struct OnboardingScreen: View {
                         .foregroundStyle(Color.ppError)
                 }
                 .padding(Theme.spacingSM)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.ppError.opacity(0.1))
                 .cornerRadius(Theme.radiusSM)
             }
@@ -306,8 +393,10 @@ struct OnboardingScreen: View {
             _ = try await supabase.upsertInstructor(data)
             await auth.fetchInstructorProfile(xionAddress: xionAddress)
             dismiss()
+        } catch let urlError as URLError {
+            errorMessage = "Network error (\(urlError.code.rawValue)): \(urlError.localizedDescription)\nURL: \(urlError.failureURLString ?? "unknown")"
         } catch {
-            errorMessage = "Failed to save profile: \(error.localizedDescription)"
+            errorMessage = "Failed to save profile: \(error)\n\nDetails: \(String(describing: error))"
         }
 
         isSaving = false
@@ -315,36 +404,22 @@ struct OnboardingScreen: View {
 
     // MARK: - Subviews
 
-    private func formField(label: String, text: Binding<String>, placeholder: String, isMultiline: Bool = false) -> some View {
+    private func formField(label: String, text: Binding<String>, placeholder: String) -> some View {
         VStack(alignment: .leading, spacing: Theme.spacingSM) {
             Text(label)
                 .bodyFont(size: 13)
                 .foregroundStyle(Color.ppTextMuted)
 
-            if isMultiline {
-                TextEditor(text: text)
-                    .bodyFont(size: 14)
-                    .foregroundStyle(Color.ppTextPrimary)
-                    .frame(minHeight: 80)
-                    .padding(8)
-                    .background(Color.ppBackgroundCard)
-                    .cornerRadius(Theme.radiusSM)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Theme.radiusSM)
-                            .stroke(Color.ppBorder, lineWidth: 1)
-                    )
-            } else {
-                TextField(placeholder, text: text)
-                    .bodyFont(size: 14)
-                    .foregroundStyle(Color.ppTextPrimary)
-                    .padding(12)
-                    .background(Color.ppBackgroundCard)
-                    .cornerRadius(Theme.radiusSM)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Theme.radiusSM)
-                            .stroke(Color.ppBorder, lineWidth: 1)
-                    )
-            }
+            TextField(placeholder, text: text)
+                .bodyFont(size: 14)
+                .foregroundStyle(Color.ppTextPrimary)
+                .padding(12)
+                .background(Color.ppBackgroundCard)
+                .cornerRadius(Theme.radiusSM)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.radiusSM)
+                        .stroke(Color.ppBorder, lineWidth: 1)
+                )
         }
     }
 
