@@ -49,3 +49,5 @@ next-env.d.ts
 apps/ios/.build/
 apps/ios/ProPilates.xcodeproj/
 apps/ios/.swiftpm/
+apps/ios/build/
+apps/ios/Gemfile.lock

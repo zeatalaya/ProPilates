@@ -6,6 +6,7 @@ final class AppState {
     let authService: AuthService
     let xionService: XionService
     let supabaseService: SupabaseService
+    let paymentService: PaymentService
 
     init() {
         let config = AppConfig.load()
@@ -14,9 +15,11 @@ final class AppState {
         let supabase = SupabaseService(config: config)
         let xion = XionService(config: config)
         let auth = AuthService(config: config, supabase: supabase)
+        let payment = PaymentService(config: config)
 
         self.supabaseService = supabase
         self.xionService = xion
         self.authService = auth
+        self.paymentService = payment
     }
 }

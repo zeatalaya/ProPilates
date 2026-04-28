@@ -1,0 +1,49 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    # Increment build number automatically
+    increment_build_number(
+      xcodeproj: "ProPilates.xcodeproj"
+    )
+
+    # Build the app
+    build_app(
+      project: "ProPilates.xcodeproj",
+      scheme: "ProPilates",
+      export_method: "app-store",
+      clean: true,
+      output_directory: "./build",
+      output_name: "ProPilates.ipa"
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Build only (no upload)"
+  lane :build do
+    build_app(
+      project: "ProPilates.xcodeproj",
+      scheme: "ProPilates",
+      export_method: "app-store",
+      clean: true,
+      output_directory: "./build",
+      output_name: "ProPilates.ipa"
+    )
+  end
+
+  desc "Run tests"
+  lane :test do
+    run_tests(
+      project: "ProPilates.xcodeproj",
+      scheme: "ProPilatesTests",
+      device: "iPhone 17 Pro"
+    )
+  end
+
+end

@@ -114,6 +114,7 @@ struct Instructor: Codable, Identifiable {
     let createdAt: String
     let updatedAt: String
     var classesTaught: Int
+    let stripeAccountId: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -134,6 +135,7 @@ struct Instructor: Codable, Identifiable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case classesTaught = "classes_taught"
+        case stripeAccountId = "stripe_account_id"
     }
 
     init(from decoder: Decoder) throws {
@@ -156,5 +158,6 @@ struct Instructor: Codable, Identifiable {
         createdAt = try container.decode(String.self, forKey: .createdAt)
         updatedAt = try container.decode(String.self, forKey: .updatedAt)
         classesTaught = try container.decodeIfPresent(Int.self, forKey: .classesTaught) ?? 0
+        stripeAccountId = try container.decodeIfPresent(String.self, forKey: .stripeAccountId)
     }
 }

@@ -179,10 +179,14 @@ struct MarketplaceScreen: View {
 struct MarketplaceDetailView: View {
     @Environment(AuthService.self) private var auth
     @Environment(SupabaseService.self) private var supabase
+    @Environment(PaymentService.self) private var payment
     let pilatesClass: PilatesClass
 
     @State private var detailedClass: PilatesClass?
     @State private var isLoading = true
+    @State private var isPurchasing = false
+    @State private var purchaseError: String?
+    @State private var showPurchaseSuccess = false
 
     var body: some View {
         ScrollView {
@@ -251,21 +255,27 @@ struct MarketplaceDetailView: View {
                     // Price & Buy
                     if let price = pc.price {
                         VStack(spacing: Theme.spacingSM) {
-                            Text("$\(String(format: "%.2f", price)) USDC")
+                            Text("$\(String(format: "%.2f", price))")
                                 .headingFont(size: 24)
                                 .foregroundStyle(Color.ppAccent)
 
                             Button {
-                                // Purchase flow — will integrate with XION transactions later
+                                Task { await purchaseClass(pc, price: price) }
                             } label: {
-                                Text("Purchase")
-                                    .bodyFont(size: 15)
-                                    .foregroundStyle(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: Theme.buttonHeight)
-                                    .background(Color.ppAccent)
-                                    .cornerRadius(Theme.radiusLG)
+                                if isPurchasing {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    Label("Purchase with Apple Pay", systemImage: "creditcard")
+                                        .bodyFont(size: 15)
+                                        .foregroundStyle(.white)
+                                }
                             }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: Theme.buttonHeight)
+                            .background(Color.ppAccent)
+                            .cornerRadius(Theme.radiusLG)
+                            .disabled(isPurchasing)
                         }
                         .padding(.top, Theme.spacingMD)
                     }
@@ -286,6 +296,40 @@ struct MarketplaceDetailView: View {
             }
             isLoading = false
         }
+        .alert("Purchase Complete", isPresented: $showPurchaseSuccess) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("You now have access to this class in your portfolio.")
+        }
+        .alert("Payment Error", isPresented: .init(
+            get: { purchaseError != nil },
+            set: { if !$0 { purchaseError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(purchaseError ?? "")
+        }
+    }
+
+    @MainActor
+    private func purchaseClass(_ pc: PilatesClass, price: Double) async {
+        guard let instructor = auth.instructor else { return }
+        isPurchasing = true
+        defer { isPurchasing = false }
+
+        do {
+            _ = try await payment.purchaseClass(
+                instructorId: instructor.id,
+                classId: pc.id,
+                amount: price,
+                sellerStripeAccountId: pc.instructor?.stripeAccountId
+            )
+            showPurchaseSuccess = true
+        } catch let error as PaymentError where error.errorDescription?.contains("cancelled") == true {
+            // User cancelled — do nothing
+        } catch {
+            purchaseError = error.localizedDescription
+        }
     }
 
     private func stat(label: String, value: String) -> some View {
@@ -301,4 +345,5 @@ struct MarketplaceDetailView: View {
     MarketplaceScreen()
         .environment(AuthService(config: .load(), supabase: SupabaseService(config: .load())))
         .environment(SupabaseService(config: .load()))
+        .environment(PaymentService(config: .load()))
 }

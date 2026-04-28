@@ -10,6 +10,9 @@ packages:
   Supabase:
     url: https://github.com/supabase/supabase-swift
     from: "2.0.0"
+  Stripe:
+    url: https://github.com/stripe/stripe-ios
+    from: "24.0.0"
 
 targets:
   ProPilates:
@@ -30,6 +33,10 @@ targets:
         SWIFT_VERSION: "5.9"
     dependencies:
       - package: Supabase
+      - package: Stripe
+        product: StripePaymentSheet
+    entitlements:
+      path: ProPilates/Resources/ProPilates.entitlements
     info:
       path: ProPilates/Resources/Info.plist
 
@@ -43,3 +50,4 @@ targets:
     settings:
       base:
         SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: true

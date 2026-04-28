@@ -4,11 +4,15 @@ struct ProfileScreen: View {
     @Environment(AuthService.self) private var auth
     @Environment(SupabaseService.self) private var supabase
     @Environment(XionService.self) private var xion
+    @Environment(PaymentService.self) private var payment
 
     @State private var verifications: [Verification] = []
     @State private var subscription: Subscription?
     @State private var usdcBalance: String = "0.00"
     @State private var isLoading = true
+    @State private var isPurchasing = false
+    @State private var purchaseError: String?
+    @State private var showPurchaseSuccess = false
 
     var body: some View {
         NavigationStack {
@@ -36,6 +40,19 @@ struct ProfileScreen: View {
             #endif
             .task {
                 await loadProfileData()
+            }
+            .alert("Upgrade Successful", isPresented: $showPurchaseSuccess) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Welcome to Premium! You now have full access to all features.")
+            }
+            .alert("Payment Error", isPresented: .init(
+                get: { purchaseError != nil },
+                set: { if !$0 { purchaseError = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(purchaseError ?? "")
             }
         }
     }
@@ -147,9 +164,23 @@ struct ProfileScreen: View {
                             .subheadingFont(size: 18)
                             .foregroundStyle(Color.ppTextPrimary)
 
-                        Text("Upgrade for full access")
-                            .bodyFont(size: 12)
-                            .foregroundStyle(Color.ppTextMuted)
+                        Button {
+                            Task { await purchaseSubscription() }
+                        } label: {
+                            if isPurchasing {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Text("Upgrade $4.99/mo")
+                                    .bodyFont(size: 11)
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 28)
+                        .background(Color.ppAccent)
+                        .cornerRadius(Theme.radiusSM)
+                        .disabled(isPurchasing)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -368,6 +399,24 @@ struct ProfileScreen: View {
         }
     }
 
+    @MainActor
+    private func purchaseSubscription() async {
+        guard let instructor = auth.instructor else { return }
+        isPurchasing = true
+        defer { isPurchasing = false }
+
+        do {
+            _ = try await payment.purchaseSubscription(instructorId: instructor.id)
+            showPurchaseSuccess = true
+            // Reload subscription status
+            subscription = try? await supabase.fetchLatestSubscription(instructorId: instructor.id)
+        } catch let error as PaymentError where error.errorDescription?.contains("cancelled") == true {
+            // User cancelled — do nothing
+        } catch {
+            purchaseError = error.localizedDescription
+        }
+    }
+
     private func loadProfileData() async {
         defer { isLoading = false }
 
@@ -438,4 +487,5 @@ struct FlowLayout: Layout {
         .environment(AuthService(config: .load(), supabase: SupabaseService(config: .load())))
         .environment(SupabaseService(config: .load()))
         .environment(XionService(config: .load()))
+        .environment(PaymentService(config: .load()))
 }

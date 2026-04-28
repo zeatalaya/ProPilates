@@ -12,6 +12,9 @@ struct AppConfig {
     let marketplaceContract: String
     let usdcDenom: String
     let spotifyClientID: String
+    let stripePublishableKey: String
+    let stripeMerchantID: String
+    let apiBaseURL: String
 
     /// Loads configuration from Info.plist with fallback to built-in defaults.
     static func load() -> AppConfig {
@@ -39,7 +42,13 @@ struct AppConfig {
             usdcDenom: info["USDC_DENOM"] as? String
                 ?? "ibc/usdc",
             spotifyClientID: info["SPOTIFY_CLIENT_ID"] as? String
-                ?? "b3ab1ac165144645a27433d9b4599e90"
+                ?? "b3ab1ac165144645a27433d9b4599e90",
+            stripePublishableKey: info["STRIPE_PUBLISHABLE_KEY"] as? String
+                ?? "pk_test_REPLACE_WITH_YOUR_KEY",
+            stripeMerchantID: info["STRIPE_MERCHANT_ID"] as? String
+                ?? "merchant.com.propilates.ios",
+            apiBaseURL: info["API_BASE_URL"] as? String
+                ?? "https://pro-pilates.vercel.app"
         )
     }
 

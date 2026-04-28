@@ -15,6 +15,7 @@ struct ProPilatesApp: App {
                 .environment(appState.authService)
                 .environment(appState.xionService)
                 .environment(appState.supabaseService)
+                .environment(appState.paymentService)
                 .onOpenURL { url in
                     Task {
                         await appState.authService.handleCallback(url: url)
