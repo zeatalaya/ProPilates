@@ -30,7 +30,7 @@ struct AppConfig {
             oauth3ClientID: info["OAUTH3_CLIENT_ID"] as? String
                 ?? "W04z4drnVQCIlieA",
             oauthRedirectURL: info["OAUTH_REDIRECT_URL"] as? String
-                ?? "https://pro-pilates.vercel.app/api/auth/oauth3/callback",
+                ?? "https://thepropilates.com/api/auth/oauth3/callback",
             xionRPC: info["XION_RPC"] as? String
                 ?? "https://rpc.xion-testnet-2.burnt.com:443",
             xionREST: info["XION_REST"] as? String
@@ -44,11 +44,11 @@ struct AppConfig {
             spotifyClientID: info["SPOTIFY_CLIENT_ID"] as? String
                 ?? "b3ab1ac165144645a27433d9b4599e90",
             stripePublishableKey: info["STRIPE_PUBLISHABLE_KEY"] as? String
-                ?? "pk_test_REPLACE_WITH_YOUR_KEY",
+                ?? "pk_test_51TRUNVFL4ouVya0mrp4KetDDOEj8AnOGEt9KAYYDqxlON8bYhFL8LLRJM4L1uqX5DfZrlsgCqlNRWY9iYISnaCgg00BH2ljx57",
             stripeMerchantID: info["STRIPE_MERCHANT_ID"] as? String
                 ?? "merchant.com.propilates.app",
             apiBaseURL: info["API_BASE_URL"] as? String
-                ?? "https://pro-pilates.vercel.app"
+                ?? "https://thepropilates.com"
         )
     }
 

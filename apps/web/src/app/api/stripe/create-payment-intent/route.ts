@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe, PREMIUM_PRICE_CENTS } from "@/lib/stripe";
+import { getStripe, PREMIUM_PRICE_CENTS } from "@/lib/stripe";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     if (type === "subscription") {
       // Premium subscription payment
-      paymentIntent = await stripe.paymentIntents.create({
+      paymentIntent = await getStripe().paymentIntents.create({
         amount: PREMIUM_PRICE_CENTS,
         currency: "usd",
         metadata: {
@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
         intentParams.application_fee_amount = platformFeeCents;
       }
 
-      paymentIntent = await stripe.paymentIntents.create(
-        intentParams as Parameters<typeof stripe.paymentIntents.create>[0],
+      paymentIntent = await getStripe().paymentIntents.create(
+        intentParams as Parameters<ReturnType<typeof getStripe>["paymentIntents"]["create"]>[0],
       );
     } else {
       return NextResponse.json(

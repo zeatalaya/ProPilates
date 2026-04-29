@@ -85,12 +85,12 @@ export default function VerifyScreen() {
     // Direct user to the web verification flow
     Alert.alert(
       "Verify Credential",
-      `To verify your ${cred.name} certification, please use the web app at pro-pilates.vercel.app/verify. The verification uses Reclaim Protocol for zero-knowledge proof generation.`,
+      `To verify your ${cred.name} certification, please use the web app at thepropilates.com/verify. The verification uses Reclaim Protocol for zero-knowledge proof generation.`,
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Open Web",
-          onPress: () => Linking.openURL("https://pro-pilates.vercel.app/verify"),
+          onPress: () => Linking.openURL("https://thepropilates.com/verify"),
         },
       ],
     );

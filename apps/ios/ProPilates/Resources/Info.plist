@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>API_BASE_URL</key>
-	<string>https://pro-pilates.vercel.app</string>
+	<string>https://thepropilates.com</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -46,13 +46,13 @@
 	<key>OAUTH3_SERVER</key>
 	<string>https://oauth2.testnet.burnt.com</string>
 	<key>OAUTH_REDIRECT_URL</key>
-	<string>https://pro-pilates.vercel.app/api/auth/oauth3/callback</string>
+	<string>https://thepropilates.com/api/auth/oauth3/callback</string>
 	<key>SPOTIFY_CLIENT_ID</key>
 	<string>b3ab1ac165144645a27433d9b4599e90</string>
 	<key>STRIPE_MERCHANT_ID</key>
 	<string>merchant.com.propilates.app</string>
 	<key>STRIPE_PUBLISHABLE_KEY</key>
-	<string>pk_test_REPLACE_WITH_YOUR_KEY</string>
+	<string>pk_test_51TRUNVFL4ouVya0mrp4KetDDOEj8AnOGEt9KAYYDqxlON8bYhFL8LLRJM4L1uqX5DfZrlsgCqlNRWY9iYISnaCgg00BH2ljx57</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyZ3RxbXJ5cGF1cWlzYXl5cWZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MDI4MTIsImV4cCI6MjA4ODM3ODgxMn0.tDEykPrV12LMnhd2VlkezZk56WZrGHx4VT_Y84vINFo</string>
 	<key>SUPABASE_URL</key>
