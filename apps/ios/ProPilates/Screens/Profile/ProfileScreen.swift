@@ -151,8 +151,8 @@ struct ProfileScreen: View {
                         .bodyFont(size: 13)
                         .foregroundStyle(Color.ppTextMuted)
 
-                    if let sub = subscription {
-                        Text(sub.tier.rawValue.capitalized)
+                    if auth.tier == .premium || subscription != nil {
+                        Text("Premium")
                             .subheadingFont(size: 18)
                             .foregroundStyle(Color.ppAccent)
 

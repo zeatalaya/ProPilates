@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeScreen: View {
     @Environment(AuthService.self) private var auth
+    @Binding var selectedTab: AppTab
 
     var body: some View {
         NavigationStack {
@@ -71,12 +72,24 @@ struct HomeScreen: View {
                 .padding(.horizontal, Theme.spacingMD)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Theme.spacingMD) {
-                featureCard(icon: "square.stack.3d.up.fill", title: "Class Builder", description: "Create structured Pilates classes with exercises, timing, and cues")
-                featureCard(icon: "play.circle.fill", title: "Teaching Mode", description: "Live class delivery with timers, music, and voice cues")
-                featureCard(icon: "bag.fill", title: "Marketplace", description: "Buy and sell class portfolios as NFTs on the blockchain")
-                featureCard(icon: "checkmark.seal.fill", title: "Verification", description: "Verify your certifications with zero-knowledge proofs")
-                featureCard(icon: "music.note", title: "Spotify", description: "Integrate your playlists directly into your teaching flow")
-                featureCard(icon: "person.crop.circle.badge.checkmark", title: "Easy Sign-Up", description: "One-click wallet creation with no crypto knowledge needed")
+                featureCard(icon: "square.stack.3d.up.fill", title: "Class Builder", description: "Create structured Pilates classes with exercises, timing, and cues") {
+                    selectedTab = .builder
+                }
+                featureCard(icon: "play.circle.fill", title: "Teaching Mode", description: "Live class delivery with timers, music, and voice cues") {
+                    selectedTab = .teach
+                }
+                featureCard(icon: "bag.fill", title: "Marketplace", description: "Buy and sell class portfolios on the marketplace") {
+                    selectedTab = .more
+                }
+                featureCard(icon: "book.fill", title: "Class Templates", description: "Browse pre-built classes from the Pilates exercise library") {
+                    selectedTab = .classes
+                }
+                featureCard(icon: "music.note", title: "Spotify", description: "Integrate your playlists directly into your teaching flow") {
+                    selectedTab = .builder
+                }
+                featureCard(icon: "person.crop.circle.badge.checkmark", title: "Easy Sign-Up", description: "One-click wallet creation with no crypto knowledge needed") {
+                    selectedTab = .more
+                }
             }
             .padding(.horizontal, Theme.spacingMD)
         }
@@ -112,23 +125,26 @@ struct HomeScreen: View {
 
     // MARK: - Subviews
 
-    private func featureCard(icon: String, title: String, description: String) -> some View {
-        VStack(alignment: .leading, spacing: Theme.spacingSM) {
-            Image(systemName: icon)
-                .font(.system(size: 24))
-                .foregroundStyle(Color.ppAccent)
+    private func featureCard(icon: String, title: String, description: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: Theme.spacingSM) {
+                Image(systemName: icon)
+                    .font(.system(size: 24))
+                    .foregroundStyle(Color.ppAccent)
 
-            Text(title)
-                .subheadingFont(size: 16)
-                .foregroundStyle(Color.ppTextPrimary)
+                Text(title)
+                    .subheadingFont(size: 16)
+                    .foregroundStyle(Color.ppTextPrimary)
 
-            Text(description)
-                .bodyFont(size: 12)
-                .foregroundStyle(Color.ppTextSecondary)
-                .lineLimit(3)
+                Text(description)
+                    .bodyFont(size: 12)
+                    .foregroundStyle(Color.ppTextSecondary)
+                    .lineLimit(3)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
+        .buttonStyle(.plain)
     }
 
     private func pricingCard(tier: String, price: String, features: [String], isPremium: Bool) -> some View {
@@ -186,6 +202,6 @@ struct HomeScreen: View {
 }
 
 #Preview {
-    HomeScreen()
+    HomeScreen(selectedTab: .constant(.home))
         .environment(AuthService(config: .load(), supabase: SupabaseService(config: .load())))
 }

@@ -48,7 +48,7 @@ struct AppConfig {
             stripeMerchantID: info["STRIPE_MERCHANT_ID"] as? String
                 ?? "merchant.com.propilates.app",
             apiBaseURL: info["API_BASE_URL"] as? String
-                ?? "https://thepropilates.com"
+                ?? "https://www.thepropilates.com"
         )
     }
 
