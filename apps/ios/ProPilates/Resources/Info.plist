@@ -34,7 +34,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>105</string>
+	<string>107</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>MARKETPLACE_CONTRACT</key>
@@ -46,7 +46,7 @@
 	<key>OAUTH3_SERVER</key>
 	<string>https://oauth2.testnet.burnt.com</string>
 	<key>OAUTH_REDIRECT_URL</key>
-	<string>https://thepropilates.com/api/auth/oauth3/callback</string>
+	<string>https://www.thepropilates.com/api/auth/oauth3/callback</string>
 	<key>SPOTIFY_CLIENT_ID</key>
 	<string>b3ab1ac165144645a27433d9b4599e90</string>
 	<key>STRIPE_MERCHANT_ID</key>

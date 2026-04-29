@@ -19,10 +19,10 @@ export const isOAuth3Configured = !!(OAUTH3_SERVER && OAUTH3_CLIENT_ID);
 // The redirect URI must match what's registered with the OAuth2 server.
 // We use the web callback URL which then deep-links back to the mobile app.
 // Must match the redirect URI registered with the OAuth server at dev.testnet.burnt.com
-// For production: register https://thepropilates.com/api/auth/oauth3/callback and update this
+// For production: register https://www.thepropilates.com/api/auth/oauth3/callback and update this
 const WEB_CALLBACK_URL =
   process.env.EXPO_PUBLIC_OAUTH_REDIRECT_URL ||
-  "https://thepropilates.com/api/auth/oauth3/callback";
+  "https://www.thepropilates.com/api/auth/oauth3/callback";
 
 // Deep link URI that the web callback redirects to
 export const MOBILE_DEEP_LINK = "propilates://auth/callback";
