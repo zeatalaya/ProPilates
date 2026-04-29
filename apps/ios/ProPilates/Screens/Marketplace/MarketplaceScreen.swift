@@ -166,11 +166,7 @@ struct MarketplaceScreen: View {
     }
 
     private func methodDisplayName(_ m: PilatesMethod) -> String {
-        switch m {
-        case .mat: return "Mat"; case .reformer: return "Reformer"; case .xReformer: return "X-Reformer"
-        case .chair: return "Chair"; case .tower: return "Tower"; case .barrel: return "Barrel"
-        case .ring: return "Ring"; case .band: return "Band"; case .foamRoller: return "Foam Roller"
-        }
+        m.displayName
     }
 }
 

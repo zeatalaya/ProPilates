@@ -323,17 +323,7 @@ struct TeachScreen: View {
     }
 
     private func methodDisplayName(_ method: PilatesMethod) -> String {
-        switch method {
-        case .mat: return "Mat"
-        case .reformer: return "Reformer"
-        case .xReformer: return "X-Reformer"
-        case .chair: return "Chair"
-        case .tower: return "Tower"
-        case .barrel: return "Barrel"
-        case .ring: return "Ring"
-        case .band: return "Band"
-        case .foamRoller: return "Foam Roller"
-        }
+        method.displayName
     }
 }
 

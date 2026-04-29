@@ -136,12 +136,12 @@ export default function MarketplacePage() {
           <option value="">All Methods</option>
           <option value="mat">Mat</option>
           <option value="reformer">Reformer</option>
+          <option value="x-reformer">X-Reformer</option>
+          <option value="cadillac">Cadillac</option>
+          <option value="wunda_chair">Wunda Chair</option>
           <option value="chair">Chair</option>
-          <option value="tower">Tower</option>
-          <option value="barrel">Barrel</option>
-          <option value="ring">Ring</option>
-          <option value="band">Band</option>
-          <option value="foam_roller">Foam Roller</option>
+          <option value="spine_corrector">Spine Corrector</option>
+          <option value="ladder_barrel">Ladder Barrel</option>
         </select>
       </div>
 

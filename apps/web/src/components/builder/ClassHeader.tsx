@@ -12,9 +12,11 @@ const METHODS = [
   { value: "mat", label: "Mat" },
   { value: "reformer", label: "Reformer" },
   { value: "x-reformer", label: "x-Reformer" },
+  { value: "cadillac", label: "Cadillac" },
+  { value: "wunda_chair", label: "Wunda Chair" },
   { value: "chair", label: "Chair" },
-  { value: "tower", label: "Tower" },
-  { value: "barrel", label: "Barrel" },
+  { value: "spine_corrector", label: "Spine Corrector" },
+  { value: "ladder_barrel", label: "Ladder Barrel" },
 ];
 
 const DIFFICULTIES = [

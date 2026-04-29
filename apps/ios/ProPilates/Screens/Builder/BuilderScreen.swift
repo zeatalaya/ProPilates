@@ -269,45 +269,75 @@ struct BuilderScreen: View {
                     }
 
                     // Duration
-                    HStack {
+                    VStack(alignment: .leading, spacing: Theme.spacingSM) {
                         Text("Duration")
                             .bodyFont(size: 13)
                             .foregroundStyle(Color.ppTextMuted)
-                        Spacer()
+
+                        // Preset durations
+                        HStack(spacing: 6) {
+                            ForEach([15, 30, 45, 60, 90, 120], id: \.self) { seconds in
+                                Button {
+                                    viewModel.updateExercise(blockId: blockId, exerciseId: exerciseId, duration: seconds)
+                                } label: {
+                                    Text(formatDuration(seconds))
+                                        .bodyFont(size: 11)
+                                        .foregroundStyle(exercise.duration == seconds ? .white : Color.ppTextSecondary)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
+                                        .background(exercise.duration == seconds ? Color.ppAccent : Color.ppBackgroundCard)
+                                        .cornerRadius(Theme.radiusFull)
+                                        .overlay(RoundedRectangle(cornerRadius: Theme.radiusFull).stroke(exercise.duration == seconds ? Color.ppAccent : Color.ppBorder, lineWidth: 1))
+                                }
+                            }
+                        }
+
+                        // Fine-tune controls
                         HStack(spacing: 12) {
                             Button {
                                 let d = max(5, exercise.duration - 5)
                                 viewModel.updateExercise(blockId: blockId, exerciseId: exerciseId, duration: d)
                             } label: {
-                                Image(systemName: "minus.circle").foregroundStyle(Color.ppAccent)
+                                Image(systemName: "minus.circle.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(Color.ppAccent)
                             }
                             Text(formatDuration(exercise.duration))
-                                .bodyFont(size: 14)
+                                .subheadingFont(size: 20)
                                 .foregroundStyle(Color.ppTextPrimary)
-                                .frame(width: 50, alignment: .center)
+                                .frame(width: 60, alignment: .center)
                             Button {
                                 viewModel.updateExercise(blockId: blockId, exerciseId: exerciseId, duration: exercise.duration + 5)
                             } label: {
-                                Image(systemName: "plus.circle").foregroundStyle(Color.ppAccent)
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(Color.ppAccent)
                             }
                         }
+                        .frame(maxWidth: .infinity)
                     }
                     .cardStyle()
 
                     // Side
                     sidePicker(blockId: blockId, exerciseId: exerciseId, current: exercise.side ?? "both")
 
-                    // Notes
+                    // Custom Cues (editable)
                     VStack(alignment: .leading, spacing: Theme.spacingSM) {
-                        Text("Notes")
-                            .bodyFont(size: 13)
-                            .foregroundStyle(Color.ppTextMuted)
+                        HStack {
+                            Text("Your Cues")
+                                .bodyFont(size: 13)
+                                .foregroundStyle(Color.ppTextMuted)
+                            Spacer()
+                            Text("Personalise your instructions")
+                                .bodyFont(size: 10)
+                                .foregroundStyle(Color.ppTextMuted)
+                        }
                         TextEditor(text: Binding(
                             get: { exercise.notes },
                             set: { viewModel.updateExercise(blockId: blockId, exerciseId: exerciseId, notes: $0) }
                         ))
                         .bodyFont(size: 14)
-                        .frame(minHeight: 60)
+                        .frame(minHeight: 80)
                         .padding(8)
                         .background(Color.ppBackgroundCard)
                         .cornerRadius(Theme.radiusSM)
@@ -316,14 +346,15 @@ struct BuilderScreen: View {
                                 .stroke(Color.ppBorder, lineWidth: 1)
                         )
                     }
+                    .cardStyle()
 
-                    // Cues
+                    // Exercise Cues (reference from BASI)
                     if !info.cues.isEmpty {
                         VStack(alignment: .leading, spacing: Theme.spacingSM) {
-                            Text("Cues")
+                            Text("BASI Cues")
                                 .bodyFont(size: 13)
                                 .foregroundStyle(Color.ppTextMuted)
-                            ForEach(info.cues, id: \.self) { cue in
+                            ForEach(Array(info.cues.enumerated()), id: \.offset) { _, cue in
                                 HStack(alignment: .top, spacing: 8) {
                                     Image(systemName: "circle.fill")
                                         .font(.system(size: 4))
@@ -536,17 +567,7 @@ struct BuilderScreen: View {
     }
 
     private func methodDisplayName(_ method: PilatesMethod) -> String {
-        switch method {
-        case .mat: return "Mat"
-        case .reformer: return "Reformer"
-        case .xReformer: return "X-Reformer"
-        case .chair: return "Chair"
-        case .tower: return "Tower"
-        case .barrel: return "Barrel"
-        case .ring: return "Ring"
-        case .band: return "Band"
-        case .foamRoller: return "Foam Roller"
-        }
+        method.displayName
     }
 }
 

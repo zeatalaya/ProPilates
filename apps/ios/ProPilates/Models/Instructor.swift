@@ -6,24 +6,11 @@ enum PilatesMethod: String, Codable, CaseIterable {
     case mat
     case reformer
     case xReformer
+    case cadillac
+    case wundaChair
     case chair
-    case tower
-    case barrel
-    case ring
-    case band
-    case foamRoller
-
-    enum CodingKeys: String, CodingKey {
-        case mat
-        case reformer
-        case xReformer = "x-reformer"
-        case chair
-        case tower
-        case barrel
-        case ring
-        case band
-        case foamRoller = "foam_roller"
-    }
+    case spineCorrector
+    case ladderBarrel
 
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -32,12 +19,11 @@ enum PilatesMethod: String, Codable, CaseIterable {
         case "mat": self = .mat
         case "reformer": self = .reformer
         case "x-reformer": self = .xReformer
+        case "cadillac": self = .cadillac
+        case "wunda_chair": self = .wundaChair
         case "chair": self = .chair
-        case "tower": self = .tower
-        case "barrel": self = .barrel
-        case "ring": self = .ring
-        case "band": self = .band
-        case "foam_roller": self = .foamRoller
+        case "spine_corrector": self = .spineCorrector
+        case "ladder_barrel": self = .ladderBarrel
         default:
             throw DecodingError.dataCorruptedError(
                 in: container,
@@ -52,12 +38,26 @@ enum PilatesMethod: String, Codable, CaseIterable {
         case .mat: try container.encode("mat")
         case .reformer: try container.encode("reformer")
         case .xReformer: try container.encode("x-reformer")
+        case .cadillac: try container.encode("cadillac")
+        case .wundaChair: try container.encode("wunda_chair")
         case .chair: try container.encode("chair")
-        case .tower: try container.encode("tower")
-        case .barrel: try container.encode("barrel")
-        case .ring: try container.encode("ring")
-        case .band: try container.encode("band")
-        case .foamRoller: try container.encode("foam_roller")
+        case .spineCorrector: try container.encode("spine_corrector")
+        case .ladderBarrel: try container.encode("ladder_barrel")
+        }
+    }
+}
+
+extension PilatesMethod {
+    var displayName: String {
+        switch self {
+        case .mat: return "Mat"
+        case .reformer: return "Reformer"
+        case .xReformer: return "X-Reformer"
+        case .cadillac: return "Cadillac"
+        case .wundaChair: return "Wunda Chair"
+        case .chair: return "Chair"
+        case .spineCorrector: return "Spine Corrector"
+        case .ladderBarrel: return "Ladder Barrel"
         }
     }
 }

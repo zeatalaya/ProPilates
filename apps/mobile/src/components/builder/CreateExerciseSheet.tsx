@@ -27,7 +27,7 @@ interface Props {
 }
 
 const METHODS: PilatesMethod[] = [
-  "mat", "reformer", "x-reformer", "chair", "tower", "barrel", "ring", "band", "foam_roller",
+  "mat", "reformer", "x-reformer", "cadillac", "wunda_chair", "chair", "spine_corrector", "ladder_barrel",
 ];
 
 const CATEGORIES: ExerciseCategory[] = [

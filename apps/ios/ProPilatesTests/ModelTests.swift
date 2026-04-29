@@ -388,10 +388,10 @@ final class ModelTests: XCTestCase {
         }
     }
 
-    func testFoamRollerEncoding() throws {
-        let data = try JSONEncoder().encode(PilatesMethod.foamRoller)
+    func testWundaChairEncoding() throws {
+        let data = try JSONEncoder().encode(PilatesMethod.wundaChair)
         let string = String(data: data, encoding: .utf8)!
-        XCTAssertTrue(string.contains("foam_roller"))
+        XCTAssertTrue(string.contains("wunda_chair"))
     }
 
     func testBalancedBodyEncoding() throws {

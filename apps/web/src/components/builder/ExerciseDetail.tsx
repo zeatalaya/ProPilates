@@ -189,66 +189,84 @@ export function ExerciseDetail({ blockExercise }: Props) {
       {/* Sticky editable settings */}
       <div className="flex-shrink-0 border-t border-border bg-bg-primary p-4">
         <h3 className="mb-3 text-sm font-semibold text-text-secondary">Exercise Settings</h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="space-y-3">
+          {/* Duration presets */}
           <div>
-            <label className="label-text mb-1 block text-[11px]">
+            <label className="label-text mb-1.5 block text-[11px]">
               <Clock size={10} className="mr-1 inline" />
-              Duration (s)
+              Duration
             </label>
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {[15, 30, 45, 60, 90, 120].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => handleUpdate({ duration: s })}
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                    blockExercise.duration === s
+                      ? "bg-violet-600 text-white"
+                      : "bg-bg-elevated text-text-muted hover:text-text-secondary"
+                  }`}
+                >
+                  {formatDuration(s)}
+                </button>
+              ))}
+            </div>
             <input
               type="number"
               className="input-field text-sm"
               value={blockExercise.duration}
               onChange={(e) =>
-                handleUpdate({ duration: parseInt(e.target.value) || 0 })
+                handleUpdate({ duration: Math.max(5, parseInt(e.target.value) || 0) })
               }
               min={5}
               max={600}
             />
           </div>
 
-          <div>
-            <label className="label-text mb-1 block text-[11px]">
-              <RotateCcw size={10} className="mr-1 inline" />
-              Reps
-            </label>
-            <input
-              type="number"
-              className="input-field text-sm"
-              value={blockExercise.reps ?? ""}
-              onChange={(e) =>
-                handleUpdate({
-                  reps: e.target.value ? parseInt(e.target.value) : null,
-                })
-              }
-              min={1}
-              max={100}
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label-text mb-1 block text-[11px]">
+                <RotateCcw size={10} className="mr-1 inline" />
+                Reps
+              </label>
+              <input
+                type="number"
+                className="input-field text-sm"
+                value={blockExercise.reps ?? ""}
+                onChange={(e) =>
+                  handleUpdate({
+                    reps: e.target.value ? parseInt(e.target.value) : null,
+                  })
+                }
+                min={1}
+                max={100}
+              />
+            </div>
+
+            <div>
+              <label className="label-text mb-1 block text-[11px]">Side</label>
+              <select
+                className="input-field text-sm"
+                value={blockExercise.side ?? ""}
+                onChange={(e) =>
+                  handleUpdate({
+                    side: (e.target.value || null) as any,
+                  })
+                }
+              >
+                <option value="">Both / N/A</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+                <option value="both">Both sides</option>
+              </select>
+            </div>
           </div>
 
           <div>
-            <label className="label-text mb-1 block text-[11px]">Side</label>
-            <select
-              className="input-field text-sm"
-              value={blockExercise.side ?? ""}
-              onChange={(e) =>
-                handleUpdate({
-                  side: (e.target.value || null) as any,
-                })
-              }
-            >
-              <option value="">Both / N/A</option>
-              <option value="left">Left</option>
-              <option value="right">Right</option>
-              <option value="both">Both sides</option>
-            </select>
-          </div>
-
-          <div className="col-span-3">
-            <label className="label-text mb-1 block text-[11px]">Notes</label>
+            <label className="label-text mb-1 block text-[11px]">Your Cues</label>
             <textarea
-              className="input-field min-h-[48px] resize-none text-sm"
-              placeholder="Personal teaching notes..."
+              className="input-field min-h-[64px] resize-none text-sm"
+              placeholder="Add your personalised teaching cues..."
               value={blockExercise.notes}
               onChange={(e) => handleUpdate({ notes: e.target.value })}
             />
