@@ -28,7 +28,7 @@ struct AppConfig {
             oauth3Server: info["OAUTH3_SERVER"] as? String
                 ?? "https://oauth2.testnet.burnt.com",
             oauth3ClientID: info["OAUTH3_CLIENT_ID"] as? String
-                ?? "W04z4drnVQCIlieA",
+                ?? "gYuyinZMpomK9DO_",
             oauthRedirectURL: info["OAUTH_REDIRECT_URL"] as? String
                 ?? "https://thepropilates.com/api/auth/oauth3/callback",
             xionRPC: info["XION_RPC"] as? String

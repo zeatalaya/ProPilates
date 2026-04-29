@@ -42,7 +42,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>ProPilates uses the camera to scan payment cards.</string>
 	<key>OAUTH3_CLIENT_ID</key>
-	<string>W04z4drnVQCIlieA</string>
+	<string>gYuyinZMpomK9DO_</string>
 	<key>OAUTH3_SERVER</key>
 	<string>https://oauth2.testnet.burnt.com</string>
 	<key>OAUTH_REDIRECT_URL</key>
