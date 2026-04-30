@@ -118,7 +118,8 @@ export function useOAuth3Mobile() {
             .from("subscriptions")
             .select("tier")
             .eq("instructor_id", data.id)
-            .eq("status", "active")
+            .gte("expires_at", new Date().toISOString())
+            .order("expires_at", { ascending: false })
             .maybeSingle();
           if (sub?.tier) setTier(sub.tier);
         }

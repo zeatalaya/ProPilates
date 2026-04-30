@@ -9,12 +9,14 @@ import {
 } from "./index";
 
 describe("constants", () => {
-  it("MOBILE_METHODS has mat, reformer, x-reformer", () => {
+  it("MOBILE_METHODS has all BASI methods", () => {
     const values = MOBILE_METHODS.map((m) => m.value);
     expect(values).toContain("mat");
     expect(values).toContain("reformer");
     expect(values).toContain("x-reformer");
-    expect(MOBILE_METHODS.length).toBe(3);
+    expect(values).toContain("cadillac");
+    expect(values).toContain("wunda_chair");
+    expect(MOBILE_METHODS.length).toBe(8);
   });
 
   it("ALL_METHODS matches MOBILE_METHODS", () => {

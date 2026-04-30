@@ -4,6 +4,11 @@ export const MOBILE_METHODS: { value: PilatesMethod; label: string }[] = [
   { value: "mat", label: "Mat" },
   { value: "reformer", label: "Reformer" },
   { value: "x-reformer", label: "x-Reformer" },
+  { value: "cadillac", label: "Cadillac" },
+  { value: "wunda_chair", label: "Wunda Chair" },
+  { value: "chair", label: "Chair" },
+  { value: "spine_corrector", label: "Spine Corrector" },
+  { value: "ladder_barrel", label: "Ladder Barrel" },
 ];
 
 export const ALL_METHODS: { value: PilatesMethod; label: string }[] = [

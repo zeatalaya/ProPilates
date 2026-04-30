@@ -266,7 +266,6 @@ final class ModelTests: XCTestCase {
             "started_at": "2024-01-01T00:00:00Z",
             "expires_at": "2024-02-01T00:00:00Z",
             "tx_hash": null,
-            "status": "active",
             "payment_method": "crossmint",
             "amount_usdc": 4.99
         }
@@ -274,7 +273,6 @@ final class ModelTests: XCTestCase {
 
         let sub = try JSONDecoder().decode(Subscription.self, from: json)
         XCTAssertEqual(sub.tier, .premium)
-        XCTAssertEqual(sub.status, "active")
         XCTAssertEqual(sub.paymentMethod, "crossmint")
         XCTAssertEqual(sub.amountUsdc, 4.99)
     }

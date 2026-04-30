@@ -351,8 +351,15 @@ private enum DetailMode {
 // MARK: - Template Detail
 
 struct TemplateDetailView: View {
+    @Environment(AuthService.self) private var auth
+    @Environment(SupabaseService.self) private var supabase
+
     let template: PilatesClass
     fileprivate var mode: DetailMode = .template
+
+    @State private var classForBuilder: PilatesClass?
+    @State private var classForTeach: PilatesClass?
+    @State private var isLoadingDetails = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -468,6 +475,29 @@ struct TemplateDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .overlay {
+            if isLoadingDetails {
+                ZStack {
+                    Color.black.opacity(0.3).ignoresSafeArea()
+                    ProgressView("Loading class...")
+                        .padding(Theme.spacingLG)
+                        .background(Color.ppBackgroundCard)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+            }
+        }
+        .fullScreenCover(item: $classForBuilder) { pc in
+            NavigationStack {
+                BuilderScreenWithClass(pilatesClass: pc)
+                    .environment(auth)
+                    .environment(supabase)
+            }
+        }
+        .fullScreenCover(item: $classForTeach) { pc in
+            NavigationStack {
+                TeachScreenFromClass(pilatesClass: pc)
+            }
+        }
     }
 
     @ViewBuilder
@@ -479,7 +509,7 @@ struct TemplateDetailView: View {
             case .template:
                 HStack(spacing: Theme.spacingSM) {
                     Button {
-                        // Navigate to builder tab with template loaded
+                        Task { await loadAndOpenBuilder() }
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "hammer.fill")
@@ -494,7 +524,7 @@ struct TemplateDetailView: View {
                     }
 
                     Button {
-                        // Navigate to teach mode with template
+                        Task { await loadAndStartTeaching() }
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "play.fill")
@@ -543,6 +573,30 @@ struct TemplateDetailView: View {
         Text(text).bodyFont(size: 12).foregroundStyle(color)
             .padding(.horizontal, 10).padding(.vertical, 4)
             .background(color.opacity(0.1)).cornerRadius(Theme.radiusFull)
+    }
+
+    private func loadAndOpenBuilder() async {
+        isLoadingDetails = true
+        defer { isLoadingDetails = false }
+        do {
+            if let detailed = try await supabase.fetchClassWithDetails(classId: template.id) {
+                classForBuilder = detailed
+            }
+        } catch {
+            print("[TemplateDetail] Load for builder error: \(error)")
+        }
+    }
+
+    private func loadAndStartTeaching() async {
+        isLoadingDetails = true
+        defer { isLoadingDetails = false }
+        do {
+            if let detailed = try await supabase.fetchClassWithDetails(classId: template.id) {
+                classForTeach = detailed
+            }
+        } catch {
+            print("[TemplateDetail] Load for teach error: \(error)")
+        }
     }
 
     private func difficultyColor(_ d: Difficulty) -> Color {

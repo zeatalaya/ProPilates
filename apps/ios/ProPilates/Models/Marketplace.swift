@@ -53,7 +53,6 @@ struct Subscription: Codable, Identifiable {
     let startedAt: String
     let expiresAt: String?
     let txHash: String?
-    let status: String
     let paymentMethod: String?
     let amountUsdc: Double?
 
@@ -64,7 +63,6 @@ struct Subscription: Codable, Identifiable {
         case startedAt = "started_at"
         case expiresAt = "expires_at"
         case txHash = "tx_hash"
-        case status
         case paymentMethod = "payment_method"
         case amountUsdc = "amount_usdc"
     }

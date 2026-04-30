@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
             tier: "premium",
             started_at: now.toISOString(),
             expires_at: expiresAt.toISOString(),
-            status: "active",
             payment_method: "stripe",
             amount_usdc: paymentIntent.amount / 100,
             tx_hash: paymentIntent.id,

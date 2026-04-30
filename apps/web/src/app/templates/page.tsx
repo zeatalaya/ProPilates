@@ -27,6 +27,11 @@ const METHODS: { value: PilatesMethod | "all"; label: string }[] = [
   { value: "mat", label: "Mat" },
   { value: "reformer", label: "Reformer" },
   { value: "x-reformer", label: "xR" },
+  { value: "cadillac", label: "Cadillac" },
+  { value: "wunda_chair", label: "Wunda Chair" },
+  { value: "chair", label: "Chair" },
+  { value: "spine_corrector", label: "Spine Corrector" },
+  { value: "ladder_barrel", label: "Ladder Barrel" },
 ];
 
 const DIFFICULTIES: { value: Difficulty | "all"; label: string }[] = [

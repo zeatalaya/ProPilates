@@ -45,7 +45,8 @@ export default function AuthScreen() {
             .from("subscriptions")
             .select("tier")
             .eq("instructor_id", instructor.id)
-            .eq("status", "active")
+            .gte("expires_at", new Date().toISOString())
+            .order("expires_at", { ascending: false })
             .maybeSingle();
           if (sub?.tier) setTier(sub.tier);
           router.replace("/(tabs)/builder");

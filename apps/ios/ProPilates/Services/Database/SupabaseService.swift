@@ -67,7 +67,8 @@ final class SupabaseService {
             .from("subscriptions")
             .select()
             .eq("instructor_id", value: instructorId.uuidString)
-            .eq("status", value: "active")
+            .gte("expires_at", value: ISO8601DateFormatter().string(from: Date()))
+            .order("expires_at", ascending: false)
             .limit(1)
             .execute()
             .value

@@ -354,7 +354,7 @@ struct PortfolioScreen: View {
 
 // MARK: - Builder wrapper that loads a class into the view model
 
-private struct BuilderScreenWithClass: View {
+struct BuilderScreenWithClass: View {
     @Environment(AuthService.self) private var auth
     @Environment(SupabaseService.self) private var supabase
     @Environment(\.dismiss) private var dismiss
@@ -383,7 +383,7 @@ private struct BuilderScreenWithClass: View {
 
 // MARK: - Teach wrapper that loads a class's blocks
 
-private struct TeachScreenFromClass: View {
+struct TeachScreenFromClass: View {
     @Environment(\.dismiss) private var dismiss
 
     let pilatesClass: PilatesClass
