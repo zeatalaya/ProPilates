@@ -61,7 +61,7 @@ struct ClassBlock: Codable, Identifiable {
 
 struct PilatesClass: Identifiable {
     let id: UUID
-    let instructorId: UUID
+    let instructorId: UUID?
     let title: String
     let description: String
     let method: PilatesMethod
@@ -102,7 +102,7 @@ extension PilatesClass: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
-        instructorId = try container.decode(UUID.self, forKey: .instructorId)
+        instructorId = try container.decodeIfPresent(UUID.self, forKey: .instructorId)
         title = try container.decode(String.self, forKey: .title)
         description = try container.decode(String.self, forKey: .description)
         method = try container.decode(PilatesMethod.self, forKey: .method)

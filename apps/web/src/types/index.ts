@@ -75,7 +75,7 @@ export interface BlockExercise {
 
 export interface PilatesClass {
   id: string;
-  instructor_id: string;
+  instructor_id: string | null;
   title: string;
   description: string;
   method: PilatesMethod;

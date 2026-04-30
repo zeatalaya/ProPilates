@@ -311,7 +311,7 @@ struct PortfolioScreen: View {
                         do {
                             if let pc = try await supabase.fetchClassWithDetails(classId: entry.classId) {
                                 // Exclude own classes that might appear in portfolio_access
-                                if pc.instructorId != instructor.id {
+                                if pc.instructorId != nil && pc.instructorId != instructor.id {
                                     purchased.append(pc)
                                 }
                             }
